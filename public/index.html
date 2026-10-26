@@ -47,7 +47,7 @@
       background-attachment: fixed;
     }
 
-    /* Navbar */
+    /* Navbar con logo */
     nav {
       position: sticky; top: 0; z-index: 100;
       backdrop-filter: blur(16px);
@@ -59,8 +59,16 @@
     .nav-inner {
       display: flex; justify-content: space-between; align-items: center;
     }
-    .logo {
-      font-family: 'Orbitron', monospace; font-weight: 900; font-size: 1.5rem;
+    .logo-box {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .logo-img {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+    }
+    .logo-text {
+      font-family: 'Orbitron', monospace; font-weight: 900; font-size: 1.3rem;
       letter-spacing: -0.5px;
       background: linear-gradient(135deg, var(--white), var(--blue));
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
@@ -340,6 +348,9 @@
       .hero-actions { justify-content: center; }
       .vision-overlay { margin: 0 20px; }
       section { padding: 70px 20px; }
+      .logo-box { gap: 8px; }
+      .logo-img { width: 30px; height: 30px; }
+      .logo-text { font-size: 1.1rem; }
     }
   </style>
 </head>
@@ -349,7 +360,12 @@
 
   <nav id="navbar">
     <div class="nav-inner container">
-      <div class="logo">LATIN AVIATION NETWORK</div>
+      <div class="logo-box">
+        <!-- ===== LOGO 2 (el abstracto azul) en el navbar ===== -->
+        <!-- Reemplaza TU_URL_LOGO_2 por la URL real de tu imagen -->
+        <img src="TU_URL_LOGO_2" alt="LAN Logo" class="logo-img" onerror="this.style.display='none'">
+        <div class="logo-text">LATIN AVIATION NETWORK</div>
+      </div>
       <a href="iniciar-seccion.html" class="btn-discord">Sign In with Discord</a>
     </div>
   </nav>
@@ -360,6 +376,11 @@
     <div class="hero-overlay"></div>
     <div class="container">
       <div class="hero-card">
+        <!-- ===== LOGO 1 (banner con texto) opcional en el hero ===== -->
+        <!-- Reemplaza TU_URL_LOGO_1 por la URL real de tu imagen -->
+        <div style="margin-bottom: 16px;">
+          <img src="TU_URL_LOGO_1" alt="LAN Banner" style="max-width: 200px; height: auto; opacity: 0.9;" onerror="this.style.display='none'">
+        </div>
         <span class="hero-eyebrow">Learn · Train · Fly</span>
         <h1>Latin Aviation Network</h1>
         <p>Latin Aviation Network (LAN) es una comunidad de aviación virtual desarrollada en Roblox, centrada en Project Flight. Buscamos ofrecer un entorno organizado donde los entusiastas de la aviación puedan compartir experiencias, aprender y trabajar en equipo.</p>
@@ -457,5 +478,4 @@
     setInterval(loadMembers, 5000);
   </script>
 </body>
-</html>
 </html>
