@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iniciar sesión | Latin Aviation Network</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --black: #030305;
+      --card: #0d0d12;
+      --card-hover: #14141d;
+      --white: #ffffff;
+      --white-soft: #cbd5e1;
+      --gray: #64748b;
+      --blue: #0066ff;
+      --blue-light: #3399ff;
+      --cyan: #00d4ff;
+      --blue-glow: rgba(0, 102, 255, 0.45);
+      --border: #1f2937;
+      --radius: 20px;
+      --transition: 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--black);
+      color: var(--white);
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+    a { text-decoration: none; color: inherit; }
+    ul { list-style: none; }
+    img { max-width: 100%; display: block; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+    /* Fondo animado */
+    .bg-mesh {
+      position: fixed; inset: 0; z-index: -2;
+      background:
+        radial-gradient(circle at 25% 30%, rgba(0, 102, 255, 0.18) 0%, transparent 45%),
+        radial-gradient(circle at 75% 70%, rgba(0, 212, 255, 0.12) 0%, transparent 45%);
+      background-attachment: fixed;
+      animation: meshMove 18s ease-in-out infinite alternate;
+    }
+    @keyframes meshMove {
+      0% { background-position: 0% 0%, 100% 100%; }
+      100% { background-position: 100% 100%, 0% 0%; }
+    }
+
+    /* Navbar */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      backdrop-filter: blur(18px);
+      background: rgba(3, 3, 5, 0.82);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 0;
+      transition: var(--transition);
+    }
+    nav.scrolled { background: rgba(2, 2, 4, 0.95); box-shadow: 0 4px 30px rgba(0,0,0,0.4); }
+    .nav-inner {
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .logo-box {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .logo-img {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+    }
+    .logo-text {
+      font-family: 'Orbitron', monospace; font-weight: 900; font-size: 1.3rem;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, var(--white), var(--blue));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .btn-discord {
+      background: linear-gradient(135deg, var(--blue), var(--blue-light));
+      color: var(--white);
+      padding: 10px 24px;
+      border-radius: 50px;
+      font-weight: 800;
+      font-size: 0.9rem;
+      box-shadow: 0 10px 30px var(--blue-glow);
+      transition: var(--transition);
+      border: none;
+      cursor: pointer;
+    }
+    .btn-discord:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 20px 40px rgba(0,102,255,0.6);
+      filter: brightness(1.1);
+    }
+
+    /* Hero con fondo de login */
+    .hero {
+      position: relative;
+      height: 92vh;
+      min-height: 700px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute; inset: 0; z-index: -1;
+      background-size: cover;
+      background-position: center;
+      background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.8)),
+        url("https://i.imgur.com/tnbKq4X.png");
+      animation: heroZoom 20s ease-in-out infinite alternate;
+    }
+    @keyframes heroZoom {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.1); }
+    }
+    .hero-overlay {
+      position: absolute; inset: 0; z-index: 0;
+      background: radial-gradient(circle at center, rgba(3,3,5,0.3) 0%, rgba(2,2,4,0.98) 100%);
+    }
+    .login-card {
+      background: rgba(13, 13, 18, 0.65);
+      backdrop-filter: blur(22px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--radius);
+      padding: 60px 40px;
+      max-width: 480px;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+      position: relative; z-index: 10;
+      animation: cardFloat 6s ease-in-out infinite, cardGlow 4s ease-in-out infinite;
+    }
+    @keyframes cardFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-12px); }
+    }
+    @keyframes cardGlow {
+      0%, 100% { box-shadow: 0 30px 60px rgba(0,0,0,0.6), 0 0 0 rgba(0,102,255,0); }
+      50% { box-shadow: 0 30px 60px rgba(0,0,0,0.6), 0 0 40px rgba(0,102,255,0.25); }
+    }
+    .login-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      border-radius: inherit; padding: 1px;
+      background: linear-gradient(135deg, var(--blue), var(--cyan));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: destination-out;
+      mask-composite: exclude;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+    .login-card:hover::before { opacity: 1; }
+
+    .hero-eyebrow {
+      display: inline-block;
+      font-family: 'Orbitron', monospace;
+      font-size: 0.75rem;
+      font-weight: 900;
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 18px;
+      padding: 6px 18px;
+      border: 1px solid rgba(0, 102, 255, 0.35);
+      border-radius: 50px;
+      background: rgba(0, 102, 255, 0.1);
+      box-shadow: 0 0 20px rgba(0, 102, 255, 0.25);
+      animation: glowPulse 3s ease-in-out infinite;
+    }
+    @keyframes glowPulse {
+      0%, 100% { box-shadow: 0 0 15px rgba(0,102,255,0.25); border-color: rgba(0,102,255,0.35); }
+      50% { box-shadow: 0 0 35px rgba(0,102,255,0.55); border-color: var(--blue); }
+    }
+    .hero h1 {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(2rem, 6vw, 3rem);
+      font-weight: 900;
+      margin-bottom: 16px;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, var(--white) 0%, var(--blue) 60%, var(--blue-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 4px 10px rgba(0,102,255,0.3));
+    }
+    .hero p {
+      color: var(--white-soft);
+      font-size: 1.1rem;
+      max-width: 420px;
+      margin: 0 auto 34px;
+      opacity: 0.95;
+    }
+    .hero-actions {
+      display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex; align-items: center; gap: 12px;
+      padding: 16px 34px; border-radius: 50px;
+      font-weight: 800; font-size: 1rem;
+      transition: var(--transition); border: none; cursor: pointer;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--blue), var(--blue-light));
+      color: var(--white);
+      box-shadow: 0 12px 30px var(--blue-glow);
+      position: relative; overflow: hidden;
+    }
+    .btn-primary::after {
+      content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(135deg, var(--blue-light), var(--cyan));
+      opacity: 0; transition: var(--transition);
+    }
+    .btn-primary:hover {
+      transform: translateY(-5px) scale(1.03);
+      box-shadow: 0 24px 45px rgba(0,102,255,0.65);
+      filter: brightness(1.2);
+    }
+    .btn-primary:hover::after { opacity: 1; }
+    .btn-ghost {
+      background: transparent; color: var(--white-soft);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover {
+      border-color: var(--blue); color: var(--blue);
+      transform: translateY(-4px);
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      background: var(--black);
+      padding: 30px 20px 25px;
+      text-align: center;
+    }
+    .footer-bottom {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      color: var(--gray);
+      font-size: 0.85rem;
+    }
+    .version {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-family: 'Orbitron', monospace;
+      font-size: 0.75rem;
+      color: var(--blue);
+    }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+      .hero { height: 88vh; padding-bottom: 50px; }
+      .login-card { padding: 40px 24px; }
+      .hero-actions { justify-content: center; }
+      .logo-box { gap: 8px; }
+      .logo-img { width: 30px; height: 30px; }
+      .logo-text { font-size: 1.1rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-mesh"></div>
+
+  <nav id="navbar">
+    <div class="nav-inner container">
+      <div class="logo-box">
+        <img src="https://i.imgur.com/V47UGra.png" alt="LAN Logo" class="logo-img" onerror="this.style.display='none'">
+        <div class="logo-text">LATIN AVIATION NETWORK</div>
+      </div>
+      <a href="iniciar-seccion.html" class="btn-discord">Sign In with Discord</a>
+    </div>
+  </nav>
+
+  <!-- Hero Login -->
+  <header class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-overlay"></div>
+    <div class="container">
+      <div class="login-card">
+        <span class="hero-eyebrow">Acceso a la comunidad</span>
+        <h1>Iniciar sesión</h1>
+        <p>Accede a tu cuenta de Latin Aviation Network usando tu perfil de Discord.</p>
+        <div class="hero-actions">
+          <!-- ⚠️ Reemplaza TU_CLIENT_ID por el Client ID real de tu app de Discord -->
+          <a href="/auth/discord/login" class="btn btn-primary">
+            Iniciar sesión con Discord →
+          </a>
+          <a href="/" class="btn btn-ghost">Volver al inicio</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <footer>
+    <div class="container">
+      <div class="footer-bottom">
+        <div class="version">0.0.0.0.1</div>
+        <p>&copy; 2026 Latin Aviation Network. Todos los derechos reservados.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 50) navbar.classList.add('scrolled');
+      else navbar.classList.remove('scrolled');
+    });
+  </script>
+</body>
+</html>
