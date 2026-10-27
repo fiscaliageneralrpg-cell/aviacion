@@ -15,6 +15,7 @@
       --gray: #64748b;
       --blue: #0066ff;
       --blue-light: #3399ff;
+      --cyan: #00d4ff;
       --blue-glow: rgba(0, 102, 255, 0.45);
       --border: #1f2937;
       --radius: 24px;
@@ -68,6 +69,21 @@
       letter-spacing: -0.5px;
       background: linear-gradient(135deg, var(--white), var(--blue));
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .btn-roblox {
+      background: linear-gradient(135deg, var(--blue), var(--blue-light));
+      color: var(--white);
+      padding: 8px 18px;
+      border-radius: 50px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      border: none;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .btn-roblox:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.1);
     }
     .btn-logout {
       background: transparent;
@@ -190,6 +206,54 @@
     }
     .btn-ghost:hover { border-color: var(--blue); color: var(--blue); transform: translateY(-2px); }
 
+    /* Modal Roblox */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 1000;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 40px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+    }
+    .modal-card .roblox-avatar {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      border: 3px solid var(--blue);
+      margin-bottom: 20px;
+    }
+    .modal-card h3 {
+      font-family: 'Orbitron', monospace;
+      font-size: 1.5rem;
+      margin-bottom: 8px;
+      color: var(--white);
+    }
+    .modal-card p {
+      color: var(--gray);
+      margin-bottom: 25px;
+    }
+    .modal-close {
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 50px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .modal-close:hover { background: var(--blue-light); }
+
     footer {
       border-top: 1px solid var(--border);
       background: var(--black);
@@ -230,6 +294,7 @@
         </div>
       </div>
       <div class="nav-right">
+        <button class="btn-roblox" id="btn-roblox">Cuenta de Roblox</button>
         <button class="btn-logout" onclick="window.location.href='/auth/logout'">Cerrar sesión</button>
       </div>
     </div>
@@ -264,7 +329,23 @@
     </div>
   </footer>
 
+  <!-- Modal Roblox -->
+  <div class="modal-overlay" id="roblox-modal">
+    <div class="modal-card">
+      <img id="roblox-modal-avatar" class="roblox-avatar" alt="Roblox Avatar" src="https://www.roblox.com/headshot-thumbnail/image?userId=0&width=420&height=420&format=png">
+      <h3 id="roblox-modal-name">Cargando...</h3>
+      <p id="roblox-modal-id">ID: —</p>
+      <button class="modal-close" onclick="document.getElementById('roblox-modal').classList.remove('active')">Cerrar</button>
+    </div>
+  </div>
+
   <script>
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 50) navbar.classList.add('scrolled');
+      else navbar.classList.remove('scrolled');
+    });
+
     async function loadUser() {
       try {
         const res = await fetch('/api/me');
@@ -280,8 +361,30 @@
         if (user.avatar) {
           document.getElementById('user-avatar').src = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`;
         }
+
+        // Botón cuenta de Roblox
+        const btnRoblox = document.getElementById('btn-roblox');
+        const modal = document.getElementById('roblox-modal');
+        const modalAvatar = document.getElementById('roblox-modal-avatar');
+        const modalName = document.getElementById('roblox-modal-name');
+        const modalId = document.getElementById('roblox-modal-id');
+
+        btnRoblox.addEventListener('click', () => {
+          if (user.roblox_id) {
+            modalName.textContent = user.roblox_username || 'Usuario de Roblox';
+            modalId.textContent = 'ID: ' + user.roblox_id;
+            modalAvatar.src = user.roblox_avatar || `https://www.roblox.com/headshot-thumbnail/image?userId=${user.roblox_id}&width=420&height=420&format=png`;
+            modal.classList.add('active');
+          } else {
+            alert('No tienes cuenta de Roblox vinculada aún.');
+          }
+        });
+
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) modal.classList.remove('active');
+        });
       } catch (e) {
-        console.error('Error cargando usuario:', e);
+        console.error(e);
         window.location.href = '/iniciar-seccion.html';
       }
     }
