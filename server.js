@@ -10,13 +10,14 @@ dotenv.config();
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
 
-// ⚠️ Para Render
+// Para Render (cookies HTTPS)
 app.set('trust proxy', 1);
 
 console.log('🔧 Iniciando servidor...');
 console.log('📋 DISCORD_CLIENT_ID:', process.env.DISCORD_CLIENT_ID ? '✅' : '❌ FALTANTE');
 console.log('📋 DISCORD_CLIENT_SECRET:', process.env.DISCORD_CLIENT_SECRET ? '✅' : '❌ FALTANTE');
 console.log('📋 SESSION_SECRET:', process.env.SESSION_SECRET ? '✅' : '❌ FALTANTE');
+console.log('📋 DB_HOST:', process.env.DB_HOST);
 
 // CORS
 app.use(cors({
@@ -28,7 +29,7 @@ app.use(express.json());
 
 // Sesiones
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'LANsecreto2026',
+  secret: process.env.SESSION_SECRET || 'LANsecreto2026!MiClaveSegura',
   resave: false,
   saveUninitialized: false,
   cookie: {
@@ -38,21 +39,21 @@ app.use(session({
   }
 }));
 
-// Archivos estáticos
+// Archivos estáticos desde public/
 app.use(express.static(path.join(__dirname, 'public')));
 
-// --- API: stats ---
+// --- API: obtener número de miembros ---
 app.get('/api/stats', async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT member_count FROM site_stats WHERE id = 1');
     res.json({ member_count: rows.length ? rows[0].member_count : 0 });
   } catch (err) {
-    console.error('Error stats:', err.message);
-    res.status(500).json({ error: 'Error interno' });
+    console.error('Error al obtener stats:', err.message);
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
-// --- API: usuario logueado ---
+// --- API: obtener usuario logueado ---
 app.get('/api/me', (req, res) => {
   if (!req.session.discordUser) {
     return res.status(401).json({ error: 'No autenticado' });
@@ -65,7 +66,7 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// --- Login Discord ---
+// --- Ruta: iniciar login de Discord ---
 app.get('/auth/discord/login', (req, res) => {
   const params = new URLSearchParams({
     client_id: process.env.DISCORD_CLIENT_ID,
@@ -76,7 +77,7 @@ app.get('/auth/discord/login', (req, res) => {
   res.redirect(`https://discord.com/api/oauth2/authorize?${params}`);
 });
 
-// --- Callback Discord → va a cargando.html ---
+// --- Ruta: callback de Discord ---
 app.get('/auth/discord/callback', async (req, res) => {
   const code = req.query.code;
   if (!code) return res.status(400).send('No se proporcionó código de Discord');
@@ -102,7 +103,7 @@ app.get('/auth/discord/callback', async (req, res) => {
       headers: { Authorization: `${tokenData.token_type} ${tokenData.access_token}` }
     });
 
-    if (!userResponse.ok) throw new Error('Error obteniendo usuario');
+    if (!userResponse.ok) throw new Error('Error obteniendo usuario de Discord');
 
     const user = await userResponse.json();
 
@@ -115,7 +116,6 @@ app.get('/auth/discord/callback', async (req, res) => {
 
     console.log('✅ Sesión guardada:', user.global_name || user.username);
 
-    // ⚠️ Aquí va a cargando.html primero
     res.redirect('/cargando.html');
   } catch (err) {
     console.error('❌ Error Discord OAuth:', err.message);
@@ -123,7 +123,7 @@ app.get('/auth/discord/callback', async (req, res) => {
   }
 });
 
-// --- Dashboard protegido ---
+// --- Ruta: dashboard protegido ---
 app.get('/dashboard', (req, res) => {
   if (!req.session.discordUser) {
     return res.redirect('/iniciar-seccion.html');
@@ -131,13 +131,13 @@ app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
-// --- Logout ---
+// --- Ruta: cerrar sesión ---
 app.get('/auth/logout', (req, res) => {
   req.session.destroy();
   res.redirect('/');
 });
 
-// Pool MySQL
+// Pool de conexión a MySQL remoto
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   port: Number(process.env.DB_PORT || 3306),
@@ -150,3 +150,4 @@ const pool = mysql.createPool({
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Servidor en http://0.0.0.0:${PORT}`);
+});
