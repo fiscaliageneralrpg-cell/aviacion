@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cargando | Latin Aviation Network</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Orbitron', monospace;
+      background: #000;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+    .loader-card {
+      text-align: center;
+      background: rgba(13, 13, 18, 0.85);
+      border: 1px solid #1f2937;
+      border-radius: 24px;
+      padding: 60px 40px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.7);
+      backdrop-filter: blur(12px);
+    }
+    .welcome-text {
+      font-size: clamp(1.5rem, 5vw, 2.5rem);
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 12px;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, #fff, #0066ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .sub-text {
+      color: #94a3b8;
+      font-size: 1rem;
+      margin-bottom: 30px;
+    }
+    .avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 3px solid #0066ff;
+      margin-bottom: 20px;
+      box-shadow: 0 0 40px rgba(0,102,255,0.5);
+    }
+    .loader {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(0,102,255,0.3);
+      border-top: 3px solid #0066ff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    .countdown {
+      color: #0066ff;
+      font-size: 1.2rem;
+      font-weight: 800;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="loader-card">
+    <img id="avatar" class="avatar" alt="Avatar" src="https://cdn.discordapp.com/embed/avatars/0.png">
+    <div class="welcome-text" id="welcome-name">Bienvenido</div>
+    <div class="sub-text">Iniciando sesión en Latin Aviation Network...</div>
+    <div class="loader"></div>
+    <div class="countdown" id="countdown">Redirigiendo en 4 segundos...</div>
+  </div>
+
+  <script>
+    async function init() {
+      try {
+        const res = await fetch('/api/me');
+        if (res.status === 401) {
+          window.location.href = '/iniciar-seccion.html';
+          return;
+        }
+        const user = await res.json();
+        const name = user.global_name || user.username;
+        document.getElementById('welcome-name').textContent = 'Bienvenido, ' + name;
+        if (user.avatar) {
+          document.getElementById('avatar').src = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`;
+        }
+      } catch (e) {
+        console.error(e);
+      }
+
+      let seconds = 4;
+      const el = document.getElementById('countdown');
+      const timer = setInterval(() => {
+        seconds--;
+        el.textContent = `Redirigiendo en ${seconds} segundos...`;
+        if (seconds <= 0) {
+          clearInterval(timer);
+          window.location.href = '/dashboard';
+        }
+      }, 1000);
+    }
+
+    init();
+  </script>
+</body>
+</html>
