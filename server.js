@@ -48,7 +48,15 @@ app.get('/api/stats', async (req, res) => {
   }
 });
 
-// --- Ruta principal ---
+// --- API: obtener usuario logueado ---
+app.get('/api/me', (req, res) => {
+  if (!req.session.discordUser) {
+    return res.status(401).json({ error: 'No autenticado' });
+  }
+  res.json(req.session.discordUser);
+});
+
+// --- Ruta principal: sirve index.html ---
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -83,11 +91,7 @@ app.get('/auth/discord/callback', async (req, res) => {
       })
     });
 
-    if (!tokenResponse.ok) {
-      const errorText = await tokenResponse.text();
-      console.error('Error token Discord:', errorText);
-      throw new Error('Error obteniendo token de Discord');
-    }
+    if (!tokenResponse.ok) throw new Error('Error obteniendo token');
 
     const tokenData = await tokenResponse.json();
 
@@ -96,7 +100,7 @@ app.get('/auth/discord/callback', async (req, res) => {
       headers: { Authorization: `${tokenData.token_type} ${tokenData.access_token}` }
     });
 
-    if (!userResponse.ok) throw new Error('Error obteniendo usuario de Discord');
+    if (!userResponse.ok) throw new Error('Error obteniendo usuario');
 
     const user = await userResponse.json();
 
@@ -116,41 +120,12 @@ app.get('/auth/discord/callback', async (req, res) => {
   }
 });
 
-// --- Ruta: dashboard protegido ---
+// --- Ruta: dashboard protegido (sirve dashboard.html) ---
 app.get('/dashboard', (req, res) => {
   if (!req.session.discordUser) {
     return res.redirect('/iniciar-seccion.html');
   }
-  const user = req.session.discordUser;
-  res.send(`
-    <!DOCTYPE html>
-    <html lang="es">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Dashboard | LAN</title>
-      <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
-      <style>
-        body { background: #030305; color: #fff; font-family: 'Orbitron', monospace; text-align: center; padding-top: 100px; }
-        .card { max-width: 400px; margin: 0 auto; background: #0d0d12; border: 1px solid #1f2937; border-radius: 20px; padding: 40px; box-shadow: 0 25px 50px rgba(0,0,0,0.6); }
-        .avatar { width: 80px; height: 80px; border-radius: 50%; border: 2px solid #0066ff; margin-bottom: 20px; }
-        h1 { background: linear-gradient(135deg, #fff, #0066ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        a { color: #0066ff; text-decoration: none; }
-        a:hover { text-decoration: underline; }
-      </style>
-    </head>
-    <body>
-      <div class="card">
-        <img src="https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png" alt="Avatar" class="avatar">
-        <h1>Bienvenido, ${user.global_name || user.username}</h1>
-        <p>Has iniciado sesión con Discord correctamente.</p>
-        <p>ID: ${user.id}</p>
-        <br>
-        <a href="/auth/logout">Cerrar sesión</a> | <a href="/">Volver al inicio</a>
-      </div>
-    </body>
-    </html>
-  `);
+  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
 // --- Ruta: cerrar sesión ---
