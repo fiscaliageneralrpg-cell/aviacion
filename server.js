@@ -39,8 +39,34 @@ app.use(session({
   }
 }));
 
-// Archivos estáticos desde public/
+// Middleware: si ya hay sesión, redirigir al dashboard
+function requireGuest(req, res, next) {
+  if (req.session.discordUser) {
+    return res.redirect('/dashboard');
+  }
+  next();
+}
+
+// Middleware: si NO hay sesión, redirigir al login
+function requireAuth(req, res, next) {
+  if (!req.session.discordUser) {
+    return res.redirect('/iniciar-seccion.html');
+  }
+  next();
+}
+
+// Servir archivos estáticos desde public/
 app.use(express.static(path.join(__dirname, 'public')));
+
+// --- Ruta principal: si ya hay sesión, ir al dashboard; si no, mostrar index ---
+app.get('/', requireGuest, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// --- Ruta: iniciar-seccion.html (si ya hay sesión, ir al dashboard) ---
+app.get('/iniciar-seccion.html', requireGuest, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'iniciar-seccion.html'));
+});
 
 // --- API: obtener número de miembros ---
 app.get('/api/stats', async (req, res) => {
@@ -54,20 +80,13 @@ app.get('/api/stats', async (req, res) => {
 });
 
 // --- API: obtener usuario logueado ---
-app.get('/api/me', (req, res) => {
-  if (!req.session.discordUser) {
-    return res.status(401).json({ error: 'No autenticado' });
-  }
+app.get('/api/me', requireAuth, (req, res) => {
   res.json(req.session.discordUser);
-});
-
-// --- Ruta principal ---
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // --- Ruta: iniciar login de Discord ---
 app.get('/auth/discord/login', (req, res) => {
+  console.log('🔗 Iniciando login de Discord...');
   const params = new URLSearchParams({
     client_id: process.env.DISCORD_CLIENT_ID,
     redirect_uri: 'https://latinaviationnetwork.com/auth/discord/callback',
@@ -124,16 +143,14 @@ app.get('/auth/discord/callback', async (req, res) => {
 });
 
 // --- Ruta: dashboard protegido ---
-app.get('/dashboard', (req, res) => {
-  if (!req.session.discordUser) {
-    return res.redirect('/iniciar-seccion.html');
-  }
+app.get('/dashboard', requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
 // --- Ruta: cerrar sesión ---
 app.get('/auth/logout', (req, res) => {
   req.session.destroy();
+  res.clearCookie('connect.sid');
   res.redirect('/');
 });
 
