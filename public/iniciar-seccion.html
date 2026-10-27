@@ -38,7 +38,6 @@
     img { max-width: 100%; display: block; }
     .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
 
-    /* Fondo animado */
     .bg-mesh {
       position: fixed; inset: 0; z-index: -2;
       background:
@@ -52,7 +51,6 @@
       100% { background-position: 100% 100%, 0% 0%; }
     }
 
-    /* Navbar */
     nav {
       position: sticky; top: 0; z-index: 100;
       backdrop-filter: blur(18px);
@@ -97,7 +95,6 @@
       filter: brightness(1.1);
     }
 
-    /* Hero con fondo de login */
     .hero {
       position: relative;
       height: 92vh;
@@ -229,7 +226,6 @@
       transform: translateY(-4px);
     }
 
-    /* Footer */
     footer {
       border-top: 1px solid var(--border);
       background: var(--black);
@@ -254,7 +250,6 @@
       color: var(--blue);
     }
 
-    /* Mobile */
     @media (max-width: 768px) {
       .hero { height: 88vh; padding-bottom: 50px; }
       .login-card { padding: 40px 24px; }
@@ -279,7 +274,6 @@
     </div>
   </nav>
 
-  <!-- Hero Login -->
   <header class="hero">
     <div class="hero-bg"></div>
     <div class="hero-overlay"></div>
@@ -289,7 +283,6 @@
         <h1>Iniciar sesión</h1>
         <p>Accede a tu cuenta de Latin Aviation Network usando tu perfil de Discord.</p>
         <div class="hero-actions">
-          <!-- ⚠️ Reemplaza TU_CLIENT_ID por el Client ID real de tu app de Discord -->
           <a href="/auth/discord/login" class="btn btn-primary">
             Iniciar sesión con Discord →
           </a>
