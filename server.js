@@ -10,6 +10,15 @@ dotenv.config();
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
 
+// ⚠️ IMPORTANTE para Render: confiar en el proxy para cookies HTTPS
+app.set('trust proxy', 1);
+
+console.log('🔧 Iniciando servidor...');
+console.log('📋 DISCORD_CLIENT_ID:', process.env.DISCORD_CLIENT_ID ? '✅' : '❌ FALTANTE');
+console.log('📋 DISCORD_CLIENT_SECRET:', process.env.DISCORD_CLIENT_SECRET ? '✅' : '❌ FALTANTE');
+console.log('📋 SESSION_SECRET:', process.env.SESSION_SECRET ? '✅' : '❌ FALTANTE');
+console.log('📋 DB_HOST:', process.env.DB_HOST);
+
 // CORS
 app.use(cors({
   origin: process.env.CORS_ORIGINS
@@ -20,11 +29,12 @@ app.use(express.json());
 
 // Sesiones
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'cambia_esto_por_algo_muy_secreto_12345',
+  secret: process.env.SESSION_SECRET || 'LANsecreto2026',
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: process.env.NODE_ENV === 'production', // true en Render (HTTPS)
+    sameSite: 'lax',
     maxAge: 24 * 60 * 60 * 1000
   }
 }));
@@ -35,13 +45,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 // --- API: obtener número de miembros ---
 app.get('/api/stats', async (req, res) => {
   try {
-    const [rows] = await pool.query(
-      'SELECT member_count FROM site_stats WHERE id = 1'
-    );
-    if (rows.length === 0) {
-      return res.json({ member_count: 0 });
-    }
-    res.json({ member_count: rows[0].member_count });
+    const [rows] = await pool.query('SELECT member_count FROM site_stats WHERE id = 1');
+    res.json({ member_count: rows.length ? rows[0].member_count : 0 });
   } catch (err) {
     console.error('Error al obtener stats:', err.message);
     res.status(500).json({ error: 'Error interno del servidor' });
@@ -56,13 +61,14 @@ app.get('/api/me', (req, res) => {
   res.json(req.session.discordUser);
 });
 
-// --- Ruta principal: sirve index.html ---
+// --- Ruta principal ---
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // --- Ruta: iniciar login de Discord ---
 app.get('/auth/discord/login', (req, res) => {
+  console.log('🔗 Iniciando login de Discord...');
   const params = new URLSearchParams({
     client_id: process.env.DISCORD_CLIENT_ID,
     redirect_uri: 'https://latinaviationnetwork.com/auth/discord/callback',
@@ -75,7 +81,12 @@ app.get('/auth/discord/login', (req, res) => {
 // --- Ruta: callback de Discord ---
 app.get('/auth/discord/callback', async (req, res) => {
   const code = req.query.code;
-  if (!code) return res.status(400).send('No se proporcionó código de Discord');
+  console.log('📨 Callback recibido. Código:', code ? 'sí' : 'no');
+
+  if (!code) {
+    console.error('❌ No hay código de autorización');
+    return res.status(400).send('No se proporcionó código de Discord');
+  }
 
   try {
     // 1. Intercambiar código por access token
@@ -91,16 +102,20 @@ app.get('/auth/discord/callback', async (req, res) => {
       })
     });
 
-    if (!tokenResponse.ok) throw new Error('Error obteniendo token');
+    if (!tokenResponse.ok) {
+      const errorText = await tokenResponse.text();
+      console.error('❌ Error token:', errorText);
+      throw new Error('Error obteniendo token de Discord');
+    }
 
     const tokenData = await tokenResponse.json();
 
-    // 2. Obtener datos del usuario de Discord
+    // 2. Obtener datos del usuario
     const userResponse = await fetch('https://discord.com/api/users/@me', {
       headers: { Authorization: `${tokenData.token_type} ${tokenData.access_token}` }
     });
 
-    if (!userResponse.ok) throw new Error('Error obteniendo usuario');
+    if (!userResponse.ok) throw new Error('Error obteniendo usuario de Discord');
 
     const user = await userResponse.json();
 
@@ -112,19 +127,24 @@ app.get('/auth/discord/callback', async (req, res) => {
       avatar: user.avatar
     };
 
+    console.log('✅ Sesión guardada para:', user.global_name || user.username);
+
     // 4. Redirigir al dashboard
     res.redirect('/dashboard');
   } catch (err) {
-    console.error('Error Discord OAuth:', err.message);
+    console.error('❌ Error Discord OAuth:', err.message);
     res.status(500).send('Error autenticando con Discord: ' + err.message);
   }
 });
 
-// --- Ruta: dashboard protegido (sirve dashboard.html) ---
+// --- Ruta: dashboard protegido ---
 app.get('/dashboard', (req, res) => {
+  console.log('🏠 Acceso a /dashboard');
   if (!req.session.discordUser) {
+    console.log('⚠️ No hay sesión activa, redirigiendo a login');
     return res.redirect('/iniciar-seccion.html');
   }
+  console.log('✅ Usuario autenticado:', req.session.discordUser.global_name);
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
@@ -146,5 +166,5 @@ const pool = mysql.createPool({
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Servidor web en http://0.0.0.0:${PORT}`);
+  console.log(`🚀 Servidor en http://0.0.0.0:${PORT}`);
 });
