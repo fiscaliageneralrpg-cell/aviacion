@@ -4,7 +4,6 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const mysql = require('mysql2/promise');
 const session = require('express-session');
-const fetch = require('node-fetch');
 
 dotenv.config();
 
@@ -49,7 +48,7 @@ app.get('/api/stats', async (req, res) => {
   }
 });
 
-// --- Ruta principal: sirve el index.html de public ---
+// --- Ruta principal ---
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -84,7 +83,11 @@ app.get('/auth/discord/callback', async (req, res) => {
       })
     });
 
-    if (!tokenResponse.ok) throw new Error('Error obteniendo token');
+    if (!tokenResponse.ok) {
+      const errorText = await tokenResponse.text();
+      console.error('Error token Discord:', errorText);
+      throw new Error('Error obteniendo token de Discord');
+    }
 
     const tokenData = await tokenResponse.json();
 
@@ -93,7 +96,7 @@ app.get('/auth/discord/callback', async (req, res) => {
       headers: { Authorization: `${tokenData.token_type} ${tokenData.access_token}` }
     });
 
-    if (!userResponse.ok) throw new Error('Error obteniendo usuario');
+    if (!userResponse.ok) throw new Error('Error obteniendo usuario de Discord');
 
     const user = await userResponse.json();
 
@@ -109,7 +112,7 @@ app.get('/auth/discord/callback', async (req, res) => {
     res.redirect('/dashboard');
   } catch (err) {
     console.error('Error Discord OAuth:', err.message);
-    res.status(500).send('Error autenticando con Discord');
+    res.status(500).send('Error autenticando con Discord: ' + err.message);
   }
 });
 
@@ -139,7 +142,7 @@ app.get('/dashboard', (req, res) => {
     <body>
       <div class="card">
         <img src="https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png" alt="Avatar" class="avatar">
-        <h1>Hola, ${user.global_name || user.username}</h1>
+        <h1>Bienvenido, ${user.global_name || user.username}</h1>
         <p>Has iniciado sesión con Discord correctamente.</p>
         <p>ID: ${user.id}</p>
         <br>
