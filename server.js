@@ -16,7 +16,6 @@ console.log('🔧 Iniciando servidor...');
 console.log('📋 DISCORD_CLIENT_ID:', process.env.DISCORD_CLIENT_ID ? '✅' : '❌ FALTANTE');
 console.log('📋 DISCORD_CLIENT_SECRET:', process.env.DISCORD_CLIENT_SECRET ? '✅' : '❌ FALTANTE');
 console.log('📋 ROBLOX_CLIENT_ID:', process.env.ROBLOX_CLIENT_ID ? '✅' : '❌ FALTANTE');
-console.log('📋 ROBLOX_CLIENT_SECRET:', process.env.ROBLOX_CLIENT_SECRET ? '✅' : '❌ FALTANTE');
 console.log('📋 SESSION_SECRET:', process.env.SESSION_SECRET ? '✅' : '❌ FALTANTE');
 console.log('📋 DB_HOST:', process.env.DB_HOST);
 
@@ -77,7 +76,7 @@ async function ensureDiscordUserInDB(req, res, next) {
         );
       }
     } catch (err) {
-      console.error('Error asegurando usuario en BD:', err.message);
+      console.error('Error guardando usuario en BD:', err.message);
     }
   }
   next();
@@ -101,27 +100,22 @@ function requireGuest(req, res, next) {
 // RUTAS
 // ============================================
 
-// Página principal
 app.get('/', requireGuest, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Iniciar-sección (solo si no hay sesión)
 app.get('/iniciar-seccion.html', requireGuest, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'iniciar-seccion.html'));
 });
 
-// Cargando (solo si hay sesión)
 app.get('/cargando.html', requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'cargando.html'));
 });
 
-// Verificación (solo si hay sesión)
 app.get('/verificacion.html', requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'verificacion.html'));
 });
 
-// Dashboard protegido
 app.get('/dashboard', requireAuth, (req, res) => {
   if (req.session.discordUser.fully_verified !== 1) {
     return res.redirect('/verificacion.html');
@@ -181,9 +175,13 @@ app.get('/auth/discord/login', (req, res) => {
 // --- Callback Discord ---
 app.get('/auth/discord/callback', async (req, res) => {
   const code = req.query.code;
-  if (!code) return res.status(400).send('No se proporcionó código de Discord');
+  if (!code) {
+    console.error('❌ No hay código de autorización');
+    return res.status(400).send('No se proporcionó código de Discord');
+  }
 
   try {
+    console.log('🔄 Intercambiando código por token...');
     const tokenResponse = await fetch('https://discord.com/api/oauth2/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -196,17 +194,29 @@ app.get('/auth/discord/callback', async (req, res) => {
       })
     });
 
-    if (!tokenResponse.ok) throw new Error('Error obteniendo token de Discord');
+    console.log('📡 Status token:', tokenResponse.status);
+
+    if (!tokenResponse.ok) {
+      const errorText = await tokenResponse.text();
+      console.error('❌ Error token Discord:', errorText);
+      throw new Error('Error obteniendo token de Discord');
+    }
 
     const tokenData = await tokenResponse.json();
+    console.log('✅ Token obtenido');
 
     const userResponse = await fetch('https://discord.com/api/users/@me', {
       headers: { Authorization: `${tokenData.token_type} ${tokenData.access_token}` }
     });
 
-    if (!userResponse.ok) throw new Error('Error obteniendo usuario de Discord');
+    if (!userResponse.ok) {
+      const errText = await userResponse.text();
+      console.error('❌ Error usuario Discord:', errText);
+      throw new Error('Error obteniendo usuario de Discord');
+    }
 
     const user = await userResponse.json();
+    console.log('✅ Usuario:', user.global_name || user.username);
 
     req.session.discordUser = {
       id: user.id,
@@ -234,12 +244,10 @@ app.get('/auth/discord/callback', async (req, res) => {
          WHERE discord_id = ?`,
         [user.username, user.global_name, user.avatar, user.id]
       );
-      req.session.discordUser.fully_verified = existing[0].fully_verified;
-      req.session.discordUser.roblox_id = existing[0].roblox_id || null;
-      req.session.discordUser.roblox_username = existing[0].roblox_username || null;
-      req.session.discordUser.roblox_avatar = existing[0].roblox_avatar || null;
+      req.session.discordUser.fully_verified = existing[0].fully_verified === 1;
     }
 
+    console.log('🚀 Redirigiendo a /cargando.html');
     res.redirect('/cargando.html');
   } catch (err) {
     console.error('❌ Error Discord OAuth:', err.message);
