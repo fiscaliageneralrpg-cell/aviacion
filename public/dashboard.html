@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard | Latin Aviation Network</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -31,11 +30,10 @@
       overflow-x: hidden;
     }
     a { text-decoration: none; color: inherit; }
-    ul { list-style: none; }
     img { max-width: 100%; display: block; }
     .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
 
-    /* Fondo del dashboard con tu foto */
+    /* Fondo del dashboard */
     .bg-dashboard {
       position: fixed; inset: 0; z-index: -2;
       background-size: cover;
@@ -55,18 +53,18 @@
     .nav-inner {
       display: flex; justify-content: space-between; align-items: center;
     }
-    .nav-left { display: flex; align-items: center; gap: 16px; }
+    .nav-left { display: flex; align-items: center; gap: 10px; }
     .nav-right { display: flex; align-items: center; gap: 12px; }
     .logo-box {
       display: flex; align-items: center; gap: 8px;
     }
     .logo-img {
-      width: 32px;
-      height: 32px;
+      width: 34px;
+      height: 34px;
       object-fit: contain;
     }
     .logo-text {
-      font-family: 'Orbitron', monospace; font-weight: 900; font-size: 1.1rem;
+      font-family: 'Orbitron', monospace; font-weight: 900; font-size: 1.2rem;
       letter-spacing: -0.5px;
       background: linear-gradient(135deg, var(--white), var(--blue));
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
@@ -75,7 +73,7 @@
       background: transparent;
       color: var(--white-soft);
       border: 1px solid var(--border);
-      padding: 8px 16px;
+      padding: 8px 18px;
       border-radius: 50px;
       font-weight: 700;
       font-size: 0.85rem;
@@ -87,22 +85,22 @@
       color: var(--blue);
     }
 
-    /* Dashboard más largo y espacioso */
+    /* Dashboard más largo */
     .dashboard-wrap {
-      min-height: 90vh;
+      min-height: 85vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 80px 20px;
+      padding: 100px 20px;
     }
     .dashboard-card {
-      background: rgba(13, 13, 18, 0.7);
+      background: rgba(13, 13, 18, 0.75);
       backdrop-filter: blur(24px);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 70px 60px;
-      max-width: 700px;
-      box-shadow: 0 40px 90px rgba(0,0,0,0.7);
+      padding: 80px 60px;
+      max-width: 750px;
+      box-shadow: 0 40px 100px rgba(0,0,0,0.7);
       position: relative; z-index: 10;
       animation: fadeInUp 0.9s ease-out;
     }
@@ -118,7 +116,7 @@
       letter-spacing: 4px;
       text-transform: uppercase;
       color: var(--blue);
-      margin-bottom: 22px;
+      margin-bottom: 18px;
       padding: 6px 16px;
       border: 1px solid rgba(0, 102, 255, 0.3);
       border-radius: 50px;
@@ -137,21 +135,21 @@
     .dashboard .subtitle {
       color: var(--white-soft);
       font-size: 1.1rem;
-      margin-bottom: 38px;
+      margin-bottom: 40px;
     }
     .user-profile {
       display: flex;
       align-items: center;
-      gap: 26px;
-      margin-bottom: 42px;
-      padding: 28px;
-      background: rgba(255,255,255,0.03);
+      gap: 30px;
+      margin-bottom: 50px;
+      padding: 34px;
+      background: rgba(255,255,255,0.04);
       border: 1px solid var(--border);
-      border-radius: 22px;
+      border-radius: 26px;
     }
     .avatar {
-      width: 120px;
-      height: 120px;
+      width: 130px;
+      height: 130px;
       border-radius: 50%;
       border: 3px solid var(--blue);
       object-fit: cover;
@@ -163,14 +161,14 @@
     }
     .user-info .username {
       font-family: 'Orbitron', monospace;
-      font-size: 1.5rem;
+      font-size: 1.6rem;
       font-weight: 900;
       color: var(--white);
       display: block;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
     }
     .user-info .user-id {
-      font-size: 1rem;
+      font-size: 1.1rem;
       color: var(--gray);
       display: block;
     }
@@ -178,7 +176,7 @@
       display: flex;
       gap: 14px;
       justify-content: flex-start;
-      margin-top: 12px;
+      margin-top: 20px;
     }
     .btn {
       display: inline-flex; align-items: center; gap: 8px;
@@ -214,7 +212,7 @@
 
     @media (max-width: 768px) {
       .dashboard-card { padding: 45px 24px; }
-      .avatar { width: 90px; height: 90px; }
+      .avatar { width: 100px; height: 100px; }
       .logo-text { font-size: 1rem; }
     }
   </style>
@@ -226,13 +224,13 @@
   <nav>
     <div class="nav-inner container">
       <div class="nav-left">
-        <a href="/auth/logout" class="btn-logout">Cerrar sesión</a>
-      </div>
-      <div class="nav-right">
         <div class="logo-box">
           <img src="https://i.imgur.com/V47UGra.png" alt="LAN Logo" class="logo-img" onerror="this.style.display='none'">
           <div class="logo-text">LATIN AVIATION NETWORK</div>
         </div>
+      </div>
+      <div class="nav-right">
+        <button class="btn-logout" onclick="window.location.href='/auth/logout'">Cerrar sesión</button>
       </div>
     </div>
   </nav>
@@ -261,7 +259,7 @@
     <div class="container">
       <div class="footer-text">
         <span class="version">0.0.0.0.1</span>
-        <span>© 2026 Latin Aviation Network. Todos los derechos reservados.</p>
+        <span>© 2026 Latin Aviation Network. Todos los derechos reservados.</span>
       </div>
     </div>
   </footer>
