@@ -26,6 +26,15 @@
       padding: 60px 40px;
       box-shadow: 0 30px 80px rgba(0,0,0,0.7);
       backdrop-filter: blur(12px);
+      max-width: 450px;
+    }
+    .avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 3px solid #0066ff;
+      margin-bottom: 20px;
+      box-shadow: 0 0 40px rgba(0,102,255,0.5);
     }
     .welcome-text {
       font-size: clamp(1.5rem, 5vw, 2.5rem);
@@ -41,14 +50,6 @@
       color: #94a3b8;
       font-size: 1rem;
       margin-bottom: 30px;
-    }
-    .avatar {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      border: 3px solid #0066ff;
-      margin-bottom: 20px;
-      box-shadow: 0 0 40px rgba(0,102,255,0.5);
     }
     .loader {
       width: 40px;
@@ -66,6 +67,22 @@
       font-weight: 800;
       margin-top: 15px;
     }
+    .verify-now {
+      margin-top: 25px;
+      display: none;
+    }
+    .btn-verify {
+      background: linear-gradient(135deg, #0066ff, #3399ff);
+      color: #fff;
+      padding: 14px 30px;
+      border-radius: 50px;
+      font-weight: 800;
+      text-decoration: none;
+      display: inline-block;
+      box-shadow: 0 10px 30px rgba(0,102,255,0.5);
+      transition: 0.3s;
+    }
+    .btn-verify:hover { transform: translateY(-3px); filter: brightness(1.1); }
   </style>
 </head>
 <body>
@@ -73,9 +90,14 @@
   <div class="loader-card">
     <img id="avatar" class="avatar" alt="Avatar" src="https://cdn.discordapp.com/embed/avatars/0.png">
     <div class="welcome-text" id="welcome-name">Bienvenido</div>
-    <div class="sub-text">Iniciando sesión en Latin Aviation Network...</div>
+    <div class="sub-text" id="sub-text">Cargando perfil...</div>
     <div class="loader"></div>
-    <div class="countdown" id="countdown">Redirigiendo en 4 segundos...</div>
+    <div class="countdown" id="countdown">...</div>
+    
+    <div class="verify-now" id="verify-now">
+      <div style="color:#0066ff; font-weight:800; margin-bottom:10px;">Primero debes verificarte</div>
+      <a href="/verificacion.html" class="btn-verify">Ir a Verificación →</a>
+    </div>
   </div>
 
   <script>
@@ -92,20 +114,25 @@
         if (user.avatar) {
           document.getElementById('avatar').src = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`;
         }
+
+        const statusRes = await fetch('/api/user-status');
+        const status = await statusRes.json();
+
+        if (status.fully_verified) {
+          document.getElementById('sub-text').textContent = 'Accediendo al panel...';
+          document.querySelector('.loader').style.display = 'none';
+          document.getElementById('countdown').textContent = 'Redirigiendo al panel...';
+          setTimeout(() => { window.location.href = '/dashboard'; }, 2000);
+          return;
+        }
+
+        document.getElementById('sub-text').textContent = 'Debes completar la verificación para continuar.';
+        document.querySelector('.loader').style.display = 'none';
+        document.getElementById('verify-now').style.display = 'block';
       } catch (e) {
         console.error(e);
+        window.location.href = '/iniciar-seccion.html';
       }
-
-      let seconds = 4;
-      const el = document.getElementById('countdown');
-      const timer = setInterval(() => {
-        seconds--;
-        el.textContent = `Redirigiendo en ${seconds} segundos...`;
-        if (seconds <= 0) {
-          clearInterval(timer);
-          window.location.href = '/dashboard';
-        }
-      }, 1000);
     }
 
     init();
