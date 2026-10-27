@@ -10,14 +10,18 @@
     :root {
       --black: #030305;
       --card: #0d0d12;
+      --card-hover: #14141d;
       --white: #ffffff;
       --white-soft: #cbd5e1;
       --gray: #64748b;
       --blue: #0066ff;
       --blue-light: #3399ff;
+      --cyan: #00d4ff;
       --green: #00ff88;
+      --blue-glow: rgba(0, 102, 255, 0.45);
       --border: #1f2937;
-      --radius: 20px;
+      --radius: 24px;
+      --transition: 0.45s cubic-bezier(0.4, 0, 0.2, 1);
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html { scroll-behavior: smooth; }
@@ -29,6 +33,7 @@
       overflow-x: hidden;
     }
     a { text-decoration: none; color: inherit; }
+    ul { list-style: none; }
     img { max-width: 100%; display: block; }
     .container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
 
@@ -123,6 +128,11 @@
       border-radius: 20px;
       padding: 30px;
       margin-top: 30px;
+      animation: slideUp 0.6s ease-out;
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
     .avatar-discord, .avatar-roblox {
       width: 100px;
@@ -137,6 +147,13 @@
       color: var(--green);
       font-weight: 800;
       font-size: 1.1rem;
+      display: block;
+      margin-bottom: 10px;
+    }
+    .status-pending {
+      color: var(--gray);
+      font-weight: 600;
+      font-size: 1rem;
       display: block;
       margin-bottom: 10px;
     }
@@ -203,7 +220,7 @@
           <div class="progress-fill step1" id="progress-fill"></div>
         </div>
 
-        <!-- Paso 1: Discord -->
+        <!-- PASO 1: DISCORD -->
         <div id="step-1">
           <div class="discord-info">
             <img id="discord-avatar" class="avatar-discord" alt="Discord" src="https://cdn.discordapp.com/embed/avatars/0.png">
@@ -216,7 +233,7 @@
           </div>
         </div>
 
-        <!-- Paso 2: Roblox -->
+        <!-- PASO 2: ROBLOX -->
         <div id="step-2" class="hidden">
           <div class="step-header">
             <span class="step-badge">Paso 2 de 3 · Roblox</span>
@@ -236,7 +253,7 @@
           </div>
         </div>
 
-        <!-- Paso 3: Completado -->
+        <!-- PASO 3: COMPLETADO -->
         <div id="step-3" class="hidden">
           <div class="step-header">
             <span class="step-badge">Paso 3 de 3 · Completado</span>
