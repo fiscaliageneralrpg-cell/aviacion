@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Términos de Servicio | Latin Aviation Network</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -15,9 +16,13 @@
       --gray: #64748b;
       --blue: #0066ff;
       --blue-light: #3399ff;
+      --cyan: #00d4ff;
+      --blue-glow: rgba(0, 102, 255, 0.45);
       --border: #1f2937;
+      --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
     body {
       font-family: 'Inter', system-ui, sans-serif;
       background: var(--black);
@@ -27,17 +32,33 @@
     }
     a { text-decoration: none; color: inherit; }
     .container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+
+    /* Fondo animado */
     .bg {
       position: fixed; inset: 0; z-index: -2;
-      background: radial-gradient(circle at 75% 25%, rgba(0,102,255,0.12) 0%, transparent 45%),
-        radial-gradient(circle at 25% 75%, rgba(0,212,255,0.08) 0%, transparent 45%);
+      background:
+        radial-gradient(circle at 75% 25%, rgba(0,102,255,0.18) 0%, transparent 45%),
+        radial-gradient(circle at 25% 75%, rgba(0,212,255,0.12) 0%, transparent 45%),
+        radial-gradient(circle at 50% 50%, rgba(0,50,150,0.10) 0%, transparent 60%);
+      background-attachment: fixed;
+      animation: meshMove 20s ease-in-out infinite alternate;
     }
+    @keyframes meshMove {
+      0% { background-position: 0% 0%, 100% 100%, 50% 50%; }
+      100% { background-position: 100% 100%, 0% 0%, 50% 50%; }
+    }
+
     nav {
       position: sticky; top: 0; z-index: 100;
       backdrop-filter: blur(16px);
       background: rgba(3,3,5,0.85);
       border-bottom: 1px solid var(--border);
       padding: 1rem 0;
+      animation: navDrop 0.7s ease-out;
+    }
+    @keyframes navDrop {
+      from { transform: translateY(-100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
     }
     .nav-inner { display: flex; justify-content: space-between; align-items: center; }
     .logo-box { display: flex; align-items: center; gap: 10px; }
@@ -46,21 +67,85 @@
       font-family: 'Orbitron', monospace; font-weight: 900; font-size: 1.2rem;
       background: linear-gradient(135deg, var(--white), var(--blue));
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      animation: logoGlow 4s ease-in-out infinite alternate;
     }
+    @keyframes logoGlow {
+      from { filter: drop-shadow(0 0 0 rgba(0,102,255,0)); }
+      to { filter: drop-shadow(0 0 10px rgba(0,102,255,0.6)); }
+    }
+    .nav-btn {
+      color: var(--white-soft); font-size: 0.9rem;
+      border: 1px solid var(--border); padding: 8px 18px; border-radius: 50px;
+      transition: var(--transition);
+    }
+    .nav-btn:hover {
+      border-color: var(--blue); color: var(--blue);
+      transform: translateY(-2px); box-shadow: 0 0 20px rgba(0,102,255,0.3);
+    }
+
     main { padding: 70px 0; }
+
+    /* Título con entrada animada */
     h1 {
       font-family: 'Orbitron', monospace; font-size: clamp(2rem, 5vw, 2.8rem);
       font-weight: 900; margin-bottom: 10px;
       background: linear-gradient(135deg, var(--white), var(--blue));
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      opacity: 0; transform: translateY(30px);
+      animation: fadeUp 0.9s ease-out 0.2s forwards;
     }
-    .updated { color: var(--gray); font-size: 0.9rem; margin-bottom: 40px; }
-    .content { background: rgba(13,13,18,0.7); border: 1px solid var(--border); border-radius: 24px; padding: 45px; backdrop-filter: blur(20px); }
-    .content h2 { font-family: 'Orbitron', monospace; font-size: 1.3rem; color: var(--blue); margin: 35px 0 12px; }
+    .updated {
+      color: var(--gray); font-size: 0.9rem; margin-bottom: 40px;
+      opacity: 0; transform: translateY(20px);
+      animation: fadeUp 0.9s ease-out 0.4s forwards;
+    }
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Tarjeta del contenido */
+    .content {
+      background: rgba(13,13,18,0.7); border: 1px solid var(--border);
+      border-radius: 24px; padding: 45px; backdrop-filter: blur(20px);
+      box-shadow: 0 30px 70px rgba(0,0,0,0.5);
+      opacity: 0; transform: translateY(40px);
+      animation: fadeUp 1s ease-out 0.55s forwards;
+      position: relative; overflow: hidden;
+    }
+    .content::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      border-radius: inherit; padding: 1px;
+      background: linear-gradient(135deg, var(--blue), var(--cyan));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: destination-out;
+      mask-composite: exclude;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    /* Encabezados de sección animados al hacer scroll */
+    .content h2 {
+      font-family: 'Orbitron', monospace; font-size: 1.3rem; color: var(--blue);
+      margin: 35px 0 12px;
+      opacity: 0; transform: translateX(-30px);
+      transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+    }
     .content h2:first-child { margin-top: 0; }
-    .content p { color: var(--white-soft); margin-bottom: 14px; }
-    .content ul { color: var(--white-soft); margin: 0 0 14px 20px; }
+    .content h2.active { opacity: 1; transform: translateX(0); }
+    .content h2:hover { text-shadow: 0 0 20px rgba(0,102,255,0.6); }
+
+    .content p, .content ul {
+      color: var(--white-soft); margin-bottom: 14px;
+      opacity: 0; transform: translateY(20px);
+      transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+    }
+    .content ul { margin: 0 0 14px 20px; }
     .content li { margin-bottom: 6px; }
+    .content p.active, .content ul.active { opacity: 1; transform: translateY(0); }
+
+    .content a { color: var(--blue); transition: var(--transition); }
+    .content a:hover { text-shadow: 0 0 15px var(--blue-glow); }
+
     footer {
       border-top: 1px solid var(--border); background: var(--black);
       padding: 20px 0; text-align: center;
@@ -70,6 +155,16 @@
       background: var(--card); border: 1px solid var(--border);
       padding: 3px 10px; border-radius: 6px;
       font-family: 'Orbitron', monospace; font-size: 0.7rem; color: var(--blue);
+      animation: versionPulse 3s ease-in-out infinite;
+    }
+    @keyframes versionPulse {
+      0%, 100% { box-shadow: 0 0 0 rgba(0,102,255,0); }
+      50% { box-shadow: 0 0 15px rgba(0,102,255,0.5); }
+    }
+
+    @media (max-width: 768px) {
+      .content { padding: 30px 22px; }
+      .logo-text { font-size: 1rem; }
     }
   </style>
 </head>
@@ -81,7 +176,7 @@
         <img src="https://i.imgur.com/V47UGra.png" alt="LAN Logo" class="logo-img" onerror="this.style.display='none'">
         <div class="logo-text">LATIN AVIATION NETWORK</div>
       </a>
-      <a href="/" style="color:var(--white-soft); font-size:0.9rem; border:1px solid var(--border); padding:8px 18px; border-radius:50px;">Inicio</a>
+      <a href="/" class="nav-btn">Inicio</a>
     </div>
   </nav>
 
@@ -125,15 +220,15 @@
       <h2>8. Servicios externos</h2>
       <p>El sitio se integra con Discord y Roblox. Estos servicios tienen sus propios términos y políticas, que puedes consultar en:</p>
       <ul>
-        <li><a href="https://discord.com/terms" style="color:var(--blue);">Términos de Discord</a></li>
-        <li><a href="https://en.help.roblox.com/hc/en-us/articles/115004647846-Roblox-Terms-of-Use" style="color:var(--blue);">Términos de Roblox</a></li>
+        <li><a href="https://discord.com/terms" target="_blank" rel="noopener">Términos de Discord</a></li>
+        <li><a href="https://en.help.roblox.com/hc/en-us/articles/115004647846-Roblox-Terms-of-Use" target="_blank" rel="noopener">Términos de Roblox</a></li>
       </ul>
 
       <h2>9. Cambios en los términos</h2>
       <p>Podemos actualizar estos términos en cualquier momento. Los cambios se publicarán en esta misma página.</p>
 
       <h2>10. Contacto</h2>
-      <p>Para cualquier consulta, únete a nuestro servidor de Discord: <a href="https://discord.gg/X6XwtZhWY8" style="color:var(--blue);">discord.gg/X6XwtZhWY8</a></p>
+      <p>Para cualquier consulta, únete a nuestro servidor de Discord: <a href="https://discord.gg/X6XwtZhWY8" target="_blank" rel="noopener">discord.gg/X6XwtZhWY8</a></p>
     </div>
   </main>
 
@@ -145,5 +240,22 @@
       </div>
     </div>
   </footer>
+
+  <script>
+    /* Aparición progresiva de secciones al hacer scroll */
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('active');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+
+    document.querySelectorAll('.content h2, .content p, .content ul').forEach((el, i) => {
+      el.style.transitionDelay = (i % 4) * 0.08 + 's';
+      observer.observe(el);
+    });
+  </script>
 </body>
 </html>
