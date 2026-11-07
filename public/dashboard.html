@@ -18,7 +18,6 @@
       --cyan: #00d4ff;
       --blue-glow: rgba(0, 102, 255, 0.45);
       --border: #1f2937;
-      --radius: 24px;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html { scroll-behavior: smooth; }
@@ -26,12 +25,16 @@
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
       background: var(--black);
       color: var(--white);
-      line-height: 1.7;
+      line-height: 1.5;
       overflow-x: hidden;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
     }
     a { text-decoration: none; color: inherit; }
     img { max-width: 100%; display: block; }
-    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; width: 100%; }
 
     .bg-dashboard {
       position: fixed; inset: 0; z-index: -2;
@@ -41,37 +44,33 @@
         url("https://i.imgur.com/rjEhr3O.jpeg");
     }
 
-    /* ===== BARRA SUPERIOR ===== */
+    /* ===== BARRA SUPERIOR (compacta) ===== */
     nav {
       position: relative;
       z-index: 100;
       overflow: hidden;
       background:
-        radial-gradient(700px 260px at 8% 0%, rgba(0,102,255,0.30), transparent 70%),
-        radial-gradient(500px 220px at 100% 100%, rgba(0,212,255,0.14), transparent 70%),
+        radial-gradient(600px 200px at 8% 0%, rgba(0,102,255,0.28), transparent 70%),
+        radial-gradient(400px 160px at 100% 100%, rgba(0,212,255,0.12), transparent 70%),
         linear-gradient(180deg, rgba(8,10,18,0.96), rgba(3,3,5,0.94));
       backdrop-filter: blur(16px);
       border-bottom: 1px solid rgba(0,102,255,0.35);
-      border-radius: 0 0 36px 36px;
-      box-shadow: 0 24px 60px rgba(0,0,0,0.65), 0 10px 50px rgba(0,102,255,0.18);
-      padding: 38px 0 30px;
+      border-radius: 0 0 28px 28px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.6), 0 8px 36px rgba(0,102,255,0.15);
+      padding: 20px 0 18px;
     }
-    /* anillos de radar decorativos */
     nav::before {
       content: "";
       position: absolute;
-      right: -140px; top: -160px;
-      width: 420px; height: 420px;
+      right: -120px; top: -150px;
+      width: 320px; height: 320px;
       border-radius: 50%;
       border: 1px solid rgba(0,212,255,0.14);
       box-shadow:
-        0 0 0 50px rgba(0,102,255,0.035),
-        0 0 0 51px rgba(0,212,255,0.10),
-        0 0 0 110px rgba(0,102,255,0.025),
-        0 0 0 111px rgba(0,212,255,0.07);
+        0 0 0 40px rgba(0,102,255,0.03),
+        0 0 0 41px rgba(0,212,255,0.09);
       pointer-events: none;
     }
-    /* línea de luz inferior */
     nav::after {
       content: "";
       position: absolute; left: 8%; right: 8%; bottom: 0; height: 2px;
@@ -83,79 +82,74 @@
       z-index: 2;
       display: flex;
       flex-direction: column;
-      gap: 26px;
+      gap: 14px;
     }
     .nav-top {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 24px;
+      gap: 16px;
     }
 
-    /* Izquierda: perfil */
+    /* Izquierda */
     .nav-profile {
       display: flex;
       align-items: center;
-      gap: 26px;
+      gap: 18px;
       min-width: 0;
+      flex: 1;
     }
     .avatar-wrap {
       position: relative;
       flex-shrink: 0;
-      padding: 5px;
+      padding: 4px;
       border-radius: 50%;
       background: conic-gradient(from 160deg, var(--blue), var(--cyan), var(--blue-light), var(--blue));
-      box-shadow: 0 0 45px var(--blue-glow);
+      box-shadow: 0 0 30px var(--blue-glow);
     }
     .nav-avatar {
-      width: 112px;
-      height: 112px;
+      width: 76px;
+      height: 76px;
       border-radius: 50%;
-      border: 4px solid var(--black);
+      border: 3px solid var(--black);
       object-fit: cover;
       background: var(--card);
     }
     .status-dot {
       position: absolute;
-      right: 8px; bottom: 8px;
-      width: 20px; height: 20px;
+      right: 4px; bottom: 4px;
+      width: 15px; height: 15px;
       border-radius: 50%;
       background: #22c55e;
-      border: 4px solid var(--black);
-      box-shadow: 0 0 12px rgba(34,197,94,0.8);
+      border: 3px solid var(--black);
+      box-shadow: 0 0 10px rgba(34,197,94,0.8);
     }
     .nav-info { min-width: 0; }
     .nav-brand {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       font-family: 'Orbitron', monospace;
-      font-size: 0.62rem;
+      font-size: 0.56rem;
       font-weight: 900;
-      letter-spacing: 3px;
+      letter-spacing: 2.5px;
       text-transform: uppercase;
       color: var(--cyan);
-      margin-bottom: 8px;
-      padding: 5px 14px;
+      margin-bottom: 4px;
+      padding: 3px 11px;
       border: 1px solid rgba(0,212,255,0.28);
       border-radius: 50px;
       background: rgba(0,212,255,0.07);
+      max-width: 100%;
     }
-    .nav-brand svg { width: 13px; height: 13px; fill: currentColor; }
-    .nav-hello {
-      display: block;
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: var(--white-soft);
-      line-height: 1.2;
-    }
+    .nav-brand svg { width: 11px; height: 11px; fill: currentColor; flex-shrink: 0; }
     .nav-welcome {
       font-family: 'Orbitron', monospace;
-      font-size: clamp(1.4rem, 3.4vw, 2.3rem);
+      font-size: clamp(1.05rem, 2.8vw, 1.6rem);
       font-weight: 900;
-      line-height: 1.15;
-      letter-spacing: -0.5px;
-      margin: 2px 0 10px;
+      line-height: 1.2;
+      letter-spacing: -0.3px;
+      margin-bottom: 6px;
       background: linear-gradient(135deg, var(--white) 30%, var(--cyan));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -164,164 +158,73 @@
     .nav-id {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      font-size: 0.85rem;
+      gap: 7px;
+      max-width: 100%;
+      font-size: 0.78rem;
       font-weight: 600;
       color: var(--white-soft);
       background: rgba(88,101,242,0.14);
       border: 1px solid rgba(88,101,242,0.45);
-      padding: 4px 14px 4px 10px;
-      border-radius: 10px;
+      padding: 2px 12px 2px 8px;
+      border-radius: 9px;
     }
-    .nav-id svg { width: 16px; height: 16px; fill: #8b94ff; flex-shrink: 0; }
+    .nav-id svg { width: 14px; height: 14px; fill: #8b94ff; flex-shrink: 0; }
+    .nav-id span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-    /* Derecha: cerrar sesión */
+    /* Derecha */
     .logout-link {
       flex-shrink: 0;
       display: flex;
-      flex-direction: column;
       align-items: center;
-      gap: 6px;
-      padding: 14px 18px;
-      border-radius: 22px;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 18px;
       background: rgba(255,255,255,0.04);
       border: 1px solid var(--border);
       transition: 0.3s;
     }
     .logout-link img {
-      width: 60px;
-      height: 60px;
+      width: 46px;
+      height: 46px;
       object-fit: contain;
-      filter: drop-shadow(0 0 12px var(--blue-glow));
+      filter: drop-shadow(0 0 10px var(--blue-glow));
     }
-    .logout-link span {
-      font-size: 0.7rem;
+    .logout-link .logout-text {
+      font-size: 0.72rem;
       font-weight: 800;
-      letter-spacing: 1px;
+      letter-spacing: 0.5px;
       color: var(--white-soft);
     }
     .logout-link:hover {
-      transform: translateY(-3px);
+      transform: translateY(-2px);
       border-color: var(--blue);
       background: rgba(0,102,255,0.12);
-      box-shadow: 0 10px 30px var(--blue-glow);
+      box-shadow: 0 8px 24px var(--blue-glow);
     }
 
-    /* Separador con avión */
-    .nav-divider {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-    .nav-divider::before, .nav-divider::after {
-      content: "";
-      flex: 1;
-      height: 1px;
-      background: repeating-linear-gradient(90deg, rgba(0,212,255,0.4) 0 6px, transparent 6px 12px);
-    }
-    .nav-divider svg {
-      width: 20px; height: 20px;
-      fill: var(--cyan);
-      transform: rotate(90deg);
-      filter: drop-shadow(0 0 6px rgba(0,212,255,0.7));
-    }
-
-    /* Abajo: botón Roblox */
+    /* Abajo: Roblox */
     .nav-bottom { display: flex; }
     .btn-roblox {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
-      width: 100%;
+      gap: 9px;
       background: linear-gradient(135deg, var(--blue), var(--blue-light));
       color: var(--white);
-      padding: 15px 28px;
-      border-radius: 18px;
+      padding: 10px 24px;
+      border-radius: 14px;
       font-family: inherit;
       font-weight: 800;
-      font-size: 1rem;
+      font-size: 0.88rem;
       border: 1px solid rgba(255,255,255,0.18);
       cursor: pointer;
       transition: 0.3s;
-      box-shadow: 0 10px 30px var(--blue-glow);
+      box-shadow: 0 8px 22px var(--blue-glow);
     }
-    .btn-roblox svg { width: 20px; height: 20px; fill: currentColor; }
-    .btn-roblox:hover {
-      transform: translateY(-2px);
-      filter: brightness(1.12);
-    }
+    .btn-roblox svg { width: 17px; height: 17px; fill: currentColor; }
+    .btn-roblox:hover { transform: translateY(-2px); filter: brightness(1.12); }
     a:focus-visible, button:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
-
-    /* ===== CONTENIDO ===== */
-    .dashboard-wrap {
-      min-height: 60vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 70px 20px;
-    }
-    .dashboard-card {
-      background: rgba(13, 13, 18, 0.75);
-      backdrop-filter: blur(24px);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 70px 60px;
-      max-width: 750px;
-      box-shadow: 0 40px 100px rgba(0,0,0,0.7);
-      position: relative; z-index: 10;
-      animation: fadeInUp 0.9s ease-out;
-    }
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(40px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .dashboard-eyebrow {
-      display: inline-block;
-      font-family: 'Orbitron', monospace;
-      font-size: 0.7rem;
-      font-weight: 900;
-      letter-spacing: 4px;
-      text-transform: uppercase;
-      color: var(--blue);
-      margin-bottom: 18px;
-      padding: 6px 16px;
-      border: 1px solid rgba(0, 102, 255, 0.3);
-      border-radius: 50px;
-      background: rgba(0, 102, 255, 0.08);
-    }
-    .dashboard-card h2 {
-      font-family: 'Orbitron', monospace;
-      font-size: clamp(2rem, 5vw, 3rem);
-      font-weight: 900;
-      margin-bottom: 10px;
-      letter-spacing: -1px;
-      background: linear-gradient(135deg, var(--white), var(--blue));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .dashboard-card .subtitle {
-      color: var(--white-soft);
-      font-size: 1.1rem;
-      margin-bottom: 40px;
-    }
-    .user-actions {
-      display: flex;
-      gap: 14px;
-      justify-content: flex-start;
-      margin-top: 20px;
-    }
-    .btn {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 14px 28px; border-radius: 50px;
-      font-weight: 800; font-size: 0.9rem;
-      transition: 0.3s; border: none; cursor: pointer;
-    }
-    .btn-ghost {
-      background: transparent; color: var(--white-soft);
-      border: 1px solid var(--border);
-    }
-    .btn-ghost:hover { border-color: var(--blue); color: var(--blue); transform: translateY(-2px); }
 
     /* Modal Roblox */
     .modal-overlay {
@@ -331,6 +234,7 @@
       display: none;
       align-items: center;
       justify-content: center;
+      padding: 16px;
     }
     .modal-overlay.active { display: flex; }
     .modal-card {
@@ -339,7 +243,7 @@
       border-radius: 24px;
       padding: 40px;
       max-width: 400px;
-      width: 90%;
+      width: 100%;
       text-align: center;
       box-shadow: 0 30px 60px rgba(0,0,0,0.8);
     }
@@ -355,11 +259,9 @@
       font-size: 1.5rem;
       margin-bottom: 8px;
       color: var(--white);
+      overflow-wrap: anywhere;
     }
-    .modal-card p {
-      color: var(--gray);
-      margin-bottom: 25px;
-    }
+    .modal-card p { color: var(--gray); margin-bottom: 25px; }
     .modal-close {
       background: var(--blue);
       color: #fff;
@@ -371,7 +273,9 @@
     }
     .modal-close:hover { background: var(--blue-light); }
 
+    /* Footer siempre abajo */
     footer {
+      margin-top: auto;
       border-top: 1px solid var(--border);
       background: var(--black);
       padding: 20px 0;
@@ -380,6 +284,11 @@
     .footer-text {
       color: var(--gray);
       font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px 12px;
     }
     .version {
       background: var(--card);
@@ -391,20 +300,32 @@
       color: var(--blue);
     }
 
+    /* ===== RESPONSIVE ===== */
     @media (max-width: 768px) {
-      nav { padding: 28px 0 24px; border-radius: 0 0 28px 28px; }
-      .nav-top { gap: 12px; }
-      .nav-profile { gap: 16px; }
-      .nav-avatar { width: 76px; height: 76px; }
-      .status-dot { width: 15px; height: 15px; right: 4px; bottom: 4px; border-width: 3px; }
-      .nav-brand { font-size: 0.5rem; letter-spacing: 2px; padding: 4px 10px; }
-      .logout-link { padding: 10px 12px; }
-      .logout-link img { width: 40px; height: 40px; }
-      .logout-link span { display: none; }
-      .dashboard-card { padding: 45px 24px; }
+      .container { padding: 0 16px; }
+      nav { padding: 16px 0 14px; border-radius: 0 0 22px 22px; }
+      .nav-profile { gap: 14px; }
+      .nav-avatar { width: 64px; height: 64px; }
+      .status-dot { width: 13px; height: 13px; }
+      .logout-link { padding: 8px 12px; }
+      .logout-link img { width: 38px; height: 38px; }
+      .logout-link .logout-text { display: none; }
+    }
+    @media (max-width: 480px) {
+      .nav-inner { gap: 12px; }
+      .nav-profile { gap: 12px; }
+      .nav-avatar { width: 54px; height: 54px; border-width: 2px; }
+      .nav-brand { font-size: 0.48rem; letter-spacing: 1.5px; padding: 2px 8px; }
+      .nav-id { font-size: 0.7rem; }
+      .logout-link { padding: 6px 9px; border-radius: 14px; }
+      .logout-link img { width: 32px; height: 32px; }
+      .nav-bottom .btn-roblox { width: 100%; }
+      .modal-card { padding: 28px 20px; }
+    }
+    @media (max-width: 340px) {
+      .nav-brand { display: none; }
     }
     @media (prefers-reduced-motion: reduce) {
-      .dashboard-card { animation: none; }
       * { transition: none !important; }
     }
   </style>
@@ -428,10 +349,9 @@
               <svg viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>
               Latin Aviation Network
             </span>
-            <span class="nav-hello">Bienvenido</span>
-            <h1 class="nav-welcome" id="welcome-name">Cargando...</h1>
+            <h1 class="nav-welcome" id="welcome-name">Bienvenido</h1>
             <span class="nav-id">
-              <svg viewBox="0 0 24 24"><path d="M20.3 4.4A19.8 19.8 0 0 0 15.4 3l-.2.4a14 14 0 0 1 4.2 2.1 15.5 15.5 0 0 0-14.8 0A14 14 0 0 1 8.8 3.4L8.6 3a19.8 19.8 0 0 0-4.9 1.4C.6 9 -.3 13.5.1 18a19.9 19.9 0 0 0 6 3l1.3-2.1a12.9 12.9 0 0 1-2-1l.5-.4a14.2 14.2 0 0 0 12.2 0l.5.4a12.9 12.9 0 0 1-2 1l1.3 2.1a19.9 19.9 0 0 0 6-3c.5-5.200-.8-9.700-3.600-13.600zM8.500 15.300c-1.200 0-2.100-1.100-2.100-2.400s.9-2.400 2.100-2.400 2.100 1.100 2.100 2.400-.9 2.400-2.100 2.400zm7 0c-1.200 0-2.100-1.100-2.100-2.400s.9-2.400 2.100-2.400 2.100 1.100 2.100 2.400-.9 2.400-2.100 2.400z"/></svg>
+              <svg viewBox="0 0 24 24"><path d="M20.3 4.4A19.8 19.8 0 0 0 15.4 3l-.2.4a14 14 0 0 1 4.2 2.1 15.5 15.5 0 0 0-14.8 0A14 14 0 0 1 8.8 3.4L8.6 3a19.8 19.8 0 0 0-4.9 1.4C.6 9-.3 13.5.1 18a19.9 19.9 0 0 0 6 3l1.3-2.1a12.9 12.9 0 0 1-2-1l.5-.4a14.2 14.2 0 0 0 12.2 0l.5.4a12.9 12.9 0 0 1-2 1l1.3 2.1a19.9 19.9 0 0 0 6-3c.5-5.2-.8-9.7-3.6-13.6zM8.5 15.3c-1.200 0-2.100-1.100-2.100-2.400s.9-2.400 2.100-2.400 2.100 1.100 2.100 2.400-.9 2.400-2.100 2.400zm7 0c-1.200 0-2.100-1.100-2.100-2.400s.9-2.400 2.100-2.400 2.100 1.100 2.100 2.400-.9 2.400-2.100 2.400z"/></svg>
               <span id="user-id">ID Discord: —</span>
             </span>
           </div>
@@ -440,39 +360,21 @@
         <!-- DERECHA: cerrar sesión -->
         <a href="/auth/logout" class="logout-link" title="Cerrar sesión">
           <img src="https://i.pinimg.com/originals/ab/23/a5/ab23a5baec3591af66206c2c14adbba8.png" alt="Cerrar sesión"
-               onerror="this.style.display='none'; this.parentElement.querySelector('.logout-fallback').style.display='inline-block'">
-          <span class="logout-fallback" style="display:none">Salir</span>
-          <span>Cerrar sesión</span>
+               onerror="this.style.display='none'; this.parentElement.querySelector('.logout-text').style.display='inline'">
+          <span class="logout-text">Cerrar sesión</span>
         </a>
-      </div>
-
-      <div class="nav-divider" aria-hidden="true">
-        <svg viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>
       </div>
 
       <!-- ABAJO: cuenta de Roblox -->
       <div class="nav-bottom">
         <button class="btn-roblox" id="btn-roblox">
-          <svg viewBox="0 0 24 24"><path d="M5.2 0 0 18.800 18.800 24 24 5.200 5.200 0zm8.600 15.100-4.900-1.300 1.300-4.900 4.900 1.300-1.300 4.900z"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M5.2 0 0 18.8 18.8 24 24 5.2 5.2 0zm8.6 15.1-4.9-1.3 1.3-4.9 4.9 1.3-1.3 4.9z"/></svg>
           Cuenta de Roblox
         </button>
       </div>
 
     </div>
   </nav>
-
-  <main class="dashboard-wrap">
-    <div class="container">
-      <div class="dashboard-card">
-        <span class="dashboard-eyebrow">Panel de usuario</span>
-        <h2>Dashboard</h2>
-        <p class="subtitle" id="welcome-sub">Sesión iniciada correctamente con Discord</p>
-        <div class="user-actions">
-          <a href="/" class="btn btn-ghost">Volver al inicio</a>
-        </div>
-      </div>
-    </div>
-  </main>
 
   <footer>
     <div class="container">
@@ -509,7 +411,7 @@
         }
         const user = await res.json();
         const name = user.global_name || user.username;
-        document.getElementById('welcome-name').textContent = name;
+        document.getElementById('welcome-name').textContent = 'Bienvenido, ' + name;
         document.getElementById('user-id').textContent = 'ID Discord: ' + user.id;
         if (user.avatar) {
           document.getElementById('user-avatar').src = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`;
