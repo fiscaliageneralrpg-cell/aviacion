@@ -3,139 +3,311 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cargando | Latin Aviation Network</title>
+  <title>Bienvenido | Latin Aviation Network</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --black: #030305;
+      --card: #0d0d12;
+      --white: #ffffff;
+      --white-soft: #cbd5e1;
+      --gray: #64748b;
+      --blue: #0066ff;
+      --blue-light: #3399ff;
+      --cyan: #00d4ff;
+      --green: #00ff88;
+      --blue-glow: rgba(0, 102, 255, 0.45);
+      --border: #1f2937;
+      --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: 'Orbitron', monospace;
-      background: #000;
-      color: #fff;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--black);
+      color: var(--white);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    a { text-decoration: none; color: inherit; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; width: 100%; }
+
+    .bg-loading {
+      position: fixed; inset: 0; z-index: -2;
+      background-size: cover; background-position: center;
+      background-image: linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.85)),
+        url("https://i.imgur.com/tnbKq4X.png");
+      animation: bgZoom 20s ease-in-out infinite alternate;
+    }
+    @keyframes bgZoom { from { transform: scale(1); } to { transform: scale(1.1); } }
+    .bg-glow {
+      position: fixed; inset: 0; z-index: -1;
+      background:
+        radial-gradient(circle at 30% 40%, rgba(0,102,255,0.2) 0%, transparent 45%),
+        radial-gradient(circle at 70% 60%, rgba(0,212,255,0.14) 0%, transparent 45%);
+      animation: meshMove 15s ease-in-out infinite alternate;
+    }
+    @keyframes meshMove {
+      0% { background-position: 0% 0%; }
+      100% { background-position: 100% 100%; }
+    }
+
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      backdrop-filter: blur(16px);
+      background: rgba(3,3,5,0.85);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 0;
+    }
+    .nav-inner { display: flex; justify-content: space-between; align-items: center; }
+    .logo-box { display: flex; align-items: center; gap: 10px; }
+    .logo-img { width: 34px; height: 34px; object-fit: contain; }
+    .logo-text {
+      font-family: 'Orbitron', monospace; font-weight: 900; font-size: 1.2rem;
+      background: linear-gradient(135deg, var(--white), var(--blue));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      animation: logoGlow 4s ease-in-out infinite alternate;
+    }
+    @keyframes logoGlow {
+      from { filter: drop-shadow(0 0 0 rgba(0,102,255,0)); }
+      to { filter: drop-shadow(0 0 10px rgba(0,102,255,0.6)); }
+    }
+
+    .loading-wrap {
+      flex: 1;
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: 100vh;
-      overflow: hidden;
-    }
-    .loader-card {
+      padding: 40px 20px;
       text-align: center;
-      background: rgba(13, 13, 18, 0.85);
-      border: 1px solid #1f2937;
-      border-radius: 24px;
-      padding: 60px 40px;
-      box-shadow: 0 30px 80px rgba(0,0,0,0.7);
-      backdrop-filter: blur(12px);
-      max-width: 450px;
     }
-    .avatar {
-      width: 80px;
-      height: 80px;
+    .loading-card {
+      background: rgba(13,13,18,0.72);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 60px 50px;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 40px 90px rgba(0,0,0,0.7);
+      position: relative; overflow: hidden;
+      opacity: 0; transform: translateY(40px);
+      animation: fadeUp 0.9s ease-out 0.2s forwards;
+    }
+    .loading-card::before {
+      content: ''; position: absolute; inset: 0;
+      border-radius: inherit; padding: 1px;
+      background: linear-gradient(135deg, var(--blue), var(--cyan));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: destination-out;
+      mask-composite: exclude;
+      opacity: 0.5; pointer-events: none;
+    }
+    @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+
+    /* Spinner */
+    .spinner {
+      width: 90px; height: 90px;
+      margin: 0 auto 30px;
       border-radius: 50%;
-      border: 3px solid #0066ff;
-      margin-bottom: 20px;
-      box-shadow: 0 0 40px rgba(0,102,255,0.5);
+      border: 4px solid rgba(0,102,255,0.15);
+      border-top-color: var(--blue);
+      border-right-color: var(--cyan);
+      animation: spin 0.9s linear infinite;
+      position: relative;
     }
-    .welcome-text {
-      font-size: clamp(1.5rem, 5vw, 2.5rem);
-      font-weight: 900;
-      color: #fff;
-      margin-bottom: 12px;
-      letter-spacing: -1px;
-      background: linear-gradient(135deg, #fff, #0066ff);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .sub-text {
-      color: #94a3b8;
-      font-size: 1rem;
-      margin-bottom: 30px;
-    }
-    .loader {
-      width: 40px;
-      height: 40px;
-      border: 3px solid rgba(0,102,255,0.3);
-      border-top: 3px solid #0066ff;
+    .spinner::after {
+      content: '';
+      position: absolute; inset: -14px;
       border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin: 20px auto;
+      border: 2px solid transparent;
+      border-bottom-color: rgba(0,212,255,0.5);
+      animation: spin 1.6s linear infinite reverse;
     }
-    @keyframes spin { 100% { transform: rotate(360deg); } }
-    .countdown {
-      color: #0066ff;
-      font-size: 1.2rem;
-      font-weight: 800;
-      margin-top: 15px;
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-card h1 {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(1.6rem, 5vw, 2.2rem);
+      font-weight: 900; margin-bottom: 10px;
+      background: linear-gradient(135deg, var(--white), var(--blue));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
-    .verify-now {
-      margin-top: 25px;
-      display: none;
+    .loading-card p {
+      color: var(--white-soft);
+      margin-bottom: 26px;
     }
-    .btn-verify {
-      background: linear-gradient(135deg, #0066ff, #3399ff);
-      color: #fff;
-      padding: 14px 30px;
-      border-radius: 50px;
-      font-weight: 800;
-      text-decoration: none;
-      display: inline-block;
-      box-shadow: 0 10px 30px rgba(0,102,255,0.5);
-      transition: 0.3s;
+    .progress-track {
+      width: 100%; height: 6px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 10px;
     }
-    .btn-verify:hover { transform: translateY(-3px); filter: brightness(1.1); }
+    .progress-fill {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, var(--blue), var(--cyan));
+      border-radius: 3px;
+      animation: fillBar 4s linear forwards;
+    }
+    @keyframes fillBar { to { width: 100%; } }
+    .progress-label {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.7rem; letter-spacing: 3px;
+      color: var(--gray); text-transform: uppercase;
+    }
+
+    .actions { margin-top: 30px; display: none; }
+    .actions.show { display: block; animation: fadeUp 0.6s ease-out forwards; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+      padding: 15px 32px; border-radius: 50px;
+      font-weight: 800; font-size: 0.95rem;
+      transition: var(--transition); border: none; cursor: pointer;
+      width: 100%;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--blue), var(--blue-light));
+      color: var(--white);
+      box-shadow: 0 12px 30px var(--blue-glow);
+    }
+    .btn-primary:hover { transform: translateY(-3px); filter: brightness(1.12); box-shadow: 0 20px 40px rgba(0,102,255,0.6); }
+    .btn-success {
+      background: linear-gradient(135deg, var(--green), #00cc6a);
+      color: #000;
+      box-shadow: 0 10px 30px rgba(0,255,136,0.35);
+    }
+    .btn-success:hover { transform: translateY(-3px); filter: brightness(1.1); }
+    .btn + .btn { margin-top: 12px; }
+    .btn-ghost {
+      background: transparent; color: var(--white-soft);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { border-color: var(--blue); color: var(--blue); }
+
+    footer {
+      border-top: 1px solid var(--border);
+      background: var(--black);
+      padding: 18px 0;
+      text-align: center;
+    }
+    .footer-text { color: var(--gray); font-size: 0.8rem; }
+    .version {
+      background: var(--card); border: 1px solid var(--border);
+      padding: 3px 10px; border-radius: 6px;
+      font-family: 'Orbitron', monospace; font-size: 0.7rem; color: var(--blue);
+    }
+
+    @media (max-width: 768px) {
+      .loading-card { padding: 40px 26px; }
+      .logo-text { font-size: 1rem; }
+    }
   </style>
 </head>
 <body>
+  <div class="bg-loading"></div>
+  <div class="bg-glow"></div>
 
-  <div class="loader-card">
-    <img id="avatar" class="avatar" alt="Avatar" src="https://cdn.discordapp.com/embed/avatars/0.png">
-    <div class="welcome-text" id="welcome-name">Bienvenido</div>
-    <div class="sub-text" id="sub-text">Cargando perfil...</div>
-    <div class="loader"></div>
-    <div class="countdown" id="countdown">...</div>
-    
-    <div class="verify-now" id="verify-now">
-      <div style="color:#0066ff; font-weight:800; margin-bottom:10px;">Primero debes verificarte</div>
-      <a href="/verificacion.html" class="btn-verify">Ir a Verificación →</a>
+  <nav>
+    <div class="nav-inner container">
+      <a href="/" class="logo-box">
+        <img src="https://i.imgur.com/V47UGra.png" alt="LAN Logo" class="logo-img" onerror="this.style.display='none'">
+        <div class="logo-text">LATIN AVIATION NETWORK</div>
+      </a>
     </div>
-  </div>
+  </nav>
+
+  <main class="loading-wrap">
+    <div class="loading-card">
+      <div class="spinner"></div>
+      <h1 id="welcome-title">Bienvenido</h1>
+      <p id="welcome-sub">Estamos preparando tu panel de usuario…</p>
+
+      <div class="progress-track">
+        <div class="progress-fill"></div>
+      </div>
+      <div class="progress-label">Cargando…</div>
+
+      <div class="actions" id="actions"></div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-text">
+        <span class="version">0.0.0.0.1</span>
+        <span> © 2026 Latin Aviation Network.</span>
+      </div>
+    </div>
+  </footer>
 
   <script>
-    async function init() {
+    let verified = false;
+    let userName = 'usuario';
+
+    async function loadMe() {
       try {
         const res = await fetch('/api/me');
-        if (res.status === 401) {
-          window.location.href = '/iniciar-seccion.html';
-          return;
-        }
+        if (res.status === 401) { window.location.replace('/iniciar-seccion.html'); return; }
         const user = await res.json();
-        const name = user.global_name || user.username;
-        document.getElementById('welcome-name').textContent = 'Bienvenido, ' + name;
-        if (user.avatar) {
-          document.getElementById('avatar').src = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`;
-        }
-
-        const statusRes = await fetch('/api/user-status');
-        const status = await statusRes.json();
-
-        if (status.fully_verified) {
-          document.getElementById('sub-text').textContent = 'Accediendo al panel...';
-          document.querySelector('.loader').style.display = 'none';
-          document.getElementById('countdown').textContent = 'Redirigiendo al panel...';
-          setTimeout(() => { window.location.href = '/dashboard'; }, 2000);
-          return;
-        }
-
-        document.getElementById('sub-text').textContent = 'Debes completar la verificación para continuar.';
-        document.querySelector('.loader').style.display = 'none';
-        document.getElementById('verify-now').style.display = 'block';
+        userName = user.global_name || user.username || 'usuario';
+        document.getElementById('welcome-title').textContent = 'Bienvenido, ' + userName;
       } catch (e) {
         console.error(e);
-        window.location.href = '/iniciar-seccion.html';
       }
     }
 
-    init();
+    async function checkStatus() {
+      try {
+        const res = await fetch('/api/user-status');
+        const data = await res.json();
+        verified = !!data.fully_verified;
+      } catch (e) {
+        console.error(e);
+        verified = false;
+      }
+    }
+
+    function showActions() {
+      const actions = document.getElementById('actions');
+      actions.innerHTML = '';
+
+      if (verified) {
+        document.getElementById('welcome-sub').textContent = 'Tu cuenta está verificada. Ya puedes acceder a tu panel.';
+        const btn = document.createElement('a');
+        btn.href = '/dashboard';
+        btn.className = 'btn btn-success';
+        btn.textContent = 'Ir al Dashboard →';
+        actions.appendChild(btn);
+
+        // Si ya está verificado, entra automáticamente
+        setTimeout(() => { window.location.replace('/dashboard'); }, 1200);
+      } else {
+        document.getElementById('welcome-sub').textContent = 'Tu cuenta aún no está verificada.';
+        const btn = document.createElement('a');
+        btn.href = '/verificacion.html';
+        btn.className = 'btn btn-primary';
+        btn.textContent = 'Primero debes verificarte →';
+        actions.appendChild(btn);
+
+        const btn2 = document.createElement('a');
+        btn2.href = '/auth/logout';
+        btn2.className = 'btn btn-ghost';
+        btn2.textContent = 'Cerrar sesión';
+        actions.appendChild(btn2);
+      }
+      actions.classList.add('show');
+    }
+
+    (async () => {
+      await loadMe();
+      await checkStatus();
+      // Espera la animación de 4 segundos
+      setTimeout(showActions, 4000);
+    })();
   </script>
 </body>
 </html>
