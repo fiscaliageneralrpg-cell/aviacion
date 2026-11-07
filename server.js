@@ -400,9 +400,11 @@ function tcpTest(host, port, ms) {
     console.log('🌐 IP pública de Render: ERR', e.message);
   }
 
-  console.log('🧪 ' + DB_HOST + ':' + DB_PORT + ' ->', await tcpTest(DB_HOST, DB_PORT));
-  console.log('🧪 ' + DB_HOST + ':8000 ->', await tcpTest(DB_HOST, 8000));
-  console.log('🧪 ' + DB_HOST + ':22 ->', await tcpTest(DB_HOST, 22));
+  console.log('🧪 NEUTRO 1.1.1.1:53 ->', await tcpTest('1.1.1.1', 53));
+  console.log('🧪 NEUTRO 8.8.8.8:53 ->', await tcpTest('8.8.8.8', 53));
+  console.log('🧪 VPS ' + DB_HOST + ':' + DB_PORT + ' ->', await tcpTest(DB_HOST, DB_PORT));
+  console.log('🧪 VPS ' + DB_HOST + ':8000 ->', await tcpTest(DB_HOST, 8000));
+  console.log('🧪 VPS ' + DB_HOST + ':22 ->', await tcpTest(DB_HOST, 22));
 
   try {
     const c = await pool.getConnection();
