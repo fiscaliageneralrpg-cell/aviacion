@@ -4,6 +4,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const mysql = require('mysql2/promise');
 const session = require('express-session');
+const net = require('net');
 
 dotenv.config();
 
@@ -17,7 +18,7 @@ console.log('📋 DISCORD_CLIENT_ID:', process.env.DISCORD_CLIENT_ID ? '✅' : '
 console.log('📋 DISCORD_CLIENT_SECRET:', process.env.DISCORD_CLIENT_SECRET ? '✅' : '❌ FALTANTE');
 console.log('📋 ROBLOX_CLIENT_ID:', process.env.ROBLOX_CLIENT_ID ? '✅' : '❌ FALTANTE');
 console.log('📋 SESSION_SECRET:', process.env.SESSION_SECRET ? '✅' : '❌ FALTANTE');
-console.log('📋 DB_HOST:', process.env.DB_HOST);
+console.log('📋 DB_HOST:', process.env.DB_HOST, '| DB_PORT:', process.env.DB_PORT);
 
 // CORS
 app.use(cors({
@@ -358,16 +359,60 @@ app.get('/auth/logout', (req, res) => {
   res.redirect('/');
 });
 
-// Pool MySQL
+// ============================================
+// POOL MySQL + DIAGNÓSTICO DE RED
+// ============================================
+const DB_HOST = process.env.DB_HOST;
+const DB_PORT = Number(process.env.DB_PORT || 3306);
+
 const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  port: Number(process.env.DB_PORT || 3306),
+  host: DB_HOST,
+  port: DB_PORT,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   waitForConnections: true,
   connectionLimit: 10
 });
+
+function tcpTest(host, port, ms) {
+  ms = ms || 5000;
+  return new Promise(function (resolve) {
+    const s = new net.Socket();
+    const to = setTimeout(function () { s.destroy(); resolve('TIMEOUT'); }, ms);
+    s.connect(port, host, function () { clearTimeout(to); s.destroy(); resolve('OK'); });
+    s.on('error', function (e) { clearTimeout(to); resolve('ERR ' + e.code); });
+  });
+}
+
+(async function () {
+  console.log('🔧 DB config:', JSON.stringify({
+    host: DB_HOST,
+    port: DB_PORT,
+    user: process.env.DB_USER,
+    db: process.env.DB_NAME
+  }));
+
+  try {
+    const ip = await fetch('https://api.ipify.org').then(function (r) { return r.text(); });
+    console.log('🌐 IP pública de Render:', ip);
+  } catch (e) {
+    console.log('🌐 IP pública de Render: ERR', e.message);
+  }
+
+  console.log('🧪 ' + DB_HOST + ':' + DB_PORT + ' ->', await tcpTest(DB_HOST, DB_PORT));
+  console.log('🧪 ' + DB_HOST + ':8000 ->', await tcpTest(DB_HOST, 8000));
+  console.log('🧪 ' + DB_HOST + ':22 ->', await tcpTest(DB_HOST, 22));
+
+  try {
+    const c = await pool.getConnection();
+    await c.ping();
+    c.release();
+    console.log('✅ MySQL OK ->', DB_HOST + ':' + DB_PORT);
+  } catch (e) {
+    console.log('❌ MySQL FALLO ->', DB_HOST + ':' + DB_PORT, '|', e.code, e.message);
+  }
+})();
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Servidor en http://0.0.0.0:${PORT}`);
