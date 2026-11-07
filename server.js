@@ -4,7 +4,6 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const mysql = require('mysql2/promise');
 const session = require('express-session');
-const net = require('net');
 
 dotenv.config();
 
@@ -16,9 +15,9 @@ app.set('trust proxy', 1);
 console.log('🔧 Iniciando servidor...');
 console.log('📋 DISCORD_CLIENT_ID:', process.env.DISCORD_CLIENT_ID ? '✅' : '❌ FALTANTE');
 console.log('📋 DISCORD_CLIENT_SECRET:', process.env.DISCORD_CLIENT_SECRET ? '✅' : '❌ FALTANTE');
-console.log('📋 ROBLOX_CLIENT_ID:', process.env.ROBLOX_CLIENT_ID ? '✅' : '❌ FALTANTE');
+console.log('📋 ROBLOX_CLIENT_ID:', process.env.ROBLOX_CLIENT_ID ? '✅' : '❌ FALTANTE (app en revisión)');
 console.log('📋 SESSION_SECRET:', process.env.SESSION_SECRET ? '✅' : '❌ FALTANTE');
-console.log('📋 DB_HOST:', process.env.DB_HOST, '| DB_PORT:', process.env.DB_PORT);
+console.log('📋 DB_HOST:', process.env.DB_HOST);
 
 // CORS
 app.use(cors({
@@ -44,7 +43,21 @@ app.use(session({
 // Archivos estáticos
 app.use(express.static(path.join(__dirname, 'public')));
 
-// --- Middleware: asegurar usuario de Discord en BD ---
+// Pool de conexión a MySQL remoto (se crea antes de usarse)
+const pool = mysql.createPool({
+  host: process.env.DB_HOST,
+  port: Number(process.env.DB_PORT || 3306),
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  waitForConnections: true,
+  connectionLimit: 10
+});
+
+// ============================================
+// MIDDLEWARES
+// ============================================
+
 async function ensureDiscordUserInDB(req, res, next) {
   if (req.session.discordUser) {
     try {
@@ -65,7 +78,7 @@ async function ensureDiscordUserInDB(req, res, next) {
         );
       } else {
         await pool.query(
-          `UPDATE verified_users 
+          `UPDATE verified_users
            SET discord_username = ?, discord_global_name = ?, discord_avatar = ?, discord_verified_at = NOW(), updated_at = NOW()
            WHERE discord_id = ?`,
           [
@@ -118,10 +131,16 @@ app.get('/verificacion.html', requireAuth, (req, res) => {
 });
 
 app.get('/dashboard', requireAuth, (req, res) => {
-  if (req.session.discordUser.fully_verified !== 1) {
-    return res.redirect('/verificacion.html');
-  }
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+});
+
+// --- Páginas legales (para revisión de Roblox OAuth) ---
+app.get('/privacidad', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'privacidad.html'));
+});
+
+app.get('/terminos', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'terminos.html'));
 });
 
 // --- API: stats ---
@@ -176,13 +195,9 @@ app.get('/auth/discord/login', (req, res) => {
 // --- Callback Discord ---
 app.get('/auth/discord/callback', async (req, res) => {
   const code = req.query.code;
-  if (!code) {
-    console.error('❌ No hay código de autorización');
-    return res.status(400).send('No se proporcionó código de Discord');
-  }
+  if (!code) return res.status(400).send('No se proporcionó código de Discord');
 
   try {
-    console.log('🔄 Intercambiando código por token...');
     const tokenResponse = await fetch('https://discord.com/api/oauth2/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -195,29 +210,17 @@ app.get('/auth/discord/callback', async (req, res) => {
       })
     });
 
-    console.log('📡 Status token:', tokenResponse.status);
-
-    if (!tokenResponse.ok) {
-      const errorText = await tokenResponse.text();
-      console.error('❌ Error token Discord:', errorText);
-      throw new Error('Error obteniendo token de Discord');
-    }
+    if (!tokenResponse.ok) throw new Error('Error obteniendo token de Discord');
 
     const tokenData = await tokenResponse.json();
-    console.log('✅ Token obtenido');
 
     const userResponse = await fetch('https://discord.com/api/users/@me', {
       headers: { Authorization: `${tokenData.token_type} ${tokenData.access_token}` }
     });
 
-    if (!userResponse.ok) {
-      const errText = await userResponse.text();
-      console.error('❌ Error usuario Discord:', errText);
-      throw new Error('Error obteniendo usuario de Discord');
-    }
+    if (!userResponse.ok) throw new Error('Error obteniendo usuario de Discord');
 
     const user = await userResponse.json();
-    console.log('✅ Usuario:', user.global_name || user.username);
 
     req.session.discordUser = {
       id: user.id,
@@ -227,9 +230,8 @@ app.get('/auth/discord/callback', async (req, res) => {
       fully_verified: 0
     };
 
-    // Guardar/actualizar en BD
     const [existing] = await pool.query(
-      'SELECT id, fully_verified FROM verified_users WHERE discord_id = ?',
+      'SELECT id, fully_verified, roblox_id, roblox_username, roblox_avatar FROM verified_users WHERE discord_id = ?',
       [user.id]
     );
     if (existing.length === 0) {
@@ -240,15 +242,17 @@ app.get('/auth/discord/callback', async (req, res) => {
       );
     } else {
       await pool.query(
-        `UPDATE verified_users 
+        `UPDATE verified_users
          SET discord_username = ?, discord_global_name = ?, discord_avatar = ?, discord_verified_at = NOW(), updated_at = NOW()
          WHERE discord_id = ?`,
         [user.username, user.global_name, user.avatar, user.id]
       );
       req.session.discordUser.fully_verified = existing[0].fully_verified === 1;
+      req.session.discordUser.roblox_id = existing[0].roblox_id || null;
+      req.session.discordUser.roblox_username = existing[0].roblox_username || null;
+      req.session.discordUser.roblox_avatar = existing[0].roblox_avatar || null;
     }
 
-    console.log('🚀 Redirigiendo a /cargando.html');
     res.redirect('/cargando.html');
   } catch (err) {
     console.error('❌ Error Discord OAuth:', err.message);
@@ -260,7 +264,7 @@ app.get('/auth/discord/callback', async (req, res) => {
 app.get('/auth/roblox/login', requireAuth, (req, res) => {
   const ROBLOX_CLIENT_ID = process.env.ROBLOX_CLIENT_ID;
   if (!ROBLOX_CLIENT_ID) {
-    return res.status(500).send('ROBLOX_CLIENT_ID no configurado');
+    return res.status(500).send('ROBLOX_CLIENT_ID no configurado (app en revisión)');
   }
   const redirectUri = encodeURIComponent('https://latinaviationnetwork.com/auth/roblox/callback');
   const state = encodeURIComponent('guild::' + req.session.discordUser.id);
@@ -315,7 +319,7 @@ app.get('/auth/roblox/callback', requireAuth, async (req, res) => {
     const robloxUser = await userResponse.json();
 
     await pool.query(
-      `UPDATE verified_users 
+      `UPDATE verified_users
        SET roblox_id = ?, roblox_username = ?, roblox_avatar = ?, roblox_verified_at = NOW(), updated_at = NOW()
        WHERE discord_id = ?`,
       [
@@ -337,7 +341,7 @@ app.get('/auth/roblox/callback', requireAuth, async (req, res) => {
   }
 });
 
-// --- Marcar verificación completa ---
+// --- Marcar verificación completa (paso 3) ---
 app.post('/api/verify-complete', requireAuth, async (req, res) => {
   try {
     await pool.query(
@@ -358,63 +362,6 @@ app.get('/auth/logout', (req, res) => {
   res.clearCookie('connect.sid');
   res.redirect('/');
 });
-
-// ============================================
-// POOL MySQL + DIAGNÓSTICO DE RED
-// ============================================
-const DB_HOST = process.env.DB_HOST;
-const DB_PORT = Number(process.env.DB_PORT || 3306);
-
-const pool = mysql.createPool({
-  host: DB_HOST,
-  port: DB_PORT,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  waitForConnections: true,
-  connectionLimit: 10
-});
-
-function tcpTest(host, port, ms) {
-  ms = ms || 5000;
-  return new Promise(function (resolve) {
-    const s = new net.Socket();
-    const to = setTimeout(function () { s.destroy(); resolve('TIMEOUT'); }, ms);
-    s.connect(port, host, function () { clearTimeout(to); s.destroy(); resolve('OK'); });
-    s.on('error', function (e) { clearTimeout(to); resolve('ERR ' + e.code); });
-  });
-}
-
-(async function () {
-  console.log('🔧 DB config:', JSON.stringify({
-    host: DB_HOST,
-    port: DB_PORT,
-    user: process.env.DB_USER,
-    db: process.env.DB_NAME
-  }));
-
-  try {
-    const ip = await fetch('https://api.ipify.org').then(function (r) { return r.text(); });
-    console.log('🌐 IP pública de Render:', ip);
-  } catch (e) {
-    console.log('🌐 IP pública de Render: ERR', e.message);
-  }
-
-  console.log('🧪 NEUTRO 1.1.1.1:53 ->', await tcpTest('1.1.1.1', 53));
-  console.log('🧪 NEUTRO 8.8.8.8:53 ->', await tcpTest('8.8.8.8', 53));
-  console.log('🧪 VPS ' + DB_HOST + ':' + DB_PORT + ' ->', await tcpTest(DB_HOST, DB_PORT));
-  console.log('🧪 VPS ' + DB_HOST + ':8000 ->', await tcpTest(DB_HOST, 8000));
-  console.log('🧪 VPS ' + DB_HOST + ':22 ->', await tcpTest(DB_HOST, 22));
-
-  try {
-    const c = await pool.getConnection();
-    await c.ping();
-    c.release();
-    console.log('✅ MySQL OK ->', DB_HOST + ':' + DB_PORT);
-  } catch (e) {
-    console.log('❌ MySQL FALLO ->', DB_HOST + ':' + DB_PORT, '|', e.code, e.message);
-  }
-})();
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Servidor en http://0.0.0.0:${PORT}`);
