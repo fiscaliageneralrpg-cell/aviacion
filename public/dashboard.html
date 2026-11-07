@@ -41,76 +41,232 @@
         url("https://i.imgur.com/rjEhr3O.jpeg");
     }
 
+    /* ===== BARRA SUPERIOR ===== */
     nav {
-      position: sticky; top: 0; z-index: 100;
+      position: relative;
+      z-index: 100;
+      overflow: hidden;
+      background:
+        radial-gradient(700px 260px at 8% 0%, rgba(0,102,255,0.30), transparent 70%),
+        radial-gradient(500px 220px at 100% 100%, rgba(0,212,255,0.14), transparent 70%),
+        linear-gradient(180deg, rgba(8,10,18,0.96), rgba(3,3,5,0.94));
       backdrop-filter: blur(16px);
-      background: rgba(3, 3, 5, 0.82);
-      border-bottom: 1px solid var(--border);
-      padding: 1rem 0;
+      border-bottom: 1px solid rgba(0,102,255,0.35);
+      border-radius: 0 0 36px 36px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.65), 0 10px 50px rgba(0,102,255,0.18);
+      padding: 38px 0 30px;
+    }
+    /* anillos de radar decorativos */
+    nav::before {
+      content: "";
+      position: absolute;
+      right: -140px; top: -160px;
+      width: 420px; height: 420px;
+      border-radius: 50%;
+      border: 1px solid rgba(0,212,255,0.14);
+      box-shadow:
+        0 0 0 50px rgba(0,102,255,0.035),
+        0 0 0 51px rgba(0,212,255,0.10),
+        0 0 0 110px rgba(0,102,255,0.025),
+        0 0 0 111px rgba(0,212,255,0.07);
+      pointer-events: none;
+    }
+    /* línea de luz inferior */
+    nav::after {
+      content: "";
+      position: absolute; left: 8%; right: 8%; bottom: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--blue), var(--cyan), var(--blue), transparent);
+      opacity: 0.9;
     }
     .nav-inner {
-      display: flex; justify-content: space-between; align-items: center;
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      gap: 26px;
     }
-    .nav-left { display: flex; align-items: center; gap: 10px; }
-    .nav-right { display: flex; align-items: center; gap: 12px; }
-    .logo-box {
-      display: flex; align-items: center; gap: 8px;
-    }
-    .logo-img {
-      width: 34px;
-      height: 34px;
-      object-fit: contain;
-    }
-    .logo-text {
-      font-family: 'Orbitron', monospace; font-weight: 900; font-size: 1.2rem;
-      letter-spacing: -0.5px;
-      background: linear-gradient(135deg, var(--white), var(--blue));
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
-    .btn-roblox {
-      background: linear-gradient(135deg, var(--blue), var(--blue-light));
-      color: var(--white);
-      padding: 8px 18px;
-      border-radius: 50px;
-      font-weight: 700;
-      font-size: 0.85rem;
-      border: none;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-    .btn-roblox:hover {
-      transform: translateY(-2px);
-      filter: brightness(1.1);
-    }
-    .btn-logout {
-      background: transparent;
-      color: var(--white-soft);
-      border: 1px solid var(--border);
-      padding: 8px 18px;
-      border-radius: 50px;
-      font-weight: 700;
-      font-size: 0.85rem;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-    .btn-logout:hover {
-      border-color: var(--blue);
-      color: var(--blue);
+    .nav-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 24px;
     }
 
+    /* Izquierda: perfil */
+    .nav-profile {
+      display: flex;
+      align-items: center;
+      gap: 26px;
+      min-width: 0;
+    }
+    .avatar-wrap {
+      position: relative;
+      flex-shrink: 0;
+      padding: 5px;
+      border-radius: 50%;
+      background: conic-gradient(from 160deg, var(--blue), var(--cyan), var(--blue-light), var(--blue));
+      box-shadow: 0 0 45px var(--blue-glow);
+    }
+    .nav-avatar {
+      width: 112px;
+      height: 112px;
+      border-radius: 50%;
+      border: 4px solid var(--black);
+      object-fit: cover;
+      background: var(--card);
+    }
+    .status-dot {
+      position: absolute;
+      right: 8px; bottom: 8px;
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: #22c55e;
+      border: 4px solid var(--black);
+      box-shadow: 0 0 12px rgba(34,197,94,0.8);
+    }
+    .nav-info { min-width: 0; }
+    .nav-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Orbitron', monospace;
+      font-size: 0.62rem;
+      font-weight: 900;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin-bottom: 8px;
+      padding: 5px 14px;
+      border: 1px solid rgba(0,212,255,0.28);
+      border-radius: 50px;
+      background: rgba(0,212,255,0.07);
+    }
+    .nav-brand svg { width: 13px; height: 13px; fill: currentColor; }
+    .nav-hello {
+      display: block;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--white-soft);
+      line-height: 1.2;
+    }
+    .nav-welcome {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(1.4rem, 3.4vw, 2.3rem);
+      font-weight: 900;
+      line-height: 1.15;
+      letter-spacing: -0.5px;
+      margin: 2px 0 10px;
+      background: linear-gradient(135deg, var(--white) 30%, var(--cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      overflow-wrap: anywhere;
+    }
+    .nav-id {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--white-soft);
+      background: rgba(88,101,242,0.14);
+      border: 1px solid rgba(88,101,242,0.45);
+      padding: 4px 14px 4px 10px;
+      border-radius: 10px;
+    }
+    .nav-id svg { width: 16px; height: 16px; fill: #8b94ff; flex-shrink: 0; }
+
+    /* Derecha: cerrar sesión */
+    .logout-link {
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 14px 18px;
+      border-radius: 22px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      transition: 0.3s;
+    }
+    .logout-link img {
+      width: 60px;
+      height: 60px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 12px var(--blue-glow));
+    }
+    .logout-link span {
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: var(--white-soft);
+    }
+    .logout-link:hover {
+      transform: translateY(-3px);
+      border-color: var(--blue);
+      background: rgba(0,102,255,0.12);
+      box-shadow: 0 10px 30px var(--blue-glow);
+    }
+
+    /* Separador con avión */
+    .nav-divider {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .nav-divider::before, .nav-divider::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: repeating-linear-gradient(90deg, rgba(0,212,255,0.4) 0 6px, transparent 6px 12px);
+    }
+    .nav-divider svg {
+      width: 20px; height: 20px;
+      fill: var(--cyan);
+      transform: rotate(90deg);
+      filter: drop-shadow(0 0 6px rgba(0,212,255,0.7));
+    }
+
+    /* Abajo: botón Roblox */
+    .nav-bottom { display: flex; }
+    .btn-roblox {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      background: linear-gradient(135deg, var(--blue), var(--blue-light));
+      color: var(--white);
+      padding: 15px 28px;
+      border-radius: 18px;
+      font-family: inherit;
+      font-weight: 800;
+      font-size: 1rem;
+      border: 1px solid rgba(255,255,255,0.18);
+      cursor: pointer;
+      transition: 0.3s;
+      box-shadow: 0 10px 30px var(--blue-glow);
+    }
+    .btn-roblox svg { width: 20px; height: 20px; fill: currentColor; }
+    .btn-roblox:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.12);
+    }
+    a:focus-visible, button:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+
+    /* ===== CONTENIDO ===== */
     .dashboard-wrap {
-      min-height: 85vh;
+      min-height: 60vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 100px 20px;
+      padding: 70px 20px;
     }
     .dashboard-card {
       background: rgba(13, 13, 18, 0.75);
       backdrop-filter: blur(24px);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 80px 60px;
+      padding: 70px 60px;
       max-width: 750px;
       box-shadow: 0 40px 100px rgba(0,0,0,0.7);
       position: relative; z-index: 10;
@@ -134,7 +290,7 @@
       border-radius: 50px;
       background: rgba(0, 102, 255, 0.08);
     }
-    .dashboard h1 {
+    .dashboard-card h2 {
       font-family: 'Orbitron', monospace;
       font-size: clamp(2rem, 5vw, 3rem);
       font-weight: 900;
@@ -144,45 +300,10 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
-    .dashboard .subtitle {
+    .dashboard-card .subtitle {
       color: var(--white-soft);
       font-size: 1.1rem;
       margin-bottom: 40px;
-    }
-    .user-profile {
-      display: flex;
-      align-items: center;
-      gap: 30px;
-      margin-bottom: 50px;
-      padding: 34px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid var(--border);
-      border-radius: 26px;
-    }
-    .avatar {
-      width: 130px;
-      height: 130px;
-      border-radius: 50%;
-      border: 3px solid var(--blue);
-      object-fit: cover;
-      box-shadow: 0 0 50px var(--blue-glow);
-      flex-shrink: 0;
-    }
-    .user-info {
-      flex: 1;
-    }
-    .user-info .username {
-      font-family: 'Orbitron', monospace;
-      font-size: 1.6rem;
-      font-weight: 900;
-      color: var(--white);
-      display: block;
-      margin-bottom: 8px;
-    }
-    .user-info .user-id {
-      font-size: 1.1rem;
-      color: var(--gray);
-      display: block;
     }
     .user-actions {
       display: flex;
@@ -227,7 +348,7 @@
       height: 100px;
       border-radius: 50%;
       border: 3px solid var(--blue);
-      margin-bottom: 20px;
+      margin: 0 auto 20px;
     }
     .modal-card h3 {
       font-family: 'Orbitron', monospace;
@@ -271,9 +392,20 @@
     }
 
     @media (max-width: 768px) {
+      nav { padding: 28px 0 24px; border-radius: 0 0 28px 28px; }
+      .nav-top { gap: 12px; }
+      .nav-profile { gap: 16px; }
+      .nav-avatar { width: 76px; height: 76px; }
+      .status-dot { width: 15px; height: 15px; right: 4px; bottom: 4px; border-width: 3px; }
+      .nav-brand { font-size: 0.5rem; letter-spacing: 2px; padding: 4px 10px; }
+      .logout-link { padding: 10px 12px; }
+      .logout-link img { width: 40px; height: 40px; }
+      .logout-link span { display: none; }
       .dashboard-card { padding: 45px 24px; }
-      .avatar { width: 100px; height: 100px; }
-      .logo-text { font-size: 1rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .dashboard-card { animation: none; }
+      * { transition: none !important; }
     }
   </style>
 </head>
@@ -281,18 +413,51 @@
 
   <div class="bg-dashboard"></div>
 
-  <nav>
+  <nav id="navbar">
     <div class="nav-inner container">
-      <div class="nav-left">
-        <div class="logo-box">
-          <img src="https://i.imgur.com/V47UGra.png" alt="LAN Logo" class="logo-img" onerror="this.style.display='none'">
-          <div class="logo-text">LATIN AVIATION NETWORK</div>
+
+      <div class="nav-top">
+        <!-- IZQUIERDA: foto + saludo + ID de Discord -->
+        <div class="nav-profile">
+          <div class="avatar-wrap">
+            <img id="user-avatar" class="nav-avatar" alt="Avatar de Discord" src="https://cdn.discordapp.com/embed/avatars/0.png">
+            <span class="status-dot"></span>
+          </div>
+          <div class="nav-info">
+            <span class="nav-brand">
+              <svg viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>
+              Latin Aviation Network
+            </span>
+            <span class="nav-hello">Bienvenido</span>
+            <h1 class="nav-welcome" id="welcome-name">Cargando...</h1>
+            <span class="nav-id">
+              <svg viewBox="0 0 24 24"><path d="M20.3 4.4A19.8 19.8 0 0 0 15.4 3l-.2.4a14 14 0 0 1 4.2 2.1 15.5 15.5 0 0 0-14.8 0A14 14 0 0 1 8.8 3.4L8.6 3a19.8 19.8 0 0 0-4.9 1.4C.6 9 -.3 13.5.1 18a19.9 19.9 0 0 0 6 3l1.3-2.1a12.9 12.9 0 0 1-2-1l.5-.4a14.2 14.2 0 0 0 12.2 0l.5.4a12.9 12.9 0 0 1-2 1l1.3 2.1a19.9 19.9 0 0 0 6-3c.5-5.200-.8-9.700-3.600-13.600zM8.500 15.300c-1.200 0-2.100-1.100-2.100-2.400s.9-2.400 2.100-2.400 2.100 1.100 2.100 2.400-.9 2.400-2.100 2.400zm7 0c-1.200 0-2.100-1.100-2.100-2.400s.9-2.400 2.100-2.400 2.100 1.100 2.100 2.400-.9 2.400-2.100 2.400z"/></svg>
+              <span id="user-id">ID Discord: —</span>
+            </span>
+          </div>
         </div>
+
+        <!-- DERECHA: cerrar sesión -->
+        <a href="/auth/logout" class="logout-link" title="Cerrar sesión">
+          <img src="https://i.pinimg.com/originals/ab/23/a5/ab23a5baec3591af66206c2c14adbba8.png" alt="Cerrar sesión"
+               onerror="this.style.display='none'; this.parentElement.querySelector('.logout-fallback').style.display='inline-block'">
+          <span class="logout-fallback" style="display:none">Salir</span>
+          <span>Cerrar sesión</span>
+        </a>
       </div>
-      <div class="nav-right">
-        <button class="btn-roblox" id="btn-roblox">Cuenta de Roblox</button>
-        <button class="btn-logout" onclick="window.location.href='/auth/logout'">Cerrar sesión</button>
+
+      <div class="nav-divider" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>
       </div>
+
+      <!-- ABAJO: cuenta de Roblox -->
+      <div class="nav-bottom">
+        <button class="btn-roblox" id="btn-roblox">
+          <svg viewBox="0 0 24 24"><path d="M5.2 0 0 18.800 18.800 24 24 5.200 5.200 0zm8.600 15.100-4.900-1.300 1.300-4.900 4.900 1.300-1.300 4.900z"/></svg>
+          Cuenta de Roblox
+        </button>
+      </div>
+
     </div>
   </nav>
 
@@ -300,15 +465,8 @@
     <div class="container">
       <div class="dashboard-card">
         <span class="dashboard-eyebrow">Panel de usuario</span>
-        <h1 id="welcome-name">Bienvenido</h1>
+        <h2>Dashboard</h2>
         <p class="subtitle" id="welcome-sub">Sesión iniciada correctamente con Discord</p>
-        <div class="user-profile">
-          <img id="user-avatar" class="avatar" alt="Avatar de Discord" src="https://cdn.discordapp.com/embed/avatars/0.png">
-          <div class="user-info">
-            <span class="username" id="username">Cargando...</span>
-            <span class="user-id" id="user-id">ID: —</span>
-          </div>
-        </div>
         <div class="user-actions">
           <a href="/" class="btn btn-ghost">Volver al inicio</a>
         </div>
@@ -351,9 +509,8 @@
         }
         const user = await res.json();
         const name = user.global_name || user.username;
-        document.getElementById('welcome-name').textContent = 'Bienvenido, ' + name;
-        document.getElementById('username').textContent = name;
-        document.getElementById('user-id').textContent = 'ID: ' + user.id;
+        document.getElementById('welcome-name').textContent = name;
+        document.getElementById('user-id').textContent = 'ID Discord: ' + user.id;
         if (user.avatar) {
           document.getElementById('user-avatar').src = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`;
         }
