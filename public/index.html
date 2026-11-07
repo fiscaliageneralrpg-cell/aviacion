@@ -330,6 +330,21 @@
       color: var(--blue);
     }
     .footer-bottom p { margin: 0; font-size: 0.8rem; }
+    .footer-links {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.85rem;
+    }
+    .footer-links a {
+      color: var(--gray);
+      transition: color 0.3s, text-shadow 0.3s;
+    }
+    .footer-links a:hover {
+      color: var(--blue);
+      text-shadow: 0 0 12px var(--blue-glow);
+    }
+    .footer-dot { color: var(--border); }
 
     /* Animaciones */
     @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
@@ -437,6 +452,11 @@
     <div class="container">
       <div class="footer-bottom">
         <div class="version">0.0.0.0.1</div>
+        <div class="footer-links">
+          <a href="/terminos">Términos</a>
+          <span class="footer-dot">·</span>
+          <a href="/privacidad">Privacidad</a>
+        </div>
         <p>&copy; 2026 Latin Aviation Network. Todos los derechos reservados.</p>
       </div>
     </div>
