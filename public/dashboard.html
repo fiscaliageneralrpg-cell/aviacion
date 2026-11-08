@@ -48,7 +48,7 @@
     nav {
       position: relative;
       z-index: 100;
-      overflow: hidden;
+      overflow: visible;
       background:
         radial-gradient(600px 200px at 8% 0%, rgba(0,102,255,0.28), transparent 70%),
         radial-gradient(400px 160px at 100% 100%, rgba(0,212,255,0.12), transparent 70%),
@@ -70,11 +70,14 @@
         0 0 0 40px rgba(0,102,255,0.03),
         0 0 0 41px rgba(0,212,255,0.09);
       pointer-events: none;
+      animation: radar 5s ease-in-out infinite;
     }
     nav::after {
       content: "";
       position: absolute; left: 8%; right: 8%; bottom: 0; height: 2px;
       background: linear-gradient(90deg, transparent, var(--blue), var(--cyan), var(--blue), transparent);
+      background-size: 200% 100%;
+      animation: lightFlow 3.5s linear infinite;
       opacity: 0.9;
     }
     .nav-inner {
@@ -104,10 +107,18 @@
       flex-shrink: 0;
       padding: 4px;
       border-radius: 50%;
-      background: conic-gradient(from 160deg, var(--blue), var(--cyan), var(--blue-light), var(--blue));
+      background: none;
       box-shadow: 0 0 30px var(--blue-glow);
     }
+    .avatar-wrap::before {
+      content: "";
+      position: absolute; inset: 0;
+      border-radius: 50%;
+      background: conic-gradient(from 0deg, var(--blue), var(--cyan), var(--blue-light), var(--blue));
+      animation: spin 4s linear infinite;
+    }
     .nav-avatar {
+      position: relative; z-index: 1;
       width: 76px;
       height: 76px;
       border-radius: 50%;
@@ -118,11 +129,13 @@
     .status-dot {
       position: absolute;
       right: 4px; bottom: 4px;
+      z-index: 2;
       width: 15px; height: 15px;
       border-radius: 50%;
       background: #22c55e;
       border: 3px solid var(--black);
       box-shadow: 0 0 10px rgba(34,197,94,0.8);
+      animation: pulseDot 2s ease-in-out infinite;
     }
     .nav-info { min-width: 0; }
     .nav-brand {
@@ -183,12 +196,14 @@
       background: rgba(255,255,255,0.04);
       border: 1px solid var(--border);
       transition: 0.3s;
+      animation: slideLeft 0.6s 0.6s ease-out both;
     }
     .logout-link img {
       width: 46px;
       height: 46px;
       object-fit: contain;
       filter: drop-shadow(0 0 10px var(--blue-glow));
+      animation: floaty 3s ease-in-out infinite;
     }
     .logout-link .logout-text {
       font-size: 0.72rem;
@@ -203,8 +218,14 @@
       box-shadow: 0 8px 24px var(--blue-glow);
     }
 
-    /* Abajo: Roblox */
-    .nav-bottom { display: flex; }
+    /* Abajo: Roblox + Rangos */
+    .nav-bottom {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      animation: riseUp 0.6s 0.85s ease-out both;
+    }
     .btn-roblox {
       display: inline-flex;
       align-items: center;
@@ -221,10 +242,150 @@
       cursor: pointer;
       transition: 0.3s;
       box-shadow: 0 8px 22px var(--blue-glow);
+      position: relative;
+      overflow: hidden;
     }
     .btn-roblox svg { width: 17px; height: 17px; fill: currentColor; }
+    .btn-roblox::after {
+      content: "";
+      position: absolute; top: 0; left: -80%;
+      width: 50%; height: 100%;
+      background: linear-gradient(100deg, transparent, rgba(255,255,255,0.35), transparent);
+      transform: skewX(-20deg);
+      animation: shine 4s 2s ease-in-out infinite;
+    }
+    @keyframes shine {
+      0%   { left: -80%; }
+      35%, 100% { left: 140%; }
+    }
     .btn-roblox:hover { transform: translateY(-2px); filter: brightness(1.12); }
     a:focus-visible, button:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+
+    /* ===== RANGOS ===== */
+    .rank-box {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+    .rank-main {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      max-width: 100%;
+      padding: 10px 18px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      font-weight: 800;
+      font-size: 0.85rem;
+      color: var(--white-soft);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: 0.3s;
+    }
+    .rank-main .rank-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--gray);
+      flex-shrink: 0;
+      box-shadow: 0 0 8px currentColor;
+    }
+    .rank-main .rank-label {
+      font-size: 0.62rem;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      opacity: 0.65;
+      margin-right: 2px;
+    }
+    .rank-more {
+      width: 40px; height: 40px;
+      flex-shrink: 0;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      color: var(--white-soft);
+      font-size: 1.3rem;
+      font-weight: 800;
+      line-height: 1;
+      cursor: pointer;
+      transition: 0.3s;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      animation: riseUp 0.5s 1s ease-out both;
+    }
+    .rank-more:hover {
+      border-color: var(--cyan);
+      color: var(--cyan);
+      transform: translateY(-2px);
+      box-shadow: 0 0 18px rgba(0,212,255,0.35);
+    }
+    .rank-more.show { display: inline-flex; }
+    .rank-list {
+      position: absolute;
+      top: calc(100% + 10px);
+      left: 0;
+      z-index: 300;
+      min-width: 280px;
+      max-width: 90vw;
+      display: none;
+      flex-direction: column;
+      gap: 7px;
+      padding: 14px;
+      background: rgba(8,10,18,0.97);
+      backdrop-filter: blur(18px);
+      border: 1px solid rgba(0,102,255,0.35);
+      border-radius: 18px;
+      box-shadow: 0 24px 55px rgba(0,0,0,0.7), 0 8px 30px rgba(0,102,255,0.15);
+    }
+    .rank-list.open {
+      display: flex;
+      animation: modalPop 0.3s cubic-bezier(.3,1.3,.5,1);
+    }
+    .rank-list-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.6rem;
+      font-weight: 900;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--cyan);
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 2px;
+    }
+    .rank-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--white-soft);
+      padding: 7px 10px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid transparent;
+      transition: 0.25s;
+    }
+    .rank-item:hover {
+      background: rgba(0,102,255,0.1);
+      border-color: rgba(0,102,255,0.35);
+      transform: translateX(4px);
+    }
+    .rank-item.is-top {
+      border-color: rgba(255,215,0,0.35);
+      background: rgba(255,215,0,0.07);
+    }
+    .rank-item .rank-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      box-shadow: 0 0 8px currentColor;
+    }
+    .rank-item .rank-crown { margin-left: auto; font-size: 0.7rem; }
 
     /* Modal Roblox */
     .modal-overlay {
@@ -236,7 +397,7 @@
       justify-content: center;
       padding: 16px;
     }
-    .modal-overlay.active { display: flex; }
+    .modal-overlay.active { display: flex; animation: fadeIn 0.25s ease-out; }
     .modal-card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -246,6 +407,7 @@
       width: 100%;
       text-align: center;
       box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+      animation: modalPop 0.35s cubic-bezier(.3,1.3,.5,1);
     }
     .modal-card .roblox-avatar {
       width: 100px;
@@ -253,6 +415,7 @@
       border-radius: 50%;
       border: 3px solid var(--blue);
       margin: 0 auto 20px;
+      box-shadow: 0 0 40px var(--blue-glow);
     }
     .modal-card h3 {
       font-family: 'Orbitron', monospace;
@@ -270,8 +433,9 @@
       border-radius: 50px;
       font-weight: 800;
       cursor: pointer;
+      transition: 0.3s;
     }
-    .modal-close:hover { background: var(--blue-light); }
+    .modal-close:hover { background: var(--blue-light); transform: translateY(-2px); }
 
     /* Footer siempre abajo */
     footer {
@@ -301,7 +465,6 @@
     }
 
     /* ===== ANIMACIONES ===== */
-    /* Entrada de la barra y de sus partes */
     nav { animation: navDrop 0.8s cubic-bezier(.2,.8,.2,1) both; }
     @keyframes navDrop {
       from { transform: translateY(-100%); opacity: 0; }
@@ -311,8 +474,6 @@
     .nav-brand    { animation: slideRight 0.6s 0.5s ease-out both; }
     .nav-welcome  { animation: slideRight 0.6s 0.62s ease-out both; }
     .nav-id       { animation: slideRight 0.6s 0.74s ease-out both; }
-    .logout-link  { animation: slideLeft 0.6s 0.6s ease-out both; }
-    .nav-bottom   { animation: riseUp 0.6s 0.85s ease-out both; }
     @keyframes popIn {
       from { transform: scale(0.4); opacity: 0; }
       to   { transform: scale(1); opacity: 1; }
@@ -329,43 +490,19 @@
       from { transform: translateY(16px); opacity: 0; }
       to   { transform: translateY(0); opacity: 1; }
     }
-
-    /* Aro del avatar girando */
-    .avatar-wrap { background: none; }
-    .avatar-wrap::before {
-      content: "";
-      position: absolute; inset: 0;
-      border-radius: 50%;
-      background: conic-gradient(from 0deg, var(--blue), var(--cyan), var(--blue-light), var(--blue));
-      animation: spin 4s linear infinite;
-    }
-    .nav-avatar { position: relative; z-index: 1; }
-    .status-dot { z-index: 2; animation: pulseDot 2s ease-in-out infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
     @keyframes pulseDot {
       0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.7); }
       50%      { box-shadow: 0 0 0 7px rgba(34,197,94,0); }
     }
-
-    /* Radar pulsando */
-    nav::before { animation: radar 5s ease-in-out infinite; }
     @keyframes radar {
       0%, 100% { transform: scale(1);    opacity: 0.6; }
       50%      { transform: scale(1.12); opacity: 1; }
-    }
-
-    /* Línea de luz inferior en movimiento */
-    nav::after {
-      background: linear-gradient(90deg, transparent, var(--blue), var(--cyan), var(--blue), transparent);
-      background-size: 200% 100%;
-      animation: lightFlow 3.5s linear infinite;
     }
     @keyframes lightFlow {
       from { background-position: 200% 0; }
       to   { background-position: -200% 0; }
     }
-
-    /* Avión que cruza la barra */
     .nav-plane {
       position: absolute;
       bottom: 4px; left: 0;
@@ -383,33 +520,12 @@
       92%  { opacity: 1; }
       100% { left: calc(100% + 10px); opacity: 0; }
     }
-
-    /* Botón Roblox: brillo que pasa */
-    .btn-roblox { position: relative; overflow: hidden; }
-    .btn-roblox::after {
-      content: "";
-      position: absolute; top: 0; left: -80%;
-      width: 50%; height: 100%;
-      background: linear-gradient(100deg, transparent, rgba(255,255,255,0.35), transparent);
-      transform: skewX(-20deg);
-      animation: shine 4s 2s ease-in-out infinite;
-    }
-    @keyframes shine {
-      0%   { left: -80%; }
-      35%, 100% { left: 140%; }
-    }
-    .btn-roblox:active, .logout-link:active { transform: scale(0.96); }
-
-    /* Botón cerrar sesión: la imagen late suave */
+    .btn-roblox:active, .logout-link:active, .rank-more:active { transform: scale(0.96); }
     .logout-link img { animation: floaty 3s ease-in-out infinite; }
     @keyframes floaty {
       0%, 100% { transform: translateY(0); }
       50%      { transform: translateY(-3px); }
     }
-
-    /* Modal con aparición */
-    .modal-overlay.active { animation: fadeIn 0.25s ease-out; }
-    .modal-overlay.active .modal-card { animation: modalPop 0.35s cubic-bezier(.3,1.3,.5,1); }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes modalPop {
       from { transform: scale(0.85) translateY(20px); opacity: 0; }
@@ -426,6 +542,7 @@
       .logout-link { padding: 8px 12px; }
       .logout-link img { width: 38px; height: 38px; }
       .logout-link .logout-text { display: none; }
+      .rank-main { font-size: 0.78rem; padding: 9px 14px; }
     }
     @media (max-width: 480px) {
       .nav-inner { gap: 12px; }
@@ -436,6 +553,9 @@
       .logout-link { padding: 6px 9px; border-radius: 14px; }
       .logout-link img { width: 32px; height: 32px; }
       .nav-bottom .btn-roblox { width: 100%; }
+      .rank-box { width: 100%; }
+      .rank-main { flex: 1; min-width: 0; }
+      .rank-list { left: 0; right: 0; min-width: 0; }
       .modal-card { padding: 28px 20px; }
     }
     @media (max-width: 340px) {
@@ -474,7 +594,7 @@
             </span>
             <h1 class="nav-welcome" id="welcome-name">Bienvenido</h1>
             <span class="nav-id">
-              <svg viewBox="0 0 24 24"><path d="M20.3 4.4A19.8 19.8 0 0 0 15.4 3l-.2.4a14 14 0 0 1 4.2 2.1 15.5 15.5 0 0 0-14.8 0A14 14 0 0 1 8.8 3.4L8.6 3a19.8 19.8 0 0 0-4.9 1.4C.6 9-.3 13.5.1 18a19.9 19.9 0 0 0 6 3l1.3-2.1a12.9 12.9 0 0 1-2-1l.5-.4a14.2 14.2 0 0 0 12.2 0l.5.4a12.9 12.9 0 0 1-2 1l1.3 2.1a19.9 19.9 0 0 0 6-3c.5-5.2-.8-9.7-3.6-13.6zM8.5 15.3c-1.200 0-2.100-1.100-2.100-2.400s.9-2.400 2.100-2.400 2.100 1.100 2.100 2.400-.9 2.400-2.100 2.400zm7 0c-1.200 0-2.100-1.100-2.100-2.400s.9-2.400 2.100-2.400 2.100 1.100 2.100 2.400-.9 2.400-2.100 2.400z"/></svg>
+              <svg viewBox="0 0 24 24"><path d="M20.3 4.4A19.8 19.8 0 0 0 15.4 3l-.2.4a14 14 0 0 1 4.2 2.1 15.5 15.5 0 0 0-14.8 0A14 14 0 0 1 8.8 3.4L8.6 3a19.8 19.8 0 0 0-4.9 1.4C.6 9-.3 13.5.1 18a19.9 19.9 0 0 0 6 3l1.3-2.1a12.9 12.9 0 0 1-2-1l.5-.4a14.2 14.2 0 0 0 12.2 0l.5.4a12.9 12.9 0 0 1-2 1l1.3 2.1a19.9 19.9 0 0 0 6-3c.5-5.2-.8-9.7-3.6-13.6zM8.5 15.3c-1.2 0-2.1-1.1-2.1-2.4s.9-2.4 2.1-2.4 2.1 1.1 2.1 2.4-.9 2.4-2.1 2.4zm7 0c-1.2 0-2.1-1.1-2.1-2.4s.9-2.4 2.1-2.4 2.1 1.1 2.1 2.4-.9 2.4-2.1 2.4z"/></svg>
               <span id="user-id">ID Discord: —</span>
             </span>
           </div>
@@ -488,12 +608,24 @@
         </a>
       </div>
 
-      <!-- ABAJO: cuenta de Roblox -->
+      <!-- ABAJO: cuenta de Roblox + Rango principal + botón + -->
       <div class="nav-bottom">
         <button class="btn-roblox" id="btn-roblox">
           <svg viewBox="0 0 24 24"><path d="M5.2 0 0 18.8 18.8 24 24 5.2 5.2 0zm8.6 15.1-4.9-1.3 1.3-4.9 4.9 1.3-1.3 4.9z"/></svg>
           Cuenta de Roblox
         </button>
+
+        <div class="rank-box">
+          <span class="rank-main" id="rank-main">
+            <span class="rank-dot" id="rank-dot"></span>
+            <span class="rank-label">Rango</span>
+            <span id="rank-name">Cargando…</span>
+          </span>
+          <button class="rank-more" id="rank-more" title="Ver todos mis rangos" aria-label="Ver todos mis rangos">+</button>
+          <div class="rank-list" id="rank-list">
+            <span class="rank-list-title">Mis rangos en LAN</span>
+          </div>
+        </div>
       </div>
 
     </div>
@@ -519,11 +651,76 @@
   </div>
 
   <script>
-    const navbar = document.getElementById('navbar');
-    window.addEventListener('scroll', () => {
-      if (window.scrollY > 50) navbar.classList.add('scrolled');
-      else navbar.classList.remove('scrolled');
+    /* ===== RANGOS DE DISCORD ===== */
+    async function loadRanks() {
+      const rankName = document.getElementById('rank-name');
+      const rankDot = document.getElementById('rank-dot');
+      const rankMain = document.getElementById('rank-main');
+      const moreBtn = document.getElementById('rank-more');
+      const list = document.getElementById('rank-list');
+
+      try {
+        const res = await fetch('/api/roles');
+        const data = await res.json();
+        const ranks = data.ranks || [];
+
+        if (ranks.length === 0) {
+          rankName.textContent = 'Aún sin rangos';
+          rankDot.style.background = '#64748b';
+          rankMain.style.borderColor = 'var(--border)';
+          moreBtn.classList.remove('show');
+          return;
+        }
+
+        /* RANGO PRINCIPAL = el más alto */
+        const top = ranks[0];
+        rankName.textContent = top.name;
+        rankDot.style.background = top.color;
+        rankDot.style.color = top.color;
+        rankMain.style.color = top.color;
+        rankMain.style.borderColor = top.color + '66';
+        rankMain.style.boxShadow = '0 0 20px ' + top.color + '33';
+        rankMain.style.background = top.color + '12';
+
+        /* Botón + solo si tiene más de 1 rango */
+        if (ranks.length > 1) {
+          moreBtn.classList.add('show');
+          list.innerHTML =
+            '<span class="rank-list-title">Mis rangos en LAN (' + ranks.length + ')</span>' +
+            ranks.map((r, i) =>
+              '<span class="rank-item' + (i === 0 ? ' is-top' : '') + '">' +
+                '<span class="rank-dot" style="background:' + r.color + '; color:' + r.color + '"></span>' +
+                r.name +
+                (i === 0 ? '<span class="rank-crown">👑 Principal</span>' : '') +
+              '</span>'
+            ).join('');
+        } else {
+          moreBtn.classList.remove('show');
+        }
+      } catch (e) {
+        console.error('Error cargando rangos:', e);
+        rankName.textContent = '—';
+      }
+    }
+
+    document.getElementById('rank-more').addEventListener('click', () => {
+      const list = document.getElementById('rank-list');
+      const moreBtn = document.getElementById('rank-more');
+      const open = list.classList.toggle('open');
+      moreBtn.textContent = open ? '−' : '+';
     });
+
+    /* Cerrar la lista si haces clic fuera */
+    document.addEventListener('click', (e) => {
+      const box = document.querySelector('.rank-box');
+      if (box && !box.contains(e.target)) {
+        document.getElementById('rank-list').classList.remove('open');
+        document.getElementById('rank-more').textContent = '+';
+      }
+    });
+
+    /* ===== USUARIO + ROBLOX ===== */
+    let robloxData = null;
 
     async function loadUser() {
       try {
@@ -540,33 +737,50 @@
           document.getElementById('user-avatar').src = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`;
         }
 
-        const btnRoblox = document.getElementById('btn-roblox');
-        const modal = document.getElementById('roblox-modal');
-        const modalAvatar = document.getElementById('roblox-modal-avatar');
-        const modalName = document.getElementById('roblox-modal-name');
-        const modalId = document.getElementById('roblox-modal-id');
-
-        btnRoblox.addEventListener('click', () => {
-          if (user.roblox_id) {
-            modalName.textContent = user.roblox_username || 'Usuario de Roblox';
-            modalId.textContent = 'ID: ' + user.roblox_id;
-            modalAvatar.src = user.roblox_avatar || `https://www.roblox.com/headshot-thumbnail/image?userId=${user.roblox_id}&width=420&height=420&format=png`;
-            modal.classList.add('active');
-          } else {
-            alert('No tienes cuenta de Roblox vinculada aún.');
-          }
-        });
-
-        modal.addEventListener('click', (e) => {
-          if (e.target === modal) modal.classList.remove('active');
-        });
+        /* Datos de Roblox desde la BD (más fiable que la sesión) */
+        try {
+          const sres = await fetch('/api/user-status');
+          robloxData = await sres.json();
+        } catch (e) {
+          console.error(e);
+          robloxData = { roblox_id: user.roblox_id, roblox_username: user.roblox_username, roblox_avatar: user.roblox_avatar };
+        }
       } catch (e) {
         console.error(e);
         window.location.href = '/iniciar-seccion.html';
       }
     }
 
+    document.getElementById('btn-roblox').addEventListener('click', () => {
+      const modal = document.getElementById('roblox-modal');
+      if (robloxData && robloxData.roblox_id) {
+        document.getElementById('roblox-modal-name').textContent =
+          robloxData.roblox_username || 'Usuario de Roblox';
+        document.getElementById('roblox-modal-id').textContent = 'ID: ' + robloxData.roblox_id;
+        document.getElementById('roblox-modal-avatar').src =
+          robloxData.roblox_avatar ||
+          `https://www.roblox.com/headshot-thumbnail/image?userId=${robloxData.roblox_id}&width=420&height=420&format=png`;
+        modal.classList.add('active');
+      } else {
+        alert('Aún no tienes cuenta de Roblox vinculada.\nVe a Verificación → Paso 2 para conectarla.');
+      }
+    });
+
+    document.getElementById('roblox-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'roblox-modal') {
+        document.getElementById('roblox-modal').classList.remove('active');
+      }
+    });
+
+    /* ===== NAV SCROLL ===== */
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 50) navbar.classList.add('scrolled');
+      else navbar.classList.remove('scrolled');
+    });
+
     loadUser();
+    loadRanks();
   </script>
 </body>
 </html>
