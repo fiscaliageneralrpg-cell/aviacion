@@ -159,24 +159,84 @@ app.get('/api/me', requireAuth, (req, res) => {
   res.json(req.session.discordUser);
 });
 
-// --- API: user-status ---
+// --- API: user-status (crea la fila si no existe y devuelve roblox_id) ---
 app.get('/api/user-status', requireAuth, async (req, res) => {
   try {
-    const [rows] = await pool.query(
+    const discordId = req.session.discordUser.id;
+    let [rows] = await pool.query(
       'SELECT fully_verified, roblox_id, roblox_username, roblox_avatar FROM verified_users WHERE discord_id = ?',
-      [req.session.discordUser.id]
+      [discordId]
     );
+
     if (rows.length === 0) {
-      return res.json({ fully_verified: 0, roblox_verified: false });
+      await pool.query(
+        `INSERT INTO verified_users (discord_id, discord_username, discord_global_name, discord_avatar, discord_verified_at, fully_verified)
+         VALUES (?, ?, ?, ?, NOW(), 0)`,
+        [discordId, req.session.discordUser.username, req.session.discordUser.global_name, req.session.discordUser.avatar]
+      );
+      rows = [{ fully_verified: 0, roblox_id: null, roblox_username: null, roblox_avatar: null }];
     }
+
+    const row = rows[0];
+    // La BD y la sesión mandan (si alguno dice verificado, está verificado)
+    const fullyVerified = row.fully_verified === 1 || req.session.discordUser.fully_verified === 1;
+
     res.json({
-      fully_verified: rows[0].fully_verified === 1,
-      roblox_verified: !!rows[0].roblox_id,
-      roblox_username: rows[0].roblox_username,
-      roblox_avatar: rows[0].roblox_avatar
+      fully_verified: fullyVerified,
+      roblox_verified: !!row.roblox_id,
+      roblox_id: row.roblox_id || null,
+      roblox_username: row.roblox_username || null,
+      roblox_avatar: row.roblox_avatar || null
     });
   } catch (err) {
     console.error('Error user-status:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// ============================================
+// RANGOS DE DISCORD
+// (los escribe el bot en la tabla user_roles,
+//  aquí SOLO se leen de la BD — sin token en Render)
+// ============================================
+const DISCORD_RANKS = [
+  { id: '1555489319639191653', name: 'Piloto En Formación',              short: 'PCA En Formación',       color: '#94a3b8' },
+  { id: '1555512471383441408', name: 'Controlador Aéreo En Formación',   short: 'ATC En Formación',       color: '#64748b' },
+  { id: '1559429028333621369', name: 'Piloto En Práctica',               short: 'PCA En Práctica',        color: '#38bdf8' },
+  { id: '1555489377151623178', name: 'Piloto',                           short: 'Pilot',                  color: '#0066ff' },
+  { id: '1555512718046404609', name: 'Controlador Aéreo',                short: 'Air Traffic Controller', color: '#00ff88' },
+  { id: '1555512949391495218', name: 'Instructor ATC',                   short: 'Instructor ATC',         color: '#00d4ff' },
+  { id: '1556059095277109348', name: 'Instructor PCA',                   short: 'Instructor PCA',         color: '#a855f7' },
+  { id: '1559433801162170378', name: 'Director Académico',               short: 'Director Académico',     color: '#ff9f43' },
+  { id: '1557648392362922014', name: 'Co Funder',                        short: 'Co Funder',              color: '#f43f5e' },
+  { id: '1555480212051857418', name: 'Fundador',                         short: 'Fundador',               color: '#ffd700' }
+];
+
+// --- API: rangos del usuario (LEÍDOS DE LA BD, los escribe el bot) ---
+app.get('/api/roles', requireAuth, async (req, res) => {
+  try {
+    const discordId = String(req.session.discordUser.id);
+
+    // La tabla user_roles la mantiene el bot de Discord (Pterodactyl)
+    const [rows] = await pool.query(
+      'SELECT role_ids FROM user_roles WHERE discord_id = ?',
+      [discordId]
+    );
+
+    if (!rows.length) {
+      return res.json({ ranks: [], highest: null });
+    }
+
+    // role_ids viene ordenado del rango MÁS ALTO primero (lo escribe el bot)
+    const ids = String(rows[0].role_ids || '').split(',').map(s => s.trim()).filter(Boolean);
+    const ranks = ids
+      .map(id => DISCORD_RANKS.find(r => r.id === id))
+      .filter(Boolean);
+
+    console.log(`🎖️ /api/roles (BD) | user=${discordId} | rangos=${ranks.length} | principal=${ranks[0] ? ranks[0].name : 'ninguno'}`);
+    res.json({ ranks, highest: ranks[0] || null });
+  } catch (err) {
+    console.error('Error /api/roles:', err.message);
     res.status(500).json({ error: 'Error interno' });
   }
 });
@@ -342,14 +402,26 @@ app.get('/auth/roblox/callback', requireAuth, async (req, res) => {
 });
 
 // --- Marcar verificación completa (paso 3) ---
+// UPSERT: crea la fila si no existe y siempre guarda la sesión ANTES de responder
 app.post('/api/verify-complete', requireAuth, async (req, res) => {
   try {
+    const discordId = req.session.discordUser.id;
     await pool.query(
-      `UPDATE verified_users SET fully_verified = 1, updated_at = NOW() WHERE discord_id = ?`,
-      [req.session.discordUser.id]
+      `INSERT INTO verified_users (discord_id, discord_username, discord_global_name, discord_avatar, discord_verified_at, fully_verified, updated_at)
+       VALUES (?, ?, ?, ?, NOW(), 1, NOW())
+       ON DUPLICATE KEY UPDATE fully_verified = 1, updated_at = NOW()`,
+      [discordId, req.session.discordUser.username, req.session.discordUser.global_name, req.session.discordUser.avatar]
     );
+
     req.session.discordUser.fully_verified = 1;
-    res.json({ success: true, redirect: '/dashboard' });
+
+    req.session.save((err) => {
+      if (err) {
+        console.error('Error guardando sesión:', err.message);
+        return res.json({ success: true, redirect: '/dashboard' });
+      }
+      res.json({ success: true, redirect: '/dashboard' });
+    });
   } catch (err) {
     console.error('Error verify-complete:', err.message);
     res.status(500).json({ error: 'Error interno' });
