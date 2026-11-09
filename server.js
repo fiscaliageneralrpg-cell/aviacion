@@ -55,6 +55,69 @@ const pool = mysql.createPool({
 });
 
 // ============================================
+// UTILIDADES DE VERIFICACIÓN
+// (MySQL puede devolver fully_verified como 1, '1', true o Buffer)
+// ============================================
+function esVerificado(v) {
+  if (v === true || v === 1) return true;
+  if (typeof v === 'string') return v === '1';
+  if (Buffer.isBuffer(v)) return v.length > 0 && v.some(b => b !== 0);
+  return false;
+}
+
+// Lee SIEMPRE el mejor registro del usuario (sirve aunque haya filas duplicadas)
+async function obtenerEstadoVerificado(discordId) {
+  const [rows] = await pool.query(
+    'SELECT id, fully_verified, roblox_id, roblox_username, roblox_avatar FROM verified_users WHERE discord_id = ? ORDER BY id ASC',
+    [discordId]
+  );
+  const roblox = rows.find(r => r.roblox_id) || null;
+  return {
+    existe: rows.length > 0,
+    fully_verified: rows.some(r => esVerificado(r.fully_verified)),
+    roblox_id: roblox ? roblox.roblox_id : null,
+    roblox_username: roblox ? roblox.roblox_username : null,
+    roblox_avatar: roblox ? roblox.roblox_avatar : null
+  };
+}
+
+// Limpia duplicados y asegura la clave única de verified_users
+// (sin ella, /api/verify-complete creaba una fila NUEVA en cada verificación
+//  y la lectura seguía devolviendo la fila vieja → "sigo sin verificar")
+async function ensureVerifiedUsersTable() {
+  try {
+    const [dups] = await pool.query(
+      'SELECT discord_id FROM verified_users GROUP BY discord_id HAVING COUNT(*) > 1'
+    );
+    if (dups.length) {
+      console.log(`🧹 Limpiando ${dups.length} usuario(s) duplicado(s) en verified_users...`);
+      for (const d of dups) {
+        const [rs] = await pool.query(
+          'SELECT id, fully_verified, roblox_id, roblox_username, roblox_avatar FROM verified_users WHERE discord_id = ? ORDER BY id ASC',
+          [d.discord_id]
+        );
+        const verificado = rs.some(r => esVerificado(r.fully_verified));
+        const roblox = rs.find(r => r.roblox_id) || null;
+        const keeper = rs[rs.length - 1];
+        await pool.query(
+          'UPDATE verified_users SET fully_verified = ?, roblox_id = ?, roblox_username = ?, roblox_avatar = ?, updated_at = NOW() WHERE id = ?',
+          [verificado ? 1 : 0, roblox ? roblox.roblox_id : null, roblox ? roblox.roblox_username : null, roblox ? roblox.roblox_avatar : null, keeper.id]
+        );
+        const borrar = rs.filter(r => r.id !== keeper.id).map(r => r.id);
+        await pool.query('DELETE FROM verified_users WHERE id IN (?)', [borrar]);
+      }
+      console.log('✅ Duplicados de verified_users eliminados.');
+    }
+    await pool.query('ALTER TABLE verified_users ADD UNIQUE KEY uniq_verified_discord (discord_id)');
+    console.log('🔑 Índice único verified_users.discord_id listo.');
+  } catch (err) {
+    if (err.code === 'ER_DUP_KEYNAME') console.log('🔑 Índice único verified_users ya existe.');
+    else console.error('Error asegurando verified_users:', err.message);
+  }
+}
+ensureVerifiedUsersTable();
+
+// ============================================
 // MIDDLEWARES
 // ============================================
 
@@ -163,30 +226,26 @@ app.get('/api/me', requireAuth, (req, res) => {
 app.get('/api/user-status', requireAuth, async (req, res) => {
   try {
     const discordId = req.session.discordUser.id;
-    let [rows] = await pool.query(
-      'SELECT fully_verified, roblox_id, roblox_username, roblox_avatar FROM verified_users WHERE discord_id = ?',
-      [discordId]
-    );
+    let estado = await obtenerEstadoVerificado(discordId);
 
-    if (rows.length === 0) {
+    if (!estado.existe) {
       await pool.query(
         `INSERT INTO verified_users (discord_id, discord_username, discord_global_name, discord_avatar, discord_verified_at, fully_verified)
          VALUES (?, ?, ?, ?, NOW(), 0)`,
         [discordId, req.session.discordUser.username, req.session.discordUser.global_name, req.session.discordUser.avatar]
       );
-      rows = [{ fully_verified: 0, roblox_id: null, roblox_username: null, roblox_avatar: null }];
+      estado = { existe: true, fully_verified: false, roblox_id: null, roblox_username: null, roblox_avatar: null };
     }
 
-    const row = rows[0];
     // La BD y la sesión mandan (si alguno dice verificado, está verificado)
-    const fullyVerified = row.fully_verified === 1 || req.session.discordUser.fully_verified === 1;
+    const fullyVerified = estado.fully_verified || esVerificado(req.session.discordUser.fully_verified);
 
     res.json({
       fully_verified: fullyVerified,
-      roblox_verified: !!row.roblox_id,
-      roblox_id: row.roblox_id || null,
-      roblox_username: row.roblox_username || null,
-      roblox_avatar: row.roblox_avatar || null
+      roblox_verified: !!estado.roblox_id,
+      roblox_id: estado.roblox_id || null,
+      roblox_username: estado.roblox_username || null,
+      roblox_avatar: estado.roblox_avatar || null
     });
   } catch (err) {
     console.error('Error user-status:', err.message);
@@ -604,7 +663,7 @@ app.get('/auth/discord/callback', async (req, res) => {
     };
 
     const [existing] = await pool.query(
-      'SELECT id, fully_verified, roblox_id, roblox_username, roblox_avatar FROM verified_users WHERE discord_id = ?',
+      'SELECT id, fully_verified, roblox_id, roblox_username, roblox_avatar FROM verified_users WHERE discord_id = ? ORDER BY id ASC',
       [user.id]
     );
     if (existing.length === 0) {
@@ -620,10 +679,12 @@ app.get('/auth/discord/callback', async (req, res) => {
          WHERE discord_id = ?`,
         [user.username, user.global_name, user.avatar, user.id]
       );
-      req.session.discordUser.fully_verified = existing[0].fully_verified === 1;
-      req.session.discordUser.roblox_id = existing[0].roblox_id || null;
-      req.session.discordUser.roblox_username = existing[0].roblox_username || null;
-      req.session.discordUser.roblox_avatar = existing[0].roblox_avatar || null;
+      // Mejor registro del usuario (aunque haya filas duplicadas viejas)
+      const estado = await obtenerEstadoVerificado(user.id);
+      req.session.discordUser.fully_verified = estado.fully_verified ? 1 : 0;
+      req.session.discordUser.roblox_id = estado.roblox_id || null;
+      req.session.discordUser.roblox_username = estado.roblox_username || null;
+      req.session.discordUser.roblox_avatar = estado.roblox_avatar || null;
     }
 
     res.redirect('/cargando.html');
@@ -690,22 +751,27 @@ app.get('/auth/roblox/callback', requireAuth, async (req, res) => {
     if (!userResponse.ok) throw new Error('Error obteniendo perfil de Roblox');
 
     const robloxUser = await userResponse.json();
+    const avatarUrl = `https://www.roblox.com/headshot-thumbnail/image?userId=${robloxUser.id}&width=420&height=420&format=png`;
 
-    await pool.query(
+    // UPDATE primero; si no había fila, se crea (si no, el Roblox nunca se guardaba)
+    const [upd] = await pool.query(
       `UPDATE verified_users
        SET roblox_id = ?, roblox_username = ?, roblox_avatar = ?, roblox_verified_at = NOW(), updated_at = NOW()
        WHERE discord_id = ?`,
-      [
-        robloxUser.id,
-        robloxUser.name,
-        `https://www.roblox.com/headshot-thumbnail/image?userId=${robloxUser.id}&width=420&height=420&format=png`,
-        discordId
-      ]
+      [robloxUser.id, robloxUser.name, avatarUrl, discordId]
     );
+    if (upd.affectedRows === 0) {
+      await pool.query(
+        `INSERT INTO verified_users (discord_id, discord_username, discord_global_name, discord_avatar, discord_verified_at, roblox_id, roblox_username, roblox_avatar, fully_verified, updated_at)
+         VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, 0, NOW())`,
+        [discordId, req.session.discordUser.username, req.session.discordUser.global_name, req.session.discordUser.avatar,
+         robloxUser.id, robloxUser.name, avatarUrl]
+      );
+    }
 
     req.session.discordUser.roblox_id = robloxUser.id;
     req.session.discordUser.roblox_username = robloxUser.name;
-    req.session.discordUser.roblox_avatar = `https://www.roblox.com/headshot-thumbnail/image?userId=${robloxUser.id}&width=420&height=420&format=png`;
+    req.session.discordUser.roblox_avatar = avatarUrl;
 
     res.redirect('/verificacion.html?step=3&verified=roblox');
   } catch (err) {
@@ -715,16 +781,31 @@ app.get('/auth/roblox/callback', requireAuth, async (req, res) => {
 });
 
 // --- Marcar verificación completa (paso 3) ---
-// UPSERT: crea la fila si no existe y siempre guarda la sesión ANTES de responder
+// Roblox es OBLIGATORIO (la app ya está aprobada) y se escribe sin duplicar filas
 app.post('/api/verify-complete', requireAuth, async (req, res) => {
   try {
     const discordId = req.session.discordUser.id;
-    await pool.query(
-      `INSERT INTO verified_users (discord_id, discord_username, discord_global_name, discord_avatar, discord_verified_at, fully_verified, updated_at)
-       VALUES (?, ?, ?, ?, NOW(), 1, NOW())
-       ON DUPLICATE KEY UPDATE fully_verified = 1, updated_at = NOW()`,
-      [discordId, req.session.discordUser.username, req.session.discordUser.global_name, req.session.discordUser.avatar]
+    const estado = await obtenerEstadoVerificado(discordId);
+
+    if (!estado.roblox_id) {
+      return res.status(400).json({ error: 'Debes conectar tu cuenta de Roblox para completar la verificación.' });
+    }
+
+    // 1) UPDATE primero (no crea filas nuevas)
+    const [upd] = await pool.query(
+      'UPDATE verified_users SET fully_verified = 1, updated_at = NOW() WHERE discord_id = ?',
+      [discordId]
     );
+
+    // 2) Si no existía ninguna fila, recién ahí se inserta
+    if (upd.affectedRows === 0) {
+      await pool.query(
+        `INSERT INTO verified_users (discord_id, discord_username, discord_global_name, discord_avatar, discord_verified_at, roblox_id, roblox_username, roblox_avatar, fully_verified, updated_at)
+         VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, 1, NOW())`,
+        [discordId, req.session.discordUser.username, req.session.discordUser.global_name, req.session.discordUser.avatar,
+         estado.roblox_id, estado.roblox_username, estado.roblox_avatar]
+      );
+    }
 
     req.session.discordUser.fully_verified = 1;
 
