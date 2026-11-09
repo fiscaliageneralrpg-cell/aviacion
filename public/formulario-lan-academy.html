@@ -348,4 +348,217 @@
             'Continuar hacia la pista anterior.',
             'Confirmar la nueva asignación y revisar los aspectos de la operación que puedan verse afectados.',
             'Despegar desde cualquier pista disponible.',
-            'Ign
+            'Ignorar el cambio si ya estás en rodaje.'
+          ]},
+          { n: 5, tipo: 'open', texto: 'Recibes una instrucción ATC, pero debido a interferencia no logras entenderla completamente. Explica cómo actuarías y qué comunicarías al controlador.'}
+        ]
+      },
+      {
+        titulo: 'Procedimientos de vuelo',
+        preguntas: [
+          { n: 6, tipo: 'mc', texto: '¿Cuál es la secuencia general de un circuito de tránsito?', opciones: [
+            'Despegue, base, viento en cola, final.',
+            'Despegue, viento en cola, base, final.',
+            'Final, base, despegue, viento en cola.',
+            'Despegue, final, base, viento en cola.'
+          ]},
+          { n: 7, tipo: 'mc', texto: 'Durante la aproximación final notas que la aeronave está desviada del eje de pista y la aproximación no es estable. ¿Qué decisión es la más segura?', opciones: [
+            'Continuar obligatoriamente hasta aterrizar.',
+            'Realizar correcciones bruscas para aterrizar rápidamente.',
+            'Evaluar la estabilidad y ejecutar una aproximación frustrada si no se cumplen las condiciones seguras.',
+            'Desconectar la comunicación con ATC.'
+          ]},
+          { n: 8, tipo: 'tf', texto: 'Una aproximación frustrada significa que debes abandonar el aterrizaje y ejecutar el procedimiento correspondiente, coordinando con ATC.'},
+          { n: 9, tipo: 'mc', texto: 'Después de aterrizar, el controlador te indica que continúes por una calle de rodaje específica. ¿Qué debes hacer?', opciones: [
+            'Cruzar cualquier pista que encuentres.',
+            'Seguir la instrucción y no ingresar o cruzar otra pista sin la autorización correspondiente.',
+            'Detenerte en medio de la pista sin comunicarlo.',
+            'Apagar inmediatamente la aeronave.'
+          ]},
+          { n: 10, tipo: 'open', texto: 'Antes de solicitar autorización de rodaje, ¿qué verificaciones realizarías en la aeronave y qué información deberías tener clara sobre el aeropuerto y el vuelo?'}
+        ]
+      },
+      {
+        titulo: 'Toma de decisiones y seguridad operacional',
+        preguntas: [
+          { n: 11, tipo: 'mc', texto: 'Durante el vuelo pierdes comunicación con el controlador. ¿Cuál debería ser tu primera acción?', opciones: [
+            'Continuar como si nada hubiera ocurrido.',
+            'Intentar recuperar la comunicación y mantener una trayectoria segura.',
+            'Realizar maniobras bruscas para llamar la atención.',
+            'Desconectar todos los sistemas.'
+          ]},
+          { n: 12, tipo: 'tf', texto: 'Si observas una aeronave cerca de tu trayectoria y no tienes información suficiente sobre ella, debes mantener conciencia de la situación y comunicarlo a ATC cuando sea posible.'},
+          { n: 13, tipo: 'mc', texto: 'Durante el vuelo las condiciones meteorológicas empeoran y la visibilidad disminuye. ¿Qué deberías hacer?', opciones: [
+            'Continuar sin evaluar las condiciones.',
+            'Evaluar la situación, informar a ATC y considerar alternativas seguras.',
+            'Aumentar la velocidad sin considerar las condiciones.',
+            'Ignorar las condiciones meteorológicas.'
+          ]},
+          { n: 14, tipo: 'open', texto: 'Durante el rodaje te das cuenta de que has tomado una calle equivocada y te estás acercando a una pista. Explica qué harías inmediatamente y cómo informarías el error al controlador.'},
+          { n: 15, tipo: 'mc', texto: 'Mientras ATC te ordena realizar un viraje, notas que la aeronave presenta un comportamiento inesperado. ¿Qué debe tener prioridad?', opciones: [
+            'Cumplir la instrucción ATC sin importar la situación.',
+            'Mantener el control de la aeronave, evaluar la situación y comunicar cualquier limitación a ATC.',
+            'Ignorar completamente la aeronave.',
+            'Realizar un viraje brusco inmediatamente.'
+          ]}
+        ]
+      },
+      {
+        titulo: 'Comunicaciones aeronáuticas',
+        preguntas: [
+          { n: 16, tipo: 'mc', texto: 'El controlador te dice: “LAN123, autorizado a despegar pista 09, viento 080 grados, 5 nudos”. ¿Cuál respuesta es la más apropiada?', opciones: [
+            '“LAN123, entendido”.',
+            '“LAN123, autorizado a despegar pista 09”.',
+            '“Despegando, gracias”.',
+            '“LAN123, voy a aterrizar”.'
+          ]},
+          { n: 17, tipo: 'open', texto: 'Te encuentras en plataforma y deseas iniciar el rodaje hacia la pista asignada. Escribe una transmisión que incluya tu identificación, posición, intención y pista solicitada.'},
+          { n: 18, tipo: 'mc', texto: 'El controlador te indica: “LAN123, continúe por calle Alfa, mantenga antes de pista 09”. ¿Qué debes hacer?', opciones: [
+            'Cruzar la pista 09 inmediatamente.',
+            'Continuar por Alfa y detenerte antes de la pista, sin cruzarla hasta recibir autorización explícita.',
+            'Ingresar a la pista para esperar.',
+            'Ignorar la instrucción.'
+          ]},
+          { n: 19, tipo: 'tf', texto: 'Una transmisión de radio debe ser clara, breve y contener la información necesaria para que ATC comprenda tu situación.'},
+          { n: 20, tipo: 'open', texto: 'Durante el vuelo se presenta una situación crítica que requiere asistencia inmediata. Escribe un mensaje breve que transmitirías a ATC. Incluye tu identificación, posición o fase de vuelo, naturaleza de la situación e intención.'}
+        ]
+      }
+    ];
+
+    const LETRAS = ['A', 'B', 'C', 'D'];
+    const form = document.getElementById('academy-form');
+    const alertBox = document.getElementById('alert');
+
+    /* ---------- Renderizar preguntas ---------- */
+    MODULOS.forEach((mod, mi) => {
+      const sec = document.createElement('section');
+      sec.className = 'module';
+
+      const title = document.createElement('h2');
+      title.className = 'module-title';
+      title.style.animationDelay = (0.1 * mi) + 's';
+      title.innerHTML = `<span class="m-num">${mi + 1}</span> Módulo ${['I','II','III','IV'][mi]} — ${mod.titulo}`;
+      sec.appendChild(title);
+
+      mod.preguntas.forEach((p, pi) => {
+        const box = document.createElement('div');
+        box.className = 'question';
+        box.dataset.q = p.n;
+        box.style.animationDelay = (0.05 * pi) + 's';
+
+        const tipoLabel = p.tipo === 'mc' ? 'Selección múltiple'
+                        : p.tipo === 'tf' ? 'Verdadero o falso'
+                        : 'Pregunta abierta';
+
+        let inner = `
+          <div class="q-head">
+            <span class="q-num">Pregunta ${p.n}</span>
+            <span class="q-type">${tipoLabel}</span>
+          </div>
+          <p class="q-text">${p.texto}</p>`;
+
+        if (p.tipo === 'mc' || p.tipo === 'tf') {
+          const opciones = p.tipo === 'tf' ? ['Verdadero', 'Falso'] : p.opciones;
+          inner += '<div class="options">' + opciones.map((op, i) => {
+            const val = p.tipo === 'tf' ? (i === 0 ? 'Verdadero' : 'Falso') : LETRAS[i];
+            const showLetter = p.tipo === 'tf';
+            return `
+              <label class="option">
+                <input type="radio" name="q${p.n}" value="${val}">
+                <span class="letter">${showLetter ? (i === 0 ? 'V' : 'F') : LETRAS[i]}</span>
+                <span>${p.tipo === 'tf' ? op : `<b>${LETRAS[i]}.</b> ${op}`}</span>
+              </label>`;
+          }).join('') + '</div>';
+        } else {
+          inner += `<textarea name="q${p.n}" placeholder="Escribe tu respuesta aquí..." maxlength="1500"></textarea>`;
+        }
+
+        box.innerHTML = inner;
+        sec.appendChild(box);
+      });
+
+      form.appendChild(sec);
+    });
+
+    /* ---------- Progreso ---------- */
+    const totalPreguntas = MODULOS.reduce((a, m) => a + m.preguntas.length, 0);
+
+    function respuestasActuales() {
+      const answers = {};
+      const faltantes = [];
+      MODULOS.forEach(m => m.preguntas.forEach(p => {
+        let v = '';
+        if (p.tipo === 'open') {
+          const ta = form.querySelector(`[data-q="${p.n}"] textarea`);
+          v = ta ? ta.value.trim() : '';
+        } else {
+          const sel = form.querySelector(`input[name="q${p.n}"]:checked`);
+          v = sel ? sel.value : '';
+        }
+        answers[p.n] = v;
+        if (!v) faltantes.push(p.n);
+      }));
+      return { answers, faltantes };
+    }
+
+    function actualizarProgreso() {
+      const { answers, faltantes } = respuestasActuales();
+      const hechas = totalPreguntas - faltantes.length;
+      const pct = Math.round((hechas / totalPreguntas) * 100);
+      document.getElementById('progress-bar').style.width = pct + '%';
+      document.getElementById('progress-text').textContent = `${hechas} / ${totalPreguntas} respondidas`;
+
+      form.querySelectorAll('.question').forEach(q => {
+        const n = q.dataset.q;
+        q.classList.toggle('answered', !!answers[n]);
+      });
+    }
+
+    form.addEventListener('change', actualizarProgreso);
+    form.addEventListener('input', actualizarProgreso);
+    actualizarProgreso();
+
+    /* ---------- Enviar ---------- */
+    function mostrarAlerta(msg) {
+      alertBox.textContent = msg;
+      alertBox.classList.add('show');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    document.getElementById('btn-send').addEventListener('click', async () => {
+      const { answers, faltantes } = respuestasActuales();
+
+      if (faltantes.length > 0) {
+        mostrarAlerta(`⚠️ Te faltan ${faltantes.length} pregunta(s): ${faltantes.join(', ')}. Responde todo antes de enviar.`);
+        const first = form.querySelector(`[data-q="${faltantes[0]}"]`);
+        if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+
+      alertBox.classList.remove('show');
+      const btn = document.getElementById('btn-send');
+      btn.disabled = true;
+      btn.textContent = 'Enviando...';
+
+      try {
+        const res = await fetch('/api/academy/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ answers })
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || 'No se pudo enviar el formulario');
+        }
+
+        document.getElementById('success-overlay').classList.add('active');
+      } catch (e) {
+        mostrarAlerta('❌ ' + e.message);
+        btn.disabled = false;
+        btn.textContent = '📤 Enviar formulario';
+      }
+    });
+  </script>
+</body>
+</html>
