@@ -387,12 +387,16 @@
     }
     .rank-item .rank-crown { margin-left: auto; font-size: 0.7rem; }
 
-    /* ===== TARJETA FORMULARIO LAN ACADEMY (embed largo y decorado) ===== */
-    .academy-section { margin-top: 26px; margin-bottom: 6px; }
+    /* ===== TARJETA FORMULARIO LAN ACADEMY (embed largo y decorado, todo el ancho) ===== */
+    .academy-section {
+      width: 100%; margin-top: 26px; margin-bottom: 6px;
+      padding: 0;
+    }
     .academy-card {
       position: relative; overflow: hidden;
+      width: 100%;
       display: flex; flex-direction: column; gap: 16px;
-      padding: 24px 26px 26px; border-radius: 24px; cursor: pointer; text-align: left;
+      padding: 26px 34px 26px; border-radius: 0 0 28px 28px; text-align: left;
       background:
         radial-gradient(620px 280px at 0% 0%, rgba(0,102,255,0.30), transparent 70%),
         radial-gradient(520px 260px at 100% 100%, rgba(0,212,255,0.16), transparent 70%),
@@ -426,131 +430,107 @@
       pointer-events: none;
     }
     .academy-card:hover {
-      transform: translateY(-4px);
-      border-color: var(--cyan);
+      border-color: rgba(0,102,255,0.65);
       box-shadow:
-        0 30px 62px rgba(0,0,0,0.72),
-        0 12px 50px rgba(0,212,255,0.24),
+        0 26px 56px rgba(0,0,0,0.7),
+        0 12px 46px rgba(0,102,255,0.2),
         inset 0 1px 0 rgba(255,255,255,0.08);
     }
-    .academy-top { position: relative; z-index: 2; display: flex; align-items: center; gap: 18px; }
-    .academy-bottom {
+    .academy-hint {
       position: relative; z-index: 2;
-      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
-      padding-top: 16px;
-      border-top: 1px dashed rgba(0,102,255,0.4);
+      display: block; text-align: center;
+      color: var(--gray); font-size: 0.78rem; font-weight: 600;
+      padding-top: 16px; margin-top: 4px;
+      border-top: 1px dashed rgba(0,102,255,0.35);
     }
-    .academy-icon {
-      width: 68px; height: 68px; flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 2rem; border-radius: 20px;
-      background: rgba(0,102,255,0.18); border: 1px solid rgba(0,102,255,0.5);
-      box-shadow: 0 0 30px rgba(0,102,255,0.4);
-    }
-    .academy-info { flex: 1; min-width: 220px; }
-    .academy-badge {
-      display: inline-flex; align-items: center; gap: 6px;
-      font-family: 'Orbitron', monospace; font-size: 0.56rem; font-weight: 900;
-      letter-spacing: 2.5px; text-transform: uppercase; color: var(--cyan);
-      border: 1px solid rgba(0,212,255,0.32); background: rgba(0,212,255,0.08);
-      padding: 4px 12px; border-radius: 50px; margin-bottom: 8px;
-    }
-    .academy-info h2 {
-      font-family: 'Orbitron', monospace; font-size: 1.12rem; font-weight: 900;
-      letter-spacing: 0.5px; color: var(--white); margin-bottom: 6px;
-    }
-    .academy-info p { color: var(--gray); font-size: 0.88rem; }
-    .academy-hint { color: var(--gray); font-size: 0.76rem; font-weight: 600; }
-    .academy-cta {
-      padding: 13px 30px; border-radius: 14px; border: none;
-      background: linear-gradient(135deg, var(--blue), var(--blue-light));
-      color: #fff; font-family: inherit; font-weight: 800; font-size: 0.9rem;
-      cursor: pointer; transition: 0.3s; box-shadow: 0 8px 22px var(--blue-glow);
-      position: relative; z-index: 2;
-    }
-    .academy-cta:hover { transform: translateY(-2px); filter: brightness(1.12); }
-    .academy-cta.review {
-      background: rgba(255,255,255,0.06); border: 1px solid var(--border);
-      color: var(--cyan); cursor: default; box-shadow: none;
-    }
-    .academy-cta.review:hover { transform: none; filter: none; }
-    .academy-cta.denied {
-      background: linear-gradient(135deg, #e11d48, #fb7185);
-      box-shadow: 0 8px 22px rgba(244,63,94,0.45);
-    }
-    .academy-cta.approved {
-      background: linear-gradient(135deg, #16a34a, #22c55e);
-      box-shadow: 0 8px 22px rgba(34,197,94,0.4);
-      cursor: default;
-    }
-    .academy-cta.approved:hover { transform: none; filter: none; }
-    .academy-cta[hidden] { display: none !important; }
 
-    /* ===== EMBED 2: ACCESOS (Formulario + Panel Staff) ===== */
-    .quick-section { margin-top: 20px; margin-bottom: 6px; }
-    .quick-card {
-      position: relative; overflow: hidden;
-      display: flex; flex-direction: column; gap: 16px;
-      padding: 24px 26px 26px; border-radius: 24px; text-align: left;
-      background:
-        radial-gradient(620px 280px at 100% 0%, rgba(0,212,255,0.22), transparent 70%),
-        radial-gradient(520px 260px at 0% 100%, rgba(0,102,255,0.24), transparent 70%),
-        linear-gradient(135deg, rgba(13,13,18,0.98), rgba(8,10,18,0.96));
-      border: 1px solid rgba(0,212,255,0.42);
-      box-shadow:
-        0 22px 50px rgba(0,0,0,0.65),
-        0 10px 40px rgba(0,212,255,0.12),
-        inset 0 1px 0 rgba(255,255,255,0.06);
-      transition: 0.3s;
-      animation: riseUp 0.7s 1.15s ease-out both;
-    }
-    .quick-card::before {
-      content: "";
-      position: absolute; bottom: -90px; left: -60px;
-      width: 240px; height: 240px; border-radius: 50%;
-      border: 1px solid rgba(0,102,255,0.3);
-      box-shadow:
-        0 0 0 36px rgba(0,212,255,0.05),
-        0 0 0 37px rgba(0,102,255,0.16);
-      pointer-events: none;
-      animation: radar 6s ease-in-out infinite;
-    }
-    .quick-card::after {
-      content: "";
-      position: absolute; top: 0; left: -80%;
-      width: 45%; height: 100%;
-      background: linear-gradient(100deg, transparent, rgba(0,102,255,0.16), transparent);
-      transform: skewX(-20deg);
-      animation: shine 7s 3s ease-in-out infinite;
-      pointer-events: none;
-    }
-    .quick-top { position: relative; z-index: 2; display: flex; align-items: center; gap: 18px; }
-    .quick-bottom {
+    /* ===== FILA DE BOTONES DENTRO DEL EMBED ===== */
+    .tabs-row {
       position: relative; z-index: 2;
-      display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
-      padding-top: 16px;
-      border-top: 1px dashed rgba(0,212,255,0.4);
-    }
-    .quick-icon {
-      width: 68px; height: 68px; flex-shrink: 0;
       display: flex; align-items: center; justify-content: center;
-      font-size: 2rem; border-radius: 20px;
-      background: rgba(0,212,255,0.14); border: 1px solid rgba(0,212,255,0.5);
-      box-shadow: 0 0 30px rgba(0,212,255,0.35);
+      gap: 6px; flex-wrap: wrap;
     }
-    .quick-info { flex: 1; min-width: 220px; }
-    .quick-badge {
-      display: inline-flex; align-items: center; gap: 6px;
-      font-family: 'Orbitron', monospace; font-size: 0.56rem; font-weight: 900;
-      letter-spacing: 2.5px; text-transform: uppercase; color: var(--cyan);
-      border: 1px solid rgba(0,212,255,0.32); background: rgba(0,212,255,0.08);
-      padding: 4px 12px; border-radius: 50px; margin-bottom: 8px;
+    .tab-item {
+      position: relative; z-index: 2;
+      display: inline-flex; align-items: center; gap: 9px;
+      padding: 15px 40px; border-radius: 14px; cursor: pointer;
+      background: rgba(255,255,255,0.045);
+      border: 1px solid rgba(0,102,255,0.4);
+      color: var(--white-soft);
+      font-family: 'Orbitron', monospace; font-weight: 900;
+      font-size: 0.88rem; letter-spacing: 1.6px; text-transform: uppercase;
+      transition: 0.3s;
+      animation: riseUp 0.55s 1.05s ease-out both;
     }
-    .quick-info h2 {
-      font-family: 'Orbitron', monospace; font-size: 1.12rem; font-weight: 900;
-      letter-spacing: 0.5px; color: var(--white); margin-bottom: 6px;
+    .tab-item::after {
+      content: "";
+      position: absolute; left: 12%; right: 12%; bottom: -1px; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--blue), var(--cyan), var(--blue), transparent);
+      background-size: 200% 100%;
+      opacity: 0; transition: 0.3s;
+      animation: lightFlow 3s linear infinite;
     }
-    .quick-info p { color: var(--gray); font-size: 0.88rem; }
+    .tab-item:hover {
+      transform: translateY(-3px);
+      color: var(--white);
+      background: rgba(0,102,255,0.16);
+      border-color: var(--cyan);
+      box-shadow: 0 12px 30px rgba(0,102,255,0.35);
+    }
+    .tab-item:hover::after { opacity: 1; }
+    .tab-item:active { transform: scale(0.97); }
+
+    /* Estado: en revisión */
+    .tab-item.review {
+      color: var(--cyan); cursor: default;
+      background: rgba(0,212,255,0.08); border-color: rgba(0,212,255,0.5);
+    }
+    .tab-item.review:hover { transform: none; box-shadow: none; background: rgba(0,212,255,0.08); border-color: rgba(0,212,255,0.5); }
+    .tab-item.review::after { opacity: 1; animation-duration: 2s; }
+
+    /* Estado: denegado (rehacer) */
+    .tab-item.denied {
+      color: #fff;
+      background: linear-gradient(135deg, rgba(225,29,72,0.85), rgba(251,113,133,0.85));
+      border-color: transparent;
+      box-shadow: 0 10px 26px rgba(244,63,94,0.4);
+    }
+    .tab-item.denied:hover { color: #fff; box-shadow: 0 14px 34px rgba(244,63,94,0.55); background: linear-gradient(135deg, #e11d48, #fb7185); }
+
+    /* Estado: aprobado */
+    .tab-item.approved {
+      color: #fff; cursor: default;
+      background: linear-gradient(135deg, rgba(22,163,74,0.9), rgba(34,197,94,0.9));
+      border-color: transparent;
+      box-shadow: 0 10px 26px rgba(34,197,94,0.4);
+    }
+    .tab-item.approved:hover { transform: none; color: #fff; box-shadow: 0 10px 26px rgba(34,197,94,0.4); }
+    .tab-item.approved::after { opacity: 1; background: linear-gradient(90deg, transparent, #fff, transparent); }
+
+    /* Botón staff (solo roles staff) */
+    .tab-item.staff {
+      color: #ffd700;
+      background: rgba(255,215,0,0.07);
+      border-color: rgba(255,215,0,0.42);
+      animation-delay: 1.2s;
+    }
+    .tab-item.staff:hover {
+      color: #ffd700;
+      background: rgba(255,215,0,0.16);
+      border-color: #ffd700;
+      box-shadow: 0 12px 30px rgba(255,215,0,0.28);
+    }
+    .tab-item.staff::after { background: linear-gradient(90deg, transparent, #ffd700, transparent); }
+
+    .tab-item[hidden] { display: none !important; }
+    .tab-sep {
+      width: 1px; height: 34px;
+      background: linear-gradient(180deg, transparent, rgba(0,212,255,0.55), transparent);
+      flex-shrink: 0;
+    }
+    .tab-sep[hidden] { display: none !important; }
+
+    /* ===== BOTONES DEL EMBED LARGO ===== */
     .quick-btn {
       position: relative; z-index: 2;
       display: inline-flex; align-items: center; gap: 9px;
@@ -570,21 +550,6 @@
     .quick-btn.staff:hover { transform: translateY(-2px); background: rgba(255,215,0,0.16); box-shadow: 0 8px 24px rgba(255,215,0,0.28); }
     .quick-btn.staff[hidden] { display: none !important; }
     .quick-hint { color: var(--gray); font-size: 0.76rem; font-weight: 600; }
-
-    /* ===== BOTÓN PANEL STAFF ===== */
-    .btn-staff {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 10px 20px; border-radius: 14px; cursor: pointer;
-      background: rgba(255,215,0,0.08); border: 1px solid rgba(255,215,0,0.42);
-      color: #ffd700; font-family: inherit; font-weight: 800; font-size: 0.85rem;
-      transition: 0.3s; animation: riseUp 0.6s 0.95s ease-out both;
-    }
-    .btn-staff[hidden] { display: none !important; }
-    .btn-staff:hover {
-      transform: translateY(-2px);
-      background: rgba(255,215,0,0.16);
-      box-shadow: 0 8px 24px rgba(255,215,0,0.28);
-    }
 
     /* ===== PANEL STAFF (superpuesto) ===== */
     .staff-overlay {
@@ -904,6 +869,10 @@
       from { transform: scale(0.85) translateY(20px); opacity: 0; }
       to   { transform: scale(1) translateY(0); opacity: 1; }
     }
+    @keyframes fadeUp {
+      from { transform: translateY(10px); opacity: 0; }
+      to   { transform: translateY(0); opacity: 1; }
+    }
 
     /* ===== RESPONSIVE ===== */
     @media (max-width: 768px) {
@@ -916,6 +885,8 @@
       .logout-link img { width: 38px; height: 38px; }
       .logout-link .logout-text { display: none; }
       .rank-main { font-size: 0.78rem; padding: 9px 14px; }
+      .academy-card { padding: 22px 18px; }
+      .tab-item { padding: 13px 26px; font-size: 0.8rem; }
     }
     @media (max-width: 480px) {
       .nav-inner { gap: 12px; }
@@ -930,6 +901,8 @@
       .rank-main { flex: 1; min-width: 0; }
       .rank-list { left: 0; right: 0; min-width: 0; }
       .modal-card { padding: 28px 20px; }
+      .tab-item { padding: 12px 18px; letter-spacing: 1px; }
+      .tabs-row { gap: 8px; }
     }
     @media (max-width: 340px) {
       .nav-brand { display: none; }
@@ -1000,47 +973,20 @@
           </div>
         </div>
 
-        <!-- Panel staff (solo Fundador / Co Funder / Director Académico) -->
-        <button class="btn-staff" id="btn-staff" hidden>🛡 Panel Staff</button>
       </div>
 
     </div>
   </nav>
 
-  <!-- ===== EMBED 1: FORMULARIO LAN ACADEMY (siempre visible) ===== -->
-  <section class="academy-section container" id="academy-section">
-    <div class="academy-card" id="academy-card" role="button" tabindex="0">
-      <div class="academy-top">
-        <div class="academy-icon">🎓</div>
-        <div class="academy-info">
-          <span class="academy-badge">✈ LAN Academy</span>
-          <h2>Formulario LAN Academy</h2>
-          <p id="academy-desc">Completa la evaluación oficial de LAN Academy: 4 módulos y 20 preguntas de ATC, procedimientos, seguridad y comunicaciones.</p>
-        </div>
+  <!-- ===== EMBED LARGO ÚNICO: fila de accesos (Formulario + Panel Staff) ===== -->
+  <section class="academy-section" id="academy-section">
+    <div class="academy-card" id="academy-card">
+      <div class="tabs-row" role="tablist">
+        <button class="tab-item" id="academy-cta" data-mode="start">🎓 Formulario</button>
+        <span class="tab-sep" id="tab-sep" hidden></span>
+        <button class="tab-item staff" id="quick-staff" hidden>🛡 Panel Staff</button>
       </div>
-      <div class="academy-bottom">
-        <button class="academy-cta" id="academy-cta" data-mode="start">Abrir formulario →</button>
-        <span class="academy-hint" id="academy-hint">📝 Al enviar, tu formulario quedará en revisión hasta que un staff lo califique.</span>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===== EMBED 2: ACCESOS (Formulario + Panel Staff) ===== -->
-  <section class="quick-section container" id="quick-section">
-    <div class="quick-card">
-      <div class="quick-top">
-        <div class="quick-icon">🧭</div>
-        <div class="quick-info">
-          <span class="quick-badge">⚙ Accesos LAN</span>
-          <h2>Centro de operaciones</h2>
-          <p>Accede al formulario de admisión de LAN Academy y, si eres staff, al panel de revisión de formularios.</p>
-        </div>
-      </div>
-      <div class="quick-bottom">
-        <button class="quick-btn primary" id="quick-form">🎓 Formulario LAN Academy</button>
-        <button class="quick-btn staff" id="quick-staff" hidden>🛡 Panel Staff</button>
-        <span class="quick-hint" id="quick-hint">✈ Latin Aviation Network · v0.0.0.0.1</span>
-      </div>
+      <span class="academy-hint" id="academy-hint">📝 Al enviar, tu formulario quedará en revisión hasta que un staff lo califique.</span>
     </div>
   </section>
 
@@ -1120,7 +1066,7 @@
         rankMain.style.boxShadow = '0 0 20px ' + top.color + '33';
         rankMain.style.background = top.color + '12';
 
-        /* Botón + solo si tiene más de1 rango */
+        /* Botón + solo si tiene más de 1 rango */
         if (ranks.length > 1) {
           moreBtn.classList.add('show');
           list.innerHTML =
@@ -1229,15 +1175,13 @@
         const st = await res.json();
         academyStatus = st;
 
-        /* Botón Panel Staff → solo Fundador / Co Funder / Director Académico */
-        if (st.is_staff) {
-          document.getElementById('btn-staff').hidden = false;
-          document.getElementById('quick-staff').hidden = false;
-        }
+        /* Botón Panel Staff → SOLO Fundador / Co Funder / Director Académico */
+        const staffBtn = document.getElementById('quick-staff');
+        staffBtn.hidden = (st.is_staff !== true);
+        document.getElementById('tab-sep').hidden = staffBtn.hidden;
 
-        /* ===== EMBED 1: siempre visible ===== */
+        /* ===== EMBED LARGO: siempre visible ===== */
         const section = document.getElementById('academy-section');
-        const desc = document.getElementById('academy-desc');
         const cta = document.getElementById('academy-cta');
         const hint = document.getElementById('academy-hint');
         section.hidden = false;
@@ -1249,30 +1193,25 @@
         cta.hidden = !mostrarBoton;
 
         if (!mostrarBoton) {
-          desc.textContent = 'La evaluación oficial de LAN Academy: 4 módulos y 20 preguntas de ATC, procedimientos, seguridad y comunicaciones.';
           hint.textContent = '🔒 Disponible con el rango “Piloto En Formación”.';
         } else if (st.status === 'submitted' || st.status === 'graded') {
-          desc.textContent = 'Tu formulario está en revisión. Un staff lo está calificando y verás el resultado aquí mismo.';
           cta.textContent = '⏳ En revisión';
-          cta.className = 'academy-cta review';
+          cta.className = 'tab-item review';
           cta.dataset.mode = 'review';
           hint.textContent = '🛡 Un staff de LAN Academy está revisando tus respuestas.';
         } else if (st.status === 'denied') {
-          desc.textContent = 'Tu formulario fue denegado, pero puedes rehacerlo cuantas veces quieras. ¡Mucho ánimo!';
-          cta.textContent = '🔁 Rehacer formulario →';
-          cta.className = 'academy-cta denied';
+          cta.textContent = '🔁 Rehacer formulario';
+          cta.className = 'tab-item denied';
           cta.dataset.mode = 'retry';
           hint.textContent = '♻ Tu intento anterior fue denegado: vuelve a intentarlo.';
         } else if (st.status === 'approved') {
-          desc.textContent = '¡Felicidades! Tu formulario fue aprobado y ya tienes el rango Piloto En Práctica.';
           cta.textContent = '✅ Aprobado';
-          cta.className = 'academy-cta approved';
+          cta.className = 'tab-item approved';
           cta.dataset.mode = 'approved';
-          hint.textContent = '🎓 Tu formulario fue aprobado — bienvenido a la siguiente etapa.';
+          hint.textContent = '🎓 Tu formulario fue aprobado — ya tienes el rango Piloto En Práctica.';
         } else {
-          desc.textContent = 'Completa la evaluación oficial de LAN Academy: 4 módulos y 20 preguntas de ATC, procedimientos, seguridad y comunicaciones.';
-          cta.textContent = 'Abrir formulario →';
-          cta.className = 'academy-cta';
+          cta.textContent = '🎓 Formulario';
+          cta.className = 'tab-item';
           cta.dataset.mode = 'start';
           hint.textContent = '📝 Al enviar, tu formulario quedará en revisión hasta que un staff lo califique.';
         }
@@ -1288,17 +1227,12 @@
       if (cta.dataset.mode === 'approved') return; // aprobado no necesita rehacer
       window.location.href = '/dashboard/formulario-lan-academy';
     }
-    document.getElementById('academy-card').addEventListener('click', abrirFormulario);
-    document.getElementById('academy-card').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirFormulario(); }
-    });
+    /* Solo los botones de dentro del embed son clicables (el embed no) */
+    document.getElementById('academy-cta').addEventListener('click', abrirFormulario);
 
-    /* ===== EMBED 2: botones Formulario + Panel Staff ===== */
-    document.getElementById('quick-form').addEventListener('click', () => {
-      window.location.href = '/dashboard/formulario-lan-academy';
-    });
+    /* ===== EMBED LARGO: botones Formulario + Panel Staff ===== */
     document.getElementById('quick-staff').addEventListener('click', () => {
-      document.getElementById('btn-staff').click();
+      abrirPanelStaff();
     });
 
     /* =========================================================
@@ -1307,12 +1241,12 @@
     const staffOverlay = document.getElementById('staff-overlay');
     let staffGroups = [];
 
-    document.getElementById('btn-staff').addEventListener('click', async () => {
+    async function abrirPanelStaff() {
       staffOverlay.classList.add('active');
       const nombre = (document.getElementById('welcome-name').textContent || '').replace('Bienvenido, ', '');
       document.getElementById('staff-name').textContent = nombre || 'user';
       await cargarPanelStaff();
-    });
+    }
 
     document.getElementById('staff-close').addEventListener('click', () => {
       staffOverlay.classList.remove('active');
