@@ -387,6 +387,254 @@
     }
     .rank-item .rank-crown { margin-left: auto; font-size: 0.7rem; }
 
+    /* ===== TARJETA FORMULARIO LAN ACADEMY ===== */
+    .academy-section { margin-top: 26px; }
+    .academy-card {
+      position: relative; overflow: hidden;
+      display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+      padding: 22px 26px; border-radius: 22px; cursor: pointer; text-align: left;
+      background:
+        radial-gradient(420px 170px at 0% 0%, rgba(0,102,255,0.28), transparent 70%),
+        linear-gradient(135deg, rgba(13,13,18,0.97), rgba(8,10,18,0.95));
+      border: 1px solid rgba(0,102,255,0.42);
+      box-shadow: 0 18px 44px rgba(0,0,0,0.6), 0 8px 34px rgba(0,102,255,0.14);
+      transition: 0.3s;
+      animation: riseUp 0.7s 1s ease-out both;
+    }
+    .academy-card::after {
+      content: "";
+      position: absolute; top: 0; left: -80%;
+      width: 45%; height: 100%;
+      background: linear-gradient(100deg, transparent, rgba(0,212,255,0.14), transparent);
+      transform: skewX(-20deg);
+      animation: shine 6s 2s ease-in-out infinite;
+      pointer-events: none;
+    }
+    .academy-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--cyan);
+      box-shadow: 0 26px 56px rgba(0,0,0,0.7), 0 10px 44px rgba(0,212,255,0.22);
+    }
+    .academy-icon {
+      width: 64px; height: 64px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.9rem; border-radius: 18px;
+      background: rgba(0,102,255,0.16); border: 1px solid rgba(0,102,255,0.45);
+      box-shadow: 0 0 26px rgba(0,102,255,0.35);
+    }
+    .academy-info { flex: 1; min-width: 220px; }
+    .academy-info h2 {
+      font-family: 'Orbitron', monospace; font-size: 1.02rem; font-weight: 900;
+      letter-spacing: 0.5px; color: var(--white); margin-bottom: 4px;
+    }
+    .academy-info p { color: var(--gray); font-size: 0.86rem; }
+    .academy-cta {
+      padding: 12px 24px; border-radius: 14px; border: none;
+      background: linear-gradient(135deg, var(--blue), var(--blue-light));
+      color: #fff; font-family: inherit; font-weight: 800; font-size: 0.87rem;
+      cursor: pointer; transition: 0.3s; box-shadow: 0 8px 22px var(--blue-glow);
+      position: relative; z-index: 2;
+    }
+    .academy-cta:hover { transform: translateY(-2px); filter: brightness(1.12); }
+    .academy-cta.review {
+      background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+      color: var(--cyan); cursor: default; box-shadow: none;
+    }
+    .academy-cta.review:hover { transform: none; filter: none; }
+    .academy-cta.denied {
+      background: linear-gradient(135deg, #f43f5e, #fb7185);
+      box-shadow: 0 8px 22px rgba(244,63,94,0.4);
+    }
+
+    /* ===== BOTÓN PANEL STAFF ===== */
+    .btn-staff {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 20px; border-radius: 14px; cursor: pointer;
+      background: rgba(255,215,0,0.08); border: 1px solid rgba(255,215,0,0.42);
+      color: #ffd700; font-family: inherit; font-weight: 800; font-size: 0.85rem;
+      transition: 0.3s; animation: riseUp 0.6s 0.95s ease-out both;
+    }
+    .btn-staff[hidden] { display: none !important; }
+    .btn-staff:hover {
+      transform: translateY(-2px);
+      background: rgba(255,215,0,0.16);
+      box-shadow: 0 8px 24px rgba(255,215,0,0.28);
+    }
+
+    /* ===== PANEL STAFF (superpuesto) ===== */
+    .staff-overlay {
+      position: fixed; inset: 0; z-index: 1200;
+      background: rgba(0,0,0,0.82); backdrop-filter: blur(10px);
+      display: none; align-items: center; justify-content: center; padding: 18px;
+    }
+    .staff-overlay.active { display: flex; animation: fadeIn 0.25s ease-out; }
+    .staff-panel {
+      width: min(1020px, 100%); max-height: 90vh;
+      display: flex; flex-direction: column; overflow: hidden;
+      background: rgba(8,10,18,0.98);
+      border: 1px solid rgba(0,102,255,0.45);
+      border-radius: 26px;
+      box-shadow: 0 40px 90px rgba(0,0,0,0.85), 0 0 60px rgba(0,102,255,0.14);
+      animation: modalPop 0.35s cubic-bezier(.3,1.3,.5,1);
+    }
+    .staff-head {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 14px; padding: 18px 24px; border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(0,102,255,0.12), transparent);
+      flex-wrap: wrap;
+    }
+    .staff-hello {
+      font-family: 'Orbitron', monospace; font-size: 0.82rem; font-weight: 900;
+      letter-spacing: 1px; color: var(--white);
+    }
+    .staff-hello b { color: var(--cyan); }
+    .staff-tabs { display: flex; gap: 8px; }
+    .staff-tab {
+      padding: 9px 20px; border-radius: 12px; cursor: pointer;
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+      color: var(--white-soft); font-family: inherit; font-weight: 800;
+      font-size: 0.8rem; transition: 0.25s;
+    }
+    .staff-tab:hover { border-color: var(--blue); color: var(--white); }
+    .staff-tab.active {
+      background: linear-gradient(135deg, var(--blue), var(--blue-light));
+      border-color: transparent; color: #fff;
+      box-shadow: 0 6px 18px var(--blue-glow);
+    }
+    .staff-close {
+      width: 38px; height: 38px; border-radius: 12px; cursor: pointer;
+      background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+      color: var(--white-soft); font-size: 1rem; transition: 0.25s;
+    }
+    .staff-close:hover { border-color: var(--red); color: var(--red); transform: rotate(90deg); }
+    .staff-body { padding: 22px 24px; overflow-y: auto; }
+    .staff-body::-webkit-scrollbar { width: 8px; }
+    .staff-body::-webkit-scrollbar-thumb { background: rgba(0,102,255,0.4); border-radius: 8px; }
+
+    .stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; }
+    .stat-card {
+      padding: 18px; border-radius: 16px;
+      background: rgba(13,13,18,0.9); border: 1px solid var(--border);
+      transition: 0.3s;
+    }
+    .stat-card:hover { transform: translateY(-3px); border-color: rgba(0,102,255,0.5); }
+    .stat-card .num {
+      font-family: 'Orbitron', monospace; font-size: 1.7rem; font-weight: 900;
+      color: var(--cyan); display: block; margin-bottom: 4px;
+    }
+    .stat-card .lbl { color: var(--gray); font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+    .staff-subtitle {
+      font-family: 'Orbitron', monospace; font-size: 0.78rem; font-weight: 900;
+      letter-spacing: 2px; text-transform: uppercase; color: var(--cyan);
+      margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
+    }
+
+    .date-group {
+      border: 1px solid var(--border); border-radius: 18px; overflow: hidden;
+      margin-bottom: 14px; background: rgba(13,13,18,0.85);
+    }
+    .date-head { display: flex; align-items: center; gap: 14px; padding: 15px 18px; flex-wrap: wrap; }
+    .date-title {
+      font-family: 'Orbitron', monospace; font-size: 0.92rem; font-weight: 900;
+      color: var(--white); letter-spacing: 1px;
+    }
+    .date-count {
+      font-size: 0.76rem; font-weight: 700; color: var(--gray);
+      background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+      padding: 4px 12px; border-radius: 50px;
+    }
+    .btn-open-date {
+      margin-left: auto; padding: 9px 22px; border-radius: 12px; cursor: pointer;
+      background: linear-gradient(135deg, var(--blue), var(--blue-light));
+      border: none; color: #fff; font-family: inherit; font-weight: 800;
+      font-size: 0.82rem; transition: 0.3s; box-shadow: 0 6px 18px var(--blue-glow);
+    }
+    .btn-open-date:hover { transform: translateY(-2px); filter: brightness(1.12); }
+    .date-items { display: none; flex-direction: column; gap: 12px; padding: 0 16px 16px; }
+    .date-items.open { display: flex; animation: fadeUp 0.3s ease-out; }
+
+    .sub-embed {
+      border: 1px solid var(--border); border-radius: 16px; padding: 16px 18px;
+      background: rgba(255,255,255,0.03); transition: 0.25s;
+    }
+    .sub-embed:hover { border-color: rgba(0,102,255,0.45); }
+    .sub-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .sub-user { font-weight: 800; font-size: 0.92rem; color: var(--white); }
+    .sub-user small { display: block; font-weight: 600; font-size: 0.72rem; color: var(--gray); }
+    .tag {
+      font-size: 0.68rem; font-weight: 900; padding: 5px 13px; border-radius: 50px;
+      letter-spacing: 0.8px; text-transform: uppercase; border: 1px solid transparent;
+    }
+    .tag.submitted { background: rgba(0,212,255,0.12); color: var(--cyan); border-color: rgba(0,212,255,0.4); }
+    .tag.graded    { background: rgba(255,215,0,0.12); color: #ffd700; border-color: rgba(255,215,0,0.4); }
+    .tag.approved  { background: rgba(34,197,94,0.16); color: #86efac; border-color: rgba(34,197,94,0.45); }
+    .tag.denied    { background: rgba(244,63,94,0.14); color: #fda4af; border-color: rgba(244,63,94,0.45); }
+    .btn-grade {
+      margin-left: auto; padding: 9px 20px; border-radius: 12px; cursor: pointer;
+      background: rgba(0,102,255,0.16); border: 1px solid rgba(0,102,255,0.5);
+      color: var(--cyan); font-family: inherit; font-weight: 800; font-size: 0.8rem;
+      transition: 0.25s;
+    }
+    .btn-grade:hover { background: var(--blue); color: #fff; transform: translateY(-2px); }
+
+    /* --- Vista de calificación --- */
+    .grade-view { display: none; flex-direction: column; gap: 12px; margin-top: 16px; }
+    .grade-view.open { display: flex; animation: fadeUp 0.3s ease-out; }
+    .grade-q {
+      border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px;
+      background: rgba(0,0,0,0.35);
+    }
+    .gq-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+    .gq-num {
+      font-family: 'Orbitron', monospace; font-size: 0.62rem; font-weight: 900;
+      letter-spacing: 1.2px; color: var(--cyan);
+      background: rgba(0,212,255,0.1); border: 1px solid rgba(0,212,255,0.3);
+      padding: 3px 10px; border-radius: 50px;
+    }
+    .gq-kind { font-size: 0.68rem; font-weight: 700; color: var(--gray); }
+    .gq-text { font-size: 0.87rem; color: var(--white-soft); margin-bottom: 9px; }
+    .gq-answer {
+      font-size: 0.87rem; color: var(--white); white-space: pre-wrap; word-break: break-word;
+      background: rgba(255,255,255,0.05); border-left: 3px solid var(--blue);
+      padding: 10px 13px; border-radius: 8px;
+    }
+    .gq-answer.empty { color: var(--gray); font-style: italic; border-left-color: var(--gray); }
+    .gq-meta { font-size: 0.78rem; font-weight: 800; margin-top: 9px; }
+    .gq-meta.ok { color: #4ade80; }
+    .gq-meta.bad { color: #fda4af; }
+    .gq-meta.info { color: var(--gray); }
+    .open-grade { display: flex; gap: 9px; margin-top: 11px; }
+    .open-btn {
+      flex: 1; padding: 10px; border-radius: 11px; cursor: pointer;
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+      color: var(--white-soft); font-family: inherit; font-weight: 800;
+      font-size: 0.79rem; transition: 0.25s;
+    }
+    .open-btn.good.sel { background: rgba(34,197,94,0.18); border-color: #22c55e; color: #86efac; }
+    .open-btn.bad.sel  { background: rgba(244,63,94,0.18); border-color: #f43f5e; color: #fda4af; }
+    .open-btn:hover { transform: translateY(-2px); }
+
+    .grade-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+    .btn-send-grade, .btn-approve, .btn-deny {
+      padding: 13px 28px; border-radius: 14px; cursor: pointer;
+      font-family: inherit; font-weight: 900; font-size: 0.87rem;
+      border: none; transition: 0.3s;
+    }
+    .btn-send-grade {
+      background: linear-gradient(135deg, var(--blue), var(--blue-light));
+      color: #fff; box-shadow: 0 8px 22px var(--blue-glow);
+    }
+    .btn-approve { background: linear-gradient(135deg, #16a34a, #22c55e); color: #fff; box-shadow: 0 8px 22px rgba(34,197,94,0.4); }
+    .btn-deny    { background: linear-gradient(135deg, #e11d48, #f43f5e); color: #fff; box-shadow: 0 8px 22px rgba(244,63,94,0.4); }
+    .btn-send-grade:hover, .btn-approve:hover, .btn-deny:hover { transform: translateY(-2px); filter: brightness(1.12); }
+    .grade-note { font-size: 0.8rem; color: var(--gray); margin-top: 4px; }
+    .grade-done {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      padding: 13px 16px; border-radius: 13px; margin-top: 14px;
+      background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.4);
+      color: #86efac; font-weight: 800; font-size: 0.86rem;
+    }
+
     /* Modal Roblox */
     .modal-overlay {
       position: fixed; inset: 0; z-index: 1000;
@@ -626,10 +874,25 @@
             <span class="rank-list-title">Mis rangos en LAN</span>
           </div>
         </div>
+
+        <!-- Panel staff (solo Fundador / Co Funder / Director Académico) -->
+        <button class="btn-staff" id="btn-staff" hidden>🛡 Panel Staff</button>
       </div>
 
     </div>
   </nav>
+
+  <!-- ===== TARJETA: FORMULARIO LAN ACADEMY ===== -->
+  <section class="academy-section container" id="academy-section" hidden>
+    <div class="academy-card" id="academy-card" role="button" tabindex="0">
+      <div class="academy-icon">🎓</div>
+      <div class="academy-info">
+        <h2>Formulario LAN Academy</h2>
+        <p id="academy-desc">Completa la evaluación oficial de LAN Academy (20 preguntas).</p>
+      </div>
+      <button class="academy-cta" id="academy-cta" data-mode="start">Abrir formulario →</button>
+    </div>
+  </section>
 
   <footer>
     <div class="container">
@@ -650,6 +913,31 @@
     </div>
   </div>
 
+  <!-- ===== PANEL STAFF (superpuesto) ===== -->
+  <div class="staff-overlay" id="staff-overlay">
+    <div class="staff-panel">
+      <div class="staff-head">
+        <span class="staff-hello">👋 Hola staff, <b id="staff-name">—</b></span>
+        <div class="staff-tabs">
+          <button class="staff-tab active" data-tab="inicio">Inicio</button>
+          <button class="staff-tab" data-tab="formularios">Formularios</button>
+        </div>
+        <button class="staff-close" id="staff-close" aria-label="Cerrar panel">✕</button>
+      </div>
+      <div class="staff-body">
+        <div id="tab-inicio">
+          <div class="staff-subtitle">Resumen LAN Academy</div>
+          <div class="stat-cards" id="stat-cards"></div>
+        </div>
+        <div id="tab-formularios" hidden>
+          <div class="staff-subtitle">Formularios por día</div>
+          <div id="date-list"><p style="color:var(--gray);font-size:.87rem">Cargando…</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/academy-bank.js"></script>
   <script>
     /* ===== RANGOS DE DISCORD ===== */
     async function loadRanks() {
@@ -682,7 +970,7 @@
         rankMain.style.boxShadow = '0 0 20px ' + top.color + '33';
         rankMain.style.background = top.color + '12';
 
-        /* Botón + solo si tiene más de 1 rango */
+        /* Botón + solo si tiene más de1 rango */
         if (ranks.length > 1) {
           moreBtn.classList.add('show');
           list.innerHTML =
@@ -779,8 +1067,364 @@
       else navbar.classList.remove('scrolled');
     });
 
+    /* =========================================================
+       LAN ACADEMY — TARJETA + ESTADO DEL FORMULARIO
+       ========================================================= */
+    let academyStatus = null;
+
+    async function loadAcademy() {
+      try {
+        const res = await fetch('/api/academy/status');
+        if (!res.ok) return;
+        const st = await res.json();
+        academyStatus = st;
+
+        /* Botón Panel Staff → solo Fundador / Co Funder / Director Académico */
+        if (st.is_staff) document.getElementById('btn-staff').hidden = false;
+
+        /* Tarjeta del formulario → solo con rol 1555489319639191653 y si no está aprobado */
+        const section = document.getElementById('academy-section');
+        const desc = document.getElementById('academy-desc');
+        const cta = document.getElementById('academy-cta');
+
+        if (!st.has_form_role || st.status === 'approved') {
+          section.hidden = true;
+          return;
+        }
+        section.hidden = false;
+
+        if (st.status === 'submitted' || st.status === 'graded') {
+          desc.textContent = 'Tu formulario está en revisión. Un staff lo está calificando.';
+          cta.textContent = '⏳ En revisión';
+          cta.className = 'academy-cta review';
+          cta.dataset.mode = 'review';
+        } else if (st.status === 'denied') {
+          desc.textContent = 'Tu formulario fue denegado. Puedes volver a hacerlo.';
+          cta.textContent = 'Volver a hacer →';
+          cta.className = 'academy-cta denied';
+          cta.dataset.mode = 'retry';
+        } else {
+          desc.textContent = 'Completa la evaluación oficial de LAN Academy (20 preguntas).';
+          cta.textContent = 'Abrir formulario →';
+          cta.className = 'academy-cta';
+          cta.dataset.mode = 'start';
+        }
+      } catch (e) {
+        console.error('Error academy status:', e);
+      }
+    }
+
+    function abrirFormulario() {
+      const cta = document.getElementById('academy-cta');
+      if (cta.dataset.mode === 'review') return; // en revisión no se puede rehacer
+      window.location.href = '/dashboard/formulario-lan-academy';
+    }
+    document.getElementById('academy-card').addEventListener('click', abrirFormulario);
+    document.getElementById('academy-card').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirFormulario(); }
+    });
+
+    /* =========================================================
+       PANEL STAFF (superpuesto)
+       ========================================================= */
+    const staffOverlay = document.getElementById('staff-overlay');
+    let staffGroups = [];
+
+    document.getElementById('btn-staff').addEventListener('click', async () => {
+      staffOverlay.classList.add('active');
+      const nombre = (document.getElementById('welcome-name').textContent || '').replace('Bienvenido, ', '');
+      document.getElementById('staff-name').textContent = nombre || 'user';
+      await cargarPanelStaff();
+    });
+
+    document.getElementById('staff-close').addEventListener('click', () => {
+      staffOverlay.classList.remove('active');
+    });
+    staffOverlay.addEventListener('click', (e) => {
+      if (e.target === staffOverlay) staffOverlay.classList.remove('active');
+    });
+
+    document.querySelectorAll('.staff-tab').forEach((tab) => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.staff-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('tab-inicio').hidden = tab.dataset.tab !== 'inicio';
+        document.getElementById('tab-formularios').hidden = tab.dataset.tab !== 'formularios';
+      });
+    });
+
+    async function cargarPanelStaff() {
+      try {
+        const res = await fetch('/api/academy/panel');
+        if (!res.ok) throw new Error('Sin permisos de staff');
+        const data = await res.json();
+        staffGroups = data.groups || [];
+        renderStats();
+        renderDates();
+      } catch (e) {
+        document.getElementById('date-list').innerHTML =
+          '<p style="color:#fda4af">❌ ' + e.message + '</p>';
+      }
+    }
+
+    function renderStats() {
+      let total = 0, pendientes = 0, calificados = 0, aprobados = 0, denegados = 0;
+      staffGroups.forEach(g => g.items.forEach(i => {
+        total++;
+        if (i.status === 'submitted') pendientes++;
+        else if (i.status === 'graded') calificados++;
+        else if (i.status === 'approved') aprobados++;
+        else if (i.status === 'denied') denegados++;
+      }));
+      document.getElementById('stat-cards').innerHTML = `
+        <div class="stat-card"><span class="num">${total}</span><span class="lbl">Totales</span></div>
+        <div class="stat-card"><span class="num">${pendientes}</span><span class="lbl">En revisión</span></div>
+        <div class="stat-card"><span class="num">${calificados}</span><span class="lbl">Calificados</span></div>
+        <div class="stat-card"><span class="num">${aprobados}</span><span class="lbl">Aprobados</span></div>
+        <div class="stat-card"><span class="num">${denegados}</span><span class="lbl">Denegados</span></div>`;
+    }
+
+    function tagFor(status, score, total) {
+      const t = total || 20;
+      if (status === 'submitted') return '<span class="tag submitted">En revisión</span>';
+      if (status === 'graded')    return `<span class="tag graded">Calificado · ${score}/${t}</span>`;
+      if (status === 'approved')  return `<span class="tag approved">Aprobado · ${score}/${t}</span>`;
+      if (status === 'denied')    return `<span class="tag denied">Denegado${score != null ? ' · ' + score + '/' + t : ''}</span>`;
+      return '';
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function renderDates() {
+      const box = document.getElementById('date-list');
+      if (!staffGroups.length) {
+        box.innerHTML = '<p style="color:var(--gray);font-size:.87rem">Aún no hay formularios enviados.</p>';
+        return;
+      }
+
+      box.innerHTML = staffGroups.map((g, gi) => `
+        <div class="date-group">
+          <div class="date-head">
+            <span class="date-title">📅 ${g.fecha}</span>
+            <span class="date-count">${g.count} formulario${g.count > 1 ? 's' : ''}</span>
+            <button class="btn-open-date" data-g="${gi}">Abrir</button>
+          </div>
+          <div class="date-items" id="items-${gi}">
+            ${g.items.map(it => `
+              <div class="sub-embed" id="sub-${it.id}">
+                <div class="sub-head">
+                  <span class="sub-user">👤 ${escapeHtml(it.username)}<small>ID: ${it.discord_id}</small></span>
+                  ${tagFor(it.status, it.score, it.total)}
+                  <button class="btn-grade" data-id="${it.id}">${it.status === 'submitted' ? 'Calificar' : 'Ver resultado'}</button>
+                </div>
+                <div class="grade-view" id="grade-${it.id}"></div>
+              </div>`).join('')}
+          </div>
+        </div>`).join('');
+
+      box.querySelectorAll('.btn-open-date').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const items = document.getElementById('items-' + btn.dataset.g);
+          const open = items.classList.toggle('open');
+          btn.textContent = open ? 'Cerrar' : 'Abrir';
+        });
+      });
+      box.querySelectorAll('.btn-grade').forEach(btn => {
+        btn.addEventListener('click', () => abrirCalificacion(btn.dataset.id));
+      });
+    }
+
+    /* ---------- Abrir UN formulario ---------- */
+    async function abrirCalificacion(id) {
+      const slot = document.getElementById('grade-' + id);
+      if (!slot) return;
+      if (slot.classList.contains('open')) { slot.classList.remove('open'); return; }
+
+      try {
+        const res = await fetch('/api/academy/submission/' + id);
+        if (!res.ok) throw new Error('No se pudo cargar el formulario');
+        const sub = await res.json();
+        slot.innerHTML = renderGradeView(sub);
+        slot.classList.add('open');
+        conectarAcciones(id, sub);
+      } catch (e) {
+        slot.innerHTML = `<div class="grade-done" style="background:rgba(244,63,94,.1);border-color:rgba(244,63,94,.4);color:#fda4af">❌ ${e.message}</div>`;
+        slot.classList.add('open');
+      }
+    }
+
+    /* ---------- Render de la vista de calificación ---------- */
+    function renderGradeView(sub) {
+      const mods = window.LAN_ACADEMY_MODULOS || [];
+      const key = window.LAN_ACADEMY_KEY || {};
+      const ROMANOS = ['I', 'II', 'III', 'IV'];
+      const editable = sub.status === 'submitted';
+      let html = '';
+
+      mods.forEach((m, mi) => {
+        html += `<div class="staff-subtitle" style="margin-top:8px">Módulo ${ROMANOS[mi]} — ${m.titulo}</div>`;
+        m.preguntas.forEach(p => {
+          const ans = (sub.answers && sub.answers[p.n]) ? String(sub.answers[p.n]) : '';
+          const esCerrada = Object.prototype.hasOwnProperty.call(key, p.n);
+          let meta;
+
+          if (esCerrada) {
+            const ok = ans.trim().toLowerCase() === String(key[p.n]).trim().toLowerCase();
+            meta = ans
+              ? `<div class="gq-meta ${ok ? 'ok' : 'bad'}">${ok ? '✅ Correcta' : '❌ Incorrecta'} — correcta: <b>${key[p.n]}</b></div>`
+              : `<div class="gq-meta info">Sin respuesta — correcta: <b>${key[p.n]}</b></div>`;
+          } else {
+            meta = `<div class="gq-meta info">${editable ? 'Pregunta abierta — evalúala abajo' : 'Pregunta abierta'}</div>`;
+          }
+
+          html += `
+            <div class="grade-q">
+              <div class="gq-head">
+                <span class="gq-num">Pregunta ${p.n}</span>
+                <span class="gq-kind">${esCerrada ? 'Cerrada · corrección automática' : 'Abierta · manual'}</span>
+              </div>
+              <div class="gq-text">${escapeHtml(p.texto)}</div>
+              <div class="gq-answer${ans ? '' : ' empty'}">${ans ? escapeHtml(ans) : 'Sin respuesta'}</div>
+              ${meta}
+              ${(!esCerrada && editable) ? `
+                <div class="open-grade" data-open="${p.n}">
+                  <button type="button" class="open-btn good" data-val="good">👍 Buena</button>
+                  <button type="button" class="open-btn bad" data-val="bad">👎 Mala</button>
+                </div>` : ''}
+            </div>`;
+        });
+      });
+
+      /* Acciones según estado */
+      if (sub.status === 'submitted') {
+        html += `
+          <div class="grade-actions">
+            <button type="button" class="btn-send-grade" data-send="${sub.id}">📤 Enviar calificación</button>
+          </div>
+          <div class="grade-note">Las 15 preguntas cerradas se corrigen automáticamente; solo evalúa las 5 abiertas.</div>`;
+      } else if (sub.status === 'graded') {
+        html += `
+          <div class="grade-done">✅ Calificado: <b>${sub.score}/${sub.total || 20}</b></div>
+          <div class="grade-actions">
+            <button type="button" class="btn-approve" data-decision="approve" data-id="${sub.id}">✅ Aprobar</button>
+            <button type="button" class="btn-deny" data-decision="deny" data-id="${sub.id}">❌ Denegar</button>
+          </div>
+          <div class="grade-note">Aprobar → se quita “Piloto En Formación” y se otorga “Piloto En Práctica” (lo hace el bot).</div>`;
+      } else if (sub.status === 'approved') {
+        html += `<div class="grade-done">🎉 Aprobado — ${sub.score}/${sub.total || 20}. El bot ya actualizó el rol.</div>`;
+      } else if (sub.status === 'denied') {
+        html += `<div class="grade-done" style="background:rgba(244,63,94,.1);border-color:rgba(244,63,94,.4);color:#fda4af">🚫 Denegado${sub.score != null ? ' — ' + sub.score + '/' + (sub.total || 20) : ''}. El usuario puede volver a hacerlo.</div>`;
+      }
+
+      return html;
+    }
+
+    /* ---------- Acciones: buena/mala, enviar, aprobar/denegar ---------- */
+    function conectarAcciones(id, sub) {
+      const slot = document.getElementById('grade-' + id);
+      if (!slot) return;
+
+      slot.querySelectorAll('.open-grade').forEach(group => {
+        group.querySelectorAll('.open-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            group.querySelectorAll('.open-btn').forEach(b => b.classList.remove('sel'));
+            btn.classList.add('sel');
+            group.dataset.value = btn.dataset.val;
+          });
+        });
+      });
+
+      const sendBtn = slot.querySelector('[data-send]');
+      if (sendBtn) {
+        sendBtn.addEventListener('click', async () => {
+          const open = {};
+          const sinEvaluar = [];
+          slot.querySelectorAll('.open-grade').forEach(g => {
+            const q = g.dataset.open;
+            if (g.dataset.value) open[q] = g.dataset.value;
+            else sinEvaluar.push(q);
+          });
+          if (sinEvaluar.length) {
+            alert('⚠️ Faltan preguntas abiertas por evaluar: ' + sinEvaluar.join(', '));
+            return;
+          }
+
+          sendBtn.disabled = true;
+          sendBtn.textContent = 'Enviando...';
+          try {
+            const res = await fetch('/api/academy/grade/' + id, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ open })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'No se pudo calificar');
+
+            const sub2 = Object.assign({}, sub, { status: 'graded', score: data.score, total: data.total });
+            slot.innerHTML = renderGradeView(sub2);
+            conectarAcciones(id, sub2);
+            actualizarFila(id, 'graded', data.score, data.total);
+            actualizarGrupoLocal(id, 'graded');
+            renderStats();
+          } catch (e) {
+            alert('❌ ' + e.message);
+            sendBtn.disabled = false;
+            sendBtn.textContent = '📤 Enviar calificación';
+          }
+        });
+      }
+
+      slot.querySelectorAll('[data-decision]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const action = btn.dataset.decision;
+          btn.disabled = true;
+          btn.textContent = action === 'approve' ? 'Procesando...' : 'Procesando...';
+          try {
+            const res = await fetch('/api/academy/decision/' + id, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'No se pudo procesar');
+
+            const sub2 = Object.assign({}, sub, { status: data.status });
+            slot.innerHTML = renderGradeView(sub2);
+            conectarAcciones(id, sub2);
+            actualizarFila(id, data.status, sub.score, sub.total);
+            actualizarGrupoLocal(id, data.status);
+            renderStats();
+          } catch (e) {
+            alert('❌ ' + e.message);
+            btn.disabled = false;
+            btn.textContent = action === 'approve' ? '✅ Aprobar' : '❌ Denegar';
+          }
+        });
+      });
+    }
+
+    function actualizarFila(id, status, score, total) {
+      const embed = document.getElementById('sub-' + id);
+      if (!embed) return;
+      const tag = embed.querySelector('.tag');
+      if (tag) tag.outerHTML = tagFor(status, score, total);
+      const btn = embed.querySelector('.btn-grade');
+      if (btn) btn.textContent = 'Ver resultado';
+    }
+
+    function actualizarGrupoLocal(id, status) {
+      staffGroups.forEach(g => g.items.forEach(i => {
+        if (i.id === Number(id) || i.id === id) i.status = status;
+      }));
+    }
+
     loadUser();
     loadRanks();
+    loadAcademy();
   </script>
 </body>
 </html>
