@@ -241,6 +241,324 @@ app.get('/api/roles', requireAuth, async (req, res) => {
   }
 });
 
+// ============================================
+// LAN ACADEMY — FORMULARIO Y PANEL STAFF
+// ============================================
+const ACADEMY_FORM_ROLE = '1555489319639191653';           // Piloto En Formación → habilita el formulario
+const ACADEMY_ROL_SALIDA = '1555489319639191653';           // rol que se QUITA al aprobar
+const ACADEMY_ROL_ENTRADA = '1559429028333621369';          // Piloto En Práctica → rol que se DA
+const STAFF_ROLES = [
+  '1555480212051857418', // Fundador
+  '1557648392362922014', // Co Funder
+  '1559433801162170378'  // Director Académico
+];
+
+// Respuestas correctas de las preguntas CERRADAS (15)
+const ACADEMY_KEY = {
+  1: 'B', 2: 'C', 3: 'Falso', 4: 'B',
+  6: 'B', 7: 'C', 8: 'Verdadero', 9: 'B',
+  11: 'B', 12: 'Verdadero', 13: 'B', 15: 'B',
+  16: 'B', 18: 'B', 19: 'Verdadero'
+};
+// Preguntas ABIERTAS (las califica el staff: good = buena, bad = mala)
+const ACADEMY_ABIERTAS = [5, 10, 14, 17, 20];
+
+// Tablas necesarias (se crean solas al arrancar)
+async function ensureAcademyTables() {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS user_roles (
+        discord_id VARCHAR(20) NOT NULL,
+        role_ids TEXT NOT NULL,
+        highest_role_id VARCHAR(20) DEFAULT NULL,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (discord_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS academy_submissions (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        discord_id VARCHAR(20) NOT NULL,
+        answers TEXT NOT NULL,
+        status VARCHAR(20) NOT NULL DEFAULT 'submitted',
+        score INT DEFAULT NULL,
+        total INT NOT NULL DEFAULT 20,
+        staff_discord_id VARCHAR(20) DEFAULT NULL,
+        graded_at DATETIME DEFAULT NULL,
+        role_action TINYINT NOT NULL DEFAULT 0,
+        role_action_done TINYINT NOT NULL DEFAULT 0,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        KEY idx_academy_discord (discord_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+    console.log('🗂️ Tablas user_roles + academy_submissions listas.');
+  } catch (err) {
+    console.error('Error creando tablas academy:', err.message);
+  }
+}
+ensureAcademyTables();
+
+async function obtenerRangosIds(discordId) {
+  const [rows] = await pool.query('SELECT role_ids FROM user_roles WHERE discord_id = ?', [String(discordId)]);
+  if (!rows.length) return [];
+  return String(rows[0].role_ids || '').split(',').map(s => s.trim()).filter(Boolean);
+}
+
+async function esStaff(discordId) {
+  const ids = await obtenerRangosIds(discordId);
+  return STAFF_ROLES.some(r => ids.includes(r));
+}
+
+// --- Página del formulario ---
+app.get('/dashboard/formulario-lan-academy', requireAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'formulario-lan-academy.html'));
+});
+app.get('/formulario-lan-academy.html', requireAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'formulario-lan-academy.html'));
+});
+
+// --- Estado del formulario del usuario ---
+app.get('/api/academy/status', requireAuth, async (req, res) => {
+  try {
+    const discordId = String(req.session.discordUser.id);
+    const ids = await obtenerRangosIds(discordId);
+
+    const [rows] = await pool.query(
+      `SELECT status, score, total, created_at FROM academy_submissions
+       WHERE discord_id = ? ORDER BY id DESC LIMIT 1`,
+      [discordId]
+    );
+    const last = rows[0] || null;
+
+    res.json({
+      has_form_role: ids.includes(ACADEMY_FORM_ROLE),
+      is_staff: STAFF_ROLES.some(r => ids.includes(r)),
+      status: last ? last.status : 'none',   // none | submitted | graded | approved | denied
+      score: last && last.score != null ? last.score : null,
+      total: last && last.total != null ? last.total : 20,
+      submitted_at: last ? last.created_at : null
+    });
+  } catch (err) {
+    console.error('Error academy/status:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// --- Enviar formulario ---
+app.post('/api/academy/submit', requireAuth, async (req, res) => {
+  try {
+    const discordId = String(req.session.discordUser.id);
+    const ids = await obtenerRangosIds(discordId);
+
+    if (!ids.includes(ACADEMY_FORM_ROLE)) {
+      return res.status(403).json({ error: 'No tienes el rango habilitado para realizar el formulario.' });
+    }
+
+    const [prev] = await pool.query(
+      'SELECT status FROM academy_submissions WHERE discord_id = ? ORDER BY id DESC LIMIT 1',
+      [discordId]
+    );
+    if (prev.length && (prev[0].status === 'submitted' || prev[0].status === 'graded')) {
+      return res.status(409).json({ error: 'Tu formulario ya está en revisión.' });
+    }
+
+    const answers = (req.body && req.body.answers) ? req.body.answers : {};
+    const faltantes = [];
+    for (let i = 1; i <= 20; i++) {
+      if (!answers[i] || !String(answers[i]).trim()) faltantes.push(i);
+    }
+    if (faltantes.length) {
+      return res.status(400).json({ error: 'Faltan preguntas: ' + faltantes.join(', ') });
+    }
+
+    await pool.query(
+      `INSERT INTO academy_submissions (discord_id, answers, status, total)
+       VALUES (?, ?, 'submitted', 20)`,
+      [discordId, JSON.stringify(answers)]
+    );
+
+    console.log(`📝 Academy: formulario recibido de ${discordId}`);
+    res.json({ success: true, status: 'submitted' });
+  } catch (err) {
+    console.error('Error academy/submit:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// --- PANEL STAFF: formularios agrupados por fecha ---
+app.get('/api/academy/panel', requireAuth, async (req, res) => {
+  try {
+    const discordId = String(req.session.discordUser.id);
+    if (!(await esStaff(discordId))) {
+      return res.status(403).json({ error: 'Sin permisos de staff' });
+    }
+
+    const [rows] = await pool.query(
+      `SELECT s.id, s.discord_id, s.status, s.score, s.total, s.created_at,
+              DATE_FORMAT(s.created_at, '%d/%m/%Y') AS fecha,
+              u.discord_username, u.discord_global_name
+       FROM academy_submissions s
+       LEFT JOIN verified_users u ON u.discord_id = s.discord_id
+       ORDER BY s.id DESC`
+    );
+
+    const mapa = {};
+    rows.forEach(r => {
+      if (!mapa[r.fecha]) mapa[r.fecha] = [];
+      mapa[r.fecha].push({
+        id: r.id,
+        discord_id: r.discord_id,
+        username: r.discord_global_name || r.discord_username || r.discord_id,
+        status: r.status, // submitted | graded | approved | denied
+        score: r.score,
+        total: r.total
+      });
+    });
+
+    const groups = Object.keys(mapa).map(fecha => ({
+      fecha,
+      count: mapa[fecha].length,
+      items: mapa[fecha]
+    }));
+
+    res.json({ is_staff: true, groups });
+  } catch (err) {
+    console.error('Error academy/panel:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// --- Detalle de UN formulario (lo que respondió el user) ---
+app.get('/api/academy/submission/:id', requireAuth, async (req, res) => {
+  try {
+    const discordId = String(req.session.discordUser.id);
+    if (!(await esStaff(discordId))) {
+      return res.status(403).json({ error: 'Sin permisos de staff' });
+    }
+
+    const [rows] = await pool.query(
+      `SELECT s.*, u.discord_username, u.discord_global_name
+       FROM academy_submissions s
+       LEFT JOIN verified_users u ON u.discord_id = s.discord_id
+       WHERE s.id = ?`,
+      [req.params.id]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Formulario no encontrado' });
+
+    const r = rows[0];
+    let answers = {};
+    try { answers = JSON.parse(r.answers); } catch (e) { answers = {}; }
+
+    res.json({
+      id: r.id,
+      discord_id: r.discord_id,
+      username: r.discord_global_name || r.discord_username || r.discord_id,
+      status: r.status,
+      score: r.score,
+      total: r.total,
+      answers,
+      created_at: r.created_at
+    });
+  } catch (err) {
+    console.error('Error academy/submission:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// --- CALIFICAR (cerradas automático + abiertas a elección del staff) ---
+app.post('/api/academy/grade/:id', requireAuth, async (req, res) => {
+  try {
+    const discordId = String(req.session.discordUser.id);
+    if (!(await esStaff(discordId))) {
+      return res.status(403).json({ error: 'Sin permisos de staff' });
+    }
+
+    const [rows] = await pool.query('SELECT * FROM academy_submissions WHERE id = ?', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'Formulario no encontrado' });
+    const sub = rows[0];
+    if (sub.status === 'approved' || sub.status === 'denied') {
+      return res.status(409).json({ error: 'Este formulario ya fue cerrado.' });
+    }
+
+    let answers = {};
+    try { answers = JSON.parse(sub.answers); } catch (e) { answers = {}; }
+    const open = (req.body && req.body.open) ? req.body.open : {};
+
+    // 1) Preguntas cerradas: se corrigen SOLAS
+    let score = 0;
+    let aciertos = 0;
+    Object.keys(ACADEMY_KEY).forEach(q => {
+      const userAns = String(answers[q] || '').trim().toLowerCase();
+      const correcta = String(ACADEMY_KEY[q]).trim().toLowerCase();
+      if (userAns && userAns === correcta) { score++; aciertos++; }
+    });
+
+    // 2) Preguntas abiertas: el staff elige buena (good) o mala (bad)
+    let abiertasBien = 0;
+    ACADEMY_ABIERTAS.forEach(q => {
+      if (open[q] === 'good') { score++; abiertasBien++; }
+    });
+
+    await pool.query(
+      `UPDATE academy_submissions
+       SET status = 'graded', score = ?, staff_discord_id = ?, graded_at = NOW()
+       WHERE id = ?`,
+      [score, discordId, sub.id]
+    );
+
+    console.log(`✅ Academy: formulario #${sub.id} calificado → ${score}/20 (cerradas ${aciertos}/15, abiertas ${abiertasBien}/5)`);
+    res.json({ success: true, score, total: 20, cerradas: aciertos, abiertas: abiertasBien });
+  } catch (err) {
+    console.error('Error academy/grade:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// --- DECISIÓN: aprobar (cambia rol) o denegar (puede rehacer) ---
+app.post('/api/academy/decision/:id', requireAuth, async (req, res) => {
+  try {
+    const discordId = String(req.session.discordUser.id);
+    if (!(await esStaff(discordId))) {
+      return res.status(403).json({ error: 'Sin permisos de staff' });
+    }
+
+    const action = req.body && req.body.action;
+    if (action !== 'approve' && action !== 'deny') {
+      return res.status(400).json({ error: 'Acción no válida' });
+    }
+
+    const [rows] = await pool.query('SELECT id, status, score FROM academy_submissions WHERE id = ?', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'Formulario no encontrado' });
+
+    if (action === 'approve') {
+      if (rows[0].score == null) {
+        return res.status(400).json({ error: 'Primero califica el formulario.' });
+      }
+      // APROBADO → el bot le quita "Piloto En Formación" y le da "Piloto En Práctica"
+      await pool.query(
+        `UPDATE academy_submissions
+         SET status = 'approved', role_action = 1, role_action_done = 0
+         WHERE id = ?`,
+        [rows[0].id]
+      );
+      console.log(`🎓 Academy: formulario #${rows[0].id} APROBADO → cambio de rol en cola`);
+      res.json({ success: true, status: 'approved' });
+    } else {
+      // DENEGADO → el user puede volver a hacer el formulario
+      await pool.query(
+        `UPDATE academy_submissions SET status = 'denied' WHERE id = ?`,
+        [rows[0].id]
+      );
+      console.log(`🚫 Academy: formulario #${rows[0].id} DENEGADO`);
+      res.json({ success: true, status: 'denied' });
+    }
+  } catch (err) {
+    console.error('Error academy/decision:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
 // --- Login Discord ---
 app.get('/auth/discord/login', (req, res) => {
   const params = new URLSearchParams({
