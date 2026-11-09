@@ -349,11 +349,6 @@ app.get('/api/academy/status', requireAuth, async (req, res) => {
 app.post('/api/academy/submit', requireAuth, async (req, res) => {
   try {
     const discordId = String(req.session.discordUser.id);
-    const ids = await obtenerRangosIds(discordId);
-
-    if (!ids.includes(ACADEMY_FORM_ROLE)) {
-      return res.status(403).json({ error: 'No tienes el rango habilitado para realizar el formulario.' });
-    }
 
     const [prev] = await pool.query(
       'SELECT status FROM academy_submissions WHERE discord_id = ? ORDER BY id DESC LIMIT 1',
