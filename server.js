@@ -703,7 +703,8 @@ app.get('/auth/roblox/login', requireAuth, (req, res) => {
   const redirectUri = encodeURIComponent('https://latinaviationnetwork.com/auth/roblox/callback');
   const state = encodeURIComponent('guild::' + req.session.discordUser.id);
   const scope = encodeURIComponent('openid profile');
-  const url = `https://apis.roblox.com/oauth2/v1/authorize?client_id=${ROBLOX_CLIENT_ID}&response_type=code&redirect_uri=${redirectUri}&scope=${scope}&state=${state}&step=accountConfirm`;
+  // URL base oficial: https://apis.roblox.com/oauth  (¡NO /oauth2/ !)
+  const url = `https://apis.roblox.com/oauth/v1/authorize?client_id=${ROBLOX_CLIENT_ID}&response_type=code&redirect_uri=${redirectUri}&scope=${scope}&state=${state}`;
   res.redirect(url);
 });
 
@@ -721,7 +722,7 @@ app.get('/auth/roblox/callback', requireAuth, async (req, res) => {
   }
 
   try {
-    const tokenResponse = await fetch('https://apis.roblox.com/oauth2/v1/token', {
+    const tokenResponse = await fetch('https://apis.roblox.com/oauth/v1/token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -739,19 +740,25 @@ app.get('/auth/roblox/callback', requireAuth, async (req, res) => {
     if (!tokenResponse.ok) {
       const errText = await tokenResponse.text();
       console.error('Roblox token error:', errText);
-      throw new Error('Error obteniendo token de Roblox');
+      throw new Error('Roblox rechazó el intercambio de código: ' + errText.slice(0, 300));
     }
 
     const tokenData = await tokenResponse.json();
 
-    const userResponse = await fetch('https://apis.roblox.com/users/v1/users/authenticated', {
+    // Endpoint oficial de userinfo: https://apis.roblox.com/oauth/v1/userinfo
+    const userResponse = await fetch('https://apis.roblox.com/oauth/v1/userinfo', {
       headers: { Authorization: `Bearer ${tokenData.access_token}` }
     });
 
     if (!userResponse.ok) throw new Error('Error obteniendo perfil de Roblox');
 
-    const robloxUser = await userResponse.json();
-    const avatarUrl = `https://www.roblox.com/headshot-thumbnail/image?userId=${robloxUser.id}&width=420&height=420&format=png`;
+    const info = await userResponse.json();
+    const robloxUser = {
+      id: info.sub,
+      name: info.preferred_username || info.name || ('user_' + info.sub)
+    };
+    const avatarUrl = info.picture ||
+      `https://www.roblox.com/headshot-thumbnail/image?userId=${info.sub}&width=420&height=420&format=png`;
 
     // UPDATE primero; si no había fila, se crea (si no, el Roblox nunca se guardaba)
     const [upd] = await pool.query(
