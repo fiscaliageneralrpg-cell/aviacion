@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Formulario LAN Academy | Latin Aviation Network</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --black: #030305;
+      --card: #0d0d12;
+      --white: #ffffff;
+      --white-soft: #cbd5e1;
+      --gray: #64748b;
+      --blue: #0066ff;
+      --blue-light: #3399ff;
+      --cyan: #00d4ff;
+      --blue-glow: rgba(0, 102, 255, 0.45);
+      --border: #1f2937;
+      --green: #22c55e;
+      --red: #f43f5e;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--black);
+      color: var(--white);
+      line-height: 1.55;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    a { text-decoration: none; color: inherit; }
+    .container { max-width: 900px; margin: 0 auto; padding: 0 24px; width: 100%; }
+
+    .bg-page {
+      position: fixed; inset: 0; z-index: -2;
+      background:
+        radial-gradient(900px 500px at 15% -10%, rgba(0,102,255,0.22), transparent 70%),
+        radial-gradient(700px 400px at 100% 100%, rgba(0,212,255,0.10), transparent 70%),
+        var(--black);
+    }
+    .bg-page::after {
+      content: "";
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(0,102,255,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,102,255,0.05) 1px, transparent 1px);
+      background-size: 46px 46px;
+      animation: gridMove 18s linear infinite;
+    }
+    @keyframes gridMove { to { background-position: 46px 46px, 46px 46px; } }
+
+    /* ===== NAV ===== */
+    nav {
+      position: relative; z-index: 100;
+      background: linear-gradient(180deg, rgba(8,10,18,0.97), rgba(3,3,5,0.94));
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(0,102,255,0.35);
+      border-radius: 0 0 26px 26px;
+      box-shadow: 0 14px 36px rgba(0,0,0,0.6);
+      padding: 16px 0;
+      animation: navDrop 0.7s cubic-bezier(.2,.8,.2,1) both;
+    }
+    nav::after {
+      content: "";
+      position: absolute; left: 8%; right: 8%; bottom: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--blue), var(--cyan), var(--blue), transparent);
+      background-size: 200% 100%;
+      animation: lightFlow 3.5s linear infinite;
+    }
+    .nav-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .nav-brand {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-family: 'Orbitron', monospace; font-size: 0.72rem; font-weight: 900;
+      letter-spacing: 2.5px; text-transform: uppercase; color: var(--cyan);
+      padding: 6px 14px; border: 1px solid rgba(0,212,255,0.3);
+      border-radius: 50px; background: rgba(0,212,255,0.07);
+      animation: slideRight 0.6s 0.3s ease-out both;
+    }
+    .nav-brand svg { width: 14px; height: 14px; fill: currentColor; }
+    .btn-back {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 20px; border-radius: 14px;
+      background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+      color: var(--white-soft); font-weight: 800; font-size: 0.85rem;
+      cursor: pointer; transition: 0.3s;
+      animation: slideLeft 0.6s 0.4s ease-out both;
+    }
+    .btn-back:hover { border-color: var(--blue); color: var(--white); transform: translateY(-2px); box-shadow: 0 8px 22px var(--blue-glow); }
+
+    @keyframes navDrop { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes slideRight { from { transform: translateX(-24px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes slideLeft { from { transform: translateX(24px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes fadeUp { from { transform: translateY(26px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes lightFlow { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+    /* ===== HERO ===== */
+    .hero { text-align: center; padding: 54px 0 30px; animation: fadeUp 0.7s 0.45s ease-out both; }
+    .hero .badge {
+      display: inline-flex; align-items: center; gap: 7px;
+      font-family: 'Orbitron', monospace; font-size: 0.62rem; font-weight: 900;
+      letter-spacing: 3px; text-transform: uppercase; color: var(--cyan);
+      border: 1px solid rgba(0,212,255,0.3); background: rgba(0,212,255,0.08);
+      padding: 6px 16px; border-radius: 50px; margin-bottom: 16px;
+    }
+    .hero h1 {
+      font-family: 'Orbitron', monospace; font-size: clamp(1.6rem, 5vw, 2.6rem);
+      font-weight: 900; letter-spacing: -1px; margin-bottom: 10px;
+      background: linear-gradient(135deg, var(--white) 30%, var(--cyan));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .hero p { color: var(--gray); font-size: 0.95rem; }
+    .progress-wrap { margin-top: 22px; }
+    .progress-track {
+      height: 10px; border-radius: 50px; background: rgba(255,255,255,0.07);
+      border: 1px solid var(--border); overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, var(--blue), var(--cyan));
+      box-shadow: 0 0 18px var(--blue-glow);
+      transition: width 0.4s cubic-bezier(.3,1.2,.5,1);
+    }
+    .progress-text {
+      display: block; margin-top: 8px;
+      font-family: 'Orbitron', monospace; font-size: 0.72rem;
+      letter-spacing: 2px; color: var(--cyan);
+    }
+
+    /* ===== MÓDULOS Y PREGUNTAS ===== */
+    .module { margin-top: 40px; }
+    .module-title {
+      display: flex; align-items: center; gap: 12px;
+      font-family: 'Orbitron', monospace; font-size: 0.9rem; font-weight: 900;
+      letter-spacing: 1px; text-transform: uppercase; color: var(--white);
+      padding-bottom: 12px; margin-bottom: 18px;
+      border-bottom: 2px solid rgba(0,102,255,0.4);
+      animation: fadeUp 0.6s ease-out both;
+    }
+    .module-title .m-num {
+      width: 34px; height: 34px; flex-shrink: 0;
+      display: inline-flex; align-items: center; justify-content: center;
+      border-radius: 10px; background: linear-gradient(135deg, var(--blue), var(--blue-light));
+      font-size: 0.9rem; color: #fff; box-shadow: 0 6px 18px var(--blue-glow);
+    }
+    .question {
+      background: rgba(13,13,18,0.9);
+      border: 1px solid var(--border); border-radius: 20px;
+      padding: 22px 24px; margin-bottom: 16px;
+      transition: 0.3s; animation: fadeUp 0.55s ease-out both;
+    }
+    .question:hover { border-color: rgba(0,102,255,0.5); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    .question.answered { border-color: rgba(0,212,255,0.45); background: rgba(0,102,255,0.05); }
+    .q-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+    .q-num {
+      font-family: 'Orbitron', monospace; font-size: 0.68rem; font-weight: 900;
+      letter-spacing: 1.5px; text-transform: uppercase; color: var(--cyan);
+      background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.25);
+      padding: 4px 12px; border-radius: 50px;
+    }
+    .q-type { font-size: 0.7rem; font-weight: 700; color: var(--gray); letter-spacing: 0.5px; }
+    .q-text { font-size: 0.98rem; font-weight: 600; color: var(--white-soft); margin-bottom: 16px; }
+    .options { display: flex; flex-direction: column; gap: 9px; }
+    .option {
+      display: flex; align-items: flex-start; gap: 11px;
+      padding: 12px 15px; border-radius: 13px; cursor: pointer;
+      background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+      font-size: 0.9rem; color: var(--white-soft); transition: 0.25s;
+    }
+    .option:hover { background: rgba(0,102,255,0.1); border-color: rgba(0,102,255,0.45); transform: translateX(4px); }
+    .option input { display: none; }
+    .option .letter {
+      width: 26px; height: 26px; flex-shrink: 0;
+      display: inline-flex; align-items: center; justify-content: center;
+      border-radius: 8px; background: rgba(255,255,255,0.07);
+      font-family: 'Orbitron', monospace; font-size: 0.72rem; font-weight: 900;
+      color: var(--cyan); border: 1px solid var(--border); transition: 0.25s;
+    }
+    .option input:checked ~ .letter { background: linear-gradient(135deg, var(--blue), var(--blue-light)); color: #fff; border-color: transparent; box-shadow: 0 0 14px var(--blue-glow); }
+    .option:has(input:checked) {
+      background: rgba(0,102,255,0.14); border-color: var(--blue); color: var(--white);
+      box-shadow: 0 6px 20px rgba(0,102,255,0.25);
+    }
+    textarea {
+      width: 100%; min-height: 130px; resize: vertical;
+      background: rgba(0,0,0,0.45); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px 16px;
+      color: var(--white); font-family: inherit; font-size: 0.93rem;
+      transition: 0.25s; outline: none;
+    }
+    textarea:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(0,212,255,0.18); }
+    textarea::placeholder { color: var(--gray); }
+
+    /* ===== ENVIAR ===== */
+    .submit-box {
+      margin: 42px 0 70px; text-align: center;
+      animation: fadeUp 0.6s ease-out both;
+    }
+    .btn-send {
+      position: relative; overflow: hidden;
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 16px 52px; border: none; border-radius: 16px;
+      background: linear-gradient(135deg, var(--blue), var(--blue-light));
+      color: #fff; font-family: 'Orbitron', monospace; font-weight: 900;
+      font-size: 1rem; letter-spacing: 1.5px; text-transform: uppercase;
+      cursor: pointer; transition: 0.3s; box-shadow: 0 12px 34px var(--blue-glow);
+    }
+    .btn-send::after {
+      content: ""; position: absolute; top: 0; left: -80%;
+      width: 50%; height: 100%;
+      background: linear-gradient(100deg, transparent, rgba(255,255,255,0.35), transparent);
+      transform: skewX(-20deg); animation: shine 4s 1.5s ease-in-out infinite;
+    }
+    @keyframes shine { 0% { left: -80%; } 35%,100% { left: 140%; } }
+    .btn-send:hover { transform: translateY(-3px); filter: brightness(1.12); }
+    .btn-send:active { transform: scale(0.97); }
+    .btn-send:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .hint { display: block; margin-top: 14px; color: var(--gray); font-size: 0.83rem; }
+    .alert {
+      display: none; margin-bottom: 20px; padding: 13px 18px;
+      border-radius: 13px; background: rgba(244,63,94,0.12);
+      border: 1px solid rgba(244,63,94,0.5); color: #fda4af;
+      font-size: 0.88rem; font-weight: 600;
+    }
+    .alert.show { display: block; animation: fadeUp 0.3s ease-out; }
+
+    /* ===== OVERLAY ÉXITO ===== */
+    .success-overlay {
+      position: fixed; inset: 0; z-index: 1000;
+      background: rgba(0,0,0,0.82); backdrop-filter: blur(10px);
+      display: none; align-items: center; justify-content: center; padding: 20px;
+    }
+    .success-overlay.active { display: flex; animation: fadeIn 0.3s ease-out; }
+    .success-card {
+      background: var(--card); border: 1px solid rgba(0,102,255,0.5);
+      border-radius: 26px; padding: 46px 34px; max-width: 430px; width: 100%;
+      text-align: center; box-shadow: 0 34px 70px rgba(0,0,0,0.85), 0 0 60px rgba(0,102,255,0.2);
+      animation: modalPop 0.4s cubic-bezier(.3,1.3,.5,1);
+    }
+    .success-icon {
+      width: 92px; height: 92px; margin: 0 auto 20px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%; font-size: 2.6rem;
+      background: rgba(0,102,255,0.14); border: 2px solid var(--blue);
+      box-shadow: 0 0 44px var(--blue-glow); animation: pulseRing 2s ease-in-out infinite;
+    }
+    @keyframes pulseRing { 0%,100% { box-shadow: 0 0 20px var(--blue-glow); } 50% { box-shadow: 0 0 55px var(--blue-glow); } }
+    .success-card h2 {
+      font-family: 'Orbitron', monospace; font-size: 1.35rem; font-weight: 900;
+      margin-bottom: 10px; color: var(--white);
+    }
+    .success-card p { color: var(--gray); font-size: 0.92rem; margin-bottom: 26px; }
+    .success-card .btn-back-home {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 13px 30px; border-radius: 50px; border: none;
+      background: linear-gradient(135deg, var(--blue), var(--blue-light));
+      color: #fff; font-weight: 800; font-size: 0.92rem; cursor: pointer;
+      transition: 0.3s; box-shadow: 0 10px 26px var(--blue-glow);
+    }
+    .success-card .btn-back-home:hover { transform: translateY(-2px); filter: brightness(1.12); }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes modalPop { from { transform: scale(0.85) translateY(22px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 600px) {
+      .container { padding: 0 16px; }
+      .nav-brand { font-size: 0.58rem; letter-spacing: 1.5px; padding: 5px 10px; }
+      .btn-back { padding: 8px 14px; font-size: 0.78rem; }
+      .question { padding: 18px 16px; }
+      .btn-send { width: 100%; justify-content: center; padding: 16px 20px; }
+      .module-title { font-size: 0.76rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-page"></div>
+
+  <nav>
+    <div class="nav-inner container">
+      <span class="nav-brand">
+        <svg viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>
+        LAN Academy
+      </span>
+      <a href="/dashboard" class="btn-back">← Volver al dashboard</a>
+    </div>
+  </nav>
+
+  <main class="container">
+
+    <header class="hero">
+      <span class="badge">✈ Evaluación oficial</span>
+      <h1>Formulario LAN Academy</h1>
+      <p>4 módulos · 20 preguntas · Lee con calma antes de responder</p>
+      <div class="progress-wrap">
+        <div class="progress-track"><div class="progress-bar" id="progress-bar"></div></div>
+        <span class="progress-text" id="progress-text">0 / 20 respondidas</span>
+      </div>
+    </header>
+
+    <div class="alert" id="alert"></div>
+
+    <form id="academy-form" autocomplete="off"><!-- generado por JavaScript --></form>
+
+    <div class="submit-box">
+      <button type="button" class="btn-send" id="btn-send">📤 Enviar formulario</button>
+      <span class="hint">Al enviar, tu formulario quedará <b>en revisión</b> hasta que un staff lo califique.</span>
+    </div>
+
+  </main>
+
+  <!-- Overlay: enviado -->
+  <div class="success-overlay" id="success-overlay">
+    <div class="success-card">
+      <div class="success-icon">📨</div>
+      <h2>Tu formulario está en revisión</h2>
+      <p>Recibimos tus respuestas correctamente. Un staff de LAN Academy lo calificará y verás el resultado en tu dashboard.</p>
+      <button class="btn-back-home" onclick="window.location.href='/dashboard'">Ir al dashboard →</button>
+    </div>
+  </div>
+
+  <script>
+    /* =========================================================
+       BANCO DE PREGUNTAS — LAN ACADEMY
+       ========================================================= */
+    const MODULOS = [
+      {
+        titulo: 'Interpretación de instrucciones ATC',
+        preguntas: [
+          { n: 1, tipo: 'mc', texto: 'Te encuentras en viento en cola dentro del circuito. El controlador te indica: “LAN123, mantenga posición y realice circuito cerrado para aproximación”. ¿Qué deberías hacer?', opciones: [
+            'Continuar directamente hacia la pista y aterrizar.',
+            'Interpretar la instrucción según los procedimientos de LAN y solicitar aclaración si resulta ambigua.',
+            'Abandonar el circuito inmediatamente.',
+            'Despegar nuevamente sin autorización.'
+          ]},
+          { n: 2, tipo: 'mc', texto: 'Estás en aproximación final, pero no has recibido autorización de aterrizaje. Además, observas que otra aeronave ocupa la pista. ¿Qué debes hacer?', opciones: [
+            'Aterrizar rápidamente antes de que la otra aeronave se mueva.',
+            'Ignorar al controlador.',
+            'Mantener una operación segura, comunicar la situación y ejecutar las instrucciones correspondientes.',
+            'Apagar el motor en aproximación.'
+          ]},
+          { n: 3, tipo: 'tf', texto: 'Si estás alineado en la pista y el controlador te dice “mantenga posición, tráfico en aproximación”, puedes despegar si consideras que tienes suficiente espacio.'},
+          { n: 4, tipo: 'mc', texto: 'El controlador cambia tu pista asignada de la 09 a la 27. ¿Qué deberías hacer?', opciones: [
+            'Continuar hacia la pista anterior.',
+            'Confirmar la nueva asignación y revisar los aspectos de la operación que puedan verse afectados.',
+            'Despegar desde cualquier pista disponible.',
+            'Ign
