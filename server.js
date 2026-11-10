@@ -72,9 +72,33 @@ async function obtenerEstadoVerificado(discordId) {
     [discordId]
   );
   const roblox = rows.find(r => r.roblox_id) || null;
+  const verificado = rows.some(r => esVerificado(r.fully_verified));
+
+  // AUTO-SANACIÓN: si ya tiene Roblox conectado pero fully_verified quedó en 0
+  // (porque la página nunca llamó a /api/verify-complete), se completa aquí.
+  // Discord + Roblox = verificación completa → nadie queda trabado en cargando.
+  if (roblox && !verificado) {
+    try {
+      await pool.query(
+        'UPDATE verified_users SET fully_verified = 1, updated_at = NOW() WHERE discord_id = ?',
+        [discordId]
+      );
+      console.log(`✅ Verificación auto-completada (Roblox conectado): ${discordId}`);
+      return {
+        existe: true,
+        fully_verified: true,
+        roblox_id: roblox.roblox_id,
+        roblox_username: roblox.roblox_username,
+        roblox_avatar: roblox.roblox_avatar
+      };
+    } catch (err) {
+      console.error('Error auto-completando verificación:', err.message);
+    }
+  }
+
   return {
     existe: rows.length > 0,
-    fully_verified: rows.some(r => esVerificado(r.fully_verified)),
+    fully_verified: verificado,
     roblox_id: roblox ? roblox.roblox_id : null,
     roblox_username: roblox ? roblox.roblox_username : null,
     roblox_avatar: roblox ? roblox.roblox_avatar : null
@@ -173,6 +197,23 @@ function requireGuest(req, res, next) {
   next();
 }
 
+// 🔒 Exige verificación COMPLETA (Discord + Roblox) para entrar al dashboard.
+// Sin esto, escribir /dashboard a mano saltaba todo el paso de Roblox.
+async function requireVerificado(req, res, next) {
+  if (!req.session.discordUser) {
+    return res.redirect('/iniciar-seccion.html');
+  }
+  try {
+    const estado = await obtenerEstadoVerificado(req.session.discordUser.id);
+    if (estado.fully_verified && estado.roblox_id) {
+      return next();
+    }
+  } catch (err) {
+    console.error('Error requireVerificado:', err.message);
+  }
+  return res.redirect('/verificacion.html');
+}
+
 // ============================================
 // RUTAS
 // ============================================
@@ -193,7 +234,7 @@ app.get('/verificacion.html', requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'verificacion.html'));
 });
 
-app.get('/dashboard', requireAuth, (req, res) => {
+app.get('/dashboard', requireVerificado, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
@@ -370,7 +411,7 @@ async function esStaff(discordId) {
 }
 
 // --- Página del formulario ---
-app.get('/dashboard/formulario-lan-academy', requireAuth, (req, res) => {
+app.get('/dashboard/formulario-lan-academy', requireVerificado, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'formulario-lan-academy.html'));
 });
 app.get('/formulario-lan-academy.html', requireAuth, (req, res) => {
