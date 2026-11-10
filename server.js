@@ -135,7 +135,7 @@ async function ensureVerifiedUsersTable() {
     await pool.query('ALTER TABLE verified_users ADD UNIQUE KEY uniq_verified_discord (discord_id)');
     console.log('🔑 Índice único verified_users.discord_id listo.');
   } catch (err) {
-    if (err.code === 'ER_DUP_KEYNAME') console.log('🔑 Índice único verified_users ya existe.');
+    if (err.code === 'ER_DUP_KEYNAME') console.log('🔑 Índice único verified_users.discord_id ya existe.');
     else console.error('Error asegurando verified_users:', err.message);
   }
 }
