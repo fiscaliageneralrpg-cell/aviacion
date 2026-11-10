@@ -15,6 +15,7 @@ app.set('trust proxy', 1);
 console.log('🔧 Iniciando servidor...');
 console.log('📋 DISCORD_CLIENT_ID:', process.env.DISCORD_CLIENT_ID ? '✅' : '❌ FALTANTE');
 console.log('📋 DISCORD_CLIENT_SECRET:', process.env.DISCORD_CLIENT_SECRET ? '✅' : '❌ FALTANTE');
+console.log('📋 DISCORD_BOT_TOKEN:', process.env.DISCORD_BOT_TOKEN ? '✅ (DM directo activo)' : '⚠️ no configurado (los DM quedan en cola para el bot)');
 console.log('📋 ROBLOX_CLIENT_ID:', process.env.ROBLOX_CLIENT_ID ? '✅' : '❌ FALTANTE (app en revisión)');
 console.log('📋 SESSION_SECRET:', process.env.SESSION_SECRET ? '✅' : '❌ FALTANTE');
 console.log('📋 DB_HOST:', process.env.DB_HOST);
@@ -387,11 +388,29 @@ async function ensureAcademyTables() {
         graded_at DATETIME DEFAULT NULL,
         role_action TINYINT NOT NULL DEFAULT 0,
         role_action_done TINYINT NOT NULL DEFAULT 0,
+        denied_ack TINYINT NOT NULL DEFAULT 0,
+        dm_pending TINYINT NOT NULL DEFAULT 0,
         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         KEY idx_academy_discord (discord_id)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
+
+    // Tablas que ya existían sin las columnas nuevas:
+    //   denied_ack → el usuario ya aceptó el aviso de "denegado" en la web del formulario
+    //   dm_pending → el DM de "denegado" aún no se ha enviado (lo puede enviar el bot)
+    const columnasNuevas = [
+      'ALTER TABLE academy_submissions ADD COLUMN denied_ack TINYINT NOT NULL DEFAULT 0',
+      'ALTER TABLE academy_submissions ADD COLUMN dm_pending TINYINT NOT NULL DEFAULT 0'
+    ];
+    for (const sql of columnasNuevas) {
+      try {
+        await pool.query(sql);
+      } catch (e) {
+        if (e.code !== 'ER_DUP_FIELDNAME') console.error('Error agregando columna academy:', e.message);
+      }
+    }
+
     console.log('🗂️ Tablas user_roles + academy_submissions listas.');
   } catch (err) {
     console.error('Error creando tablas academy:', err.message);
@@ -410,6 +429,62 @@ async function esStaff(discordId) {
   return STAFF_ROLES.some(r => ids.includes(r));
 }
 
+// --------------------------------------------
+// DM por Discord (necesita DISCORD_BOT_TOKEN en las variables de entorno).
+// Devuelve true si el mensaje se envió. Si falla (sin token, DMs cerrados, etc.)
+// devuelve false y el aviso queda con dm_pending = 1 para que el bot lo reintente.
+// --------------------------------------------
+async function enviarDM(discordId, mensaje) {
+  const token = process.env.DISCORD_BOT_TOKEN;
+  if (!token) return false;
+
+  const headers = {
+    Authorization: `Bot ${token}`,
+    'Content-Type': 'application/json'
+  };
+
+  try {
+    const canalRes = await fetch('https://discord.com/api/v10/users/@me/channels', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ recipient_id: String(discordId) }),
+      signal: AbortSignal.timeout(8000)
+    });
+    if (!canalRes.ok) throw new Error('No se pudo abrir el DM (' + canalRes.status + ')');
+    const canal = await canalRes.json();
+
+    const msgRes = await fetch(`https://discord.com/api/v10/channels/${canal.id}/messages`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(mensaje),
+      signal: AbortSignal.timeout(8000)
+    });
+    if (!msgRes.ok) throw new Error('No se pudo enviar el DM (' + msgRes.status + ')');
+    return true;
+  } catch (err) {
+    console.error(`⚠️ DM a ${discordId} falló:`, err.message);
+    return false;
+  }
+}
+
+function mensajeDenegado(score, total) {
+  const puntaje = (score != null) ? `\n\n**Puntaje obtenido:** ${score}/${total || 20}` : '';
+  return {
+    content: 'Hola, tienes una novedad sobre tu formulario de LAN Academy.',
+    embeds: [{
+      title: 'Tu formulario de LAN Academy fue denegado',
+      description:
+        'Un staff revisó tus respuestas y esta vez no fue aprobado.' + puntaje +
+        '\n\nNo te preocupes, puedes volver a intentarlo: entra a tu dashboard, abre el formulario, ' +
+        'acepta el aviso y respóndelo de nuevo.',
+      url: 'https://latinaviationnetwork.com/dashboard',
+      color: 0xf43f5e,
+      footer: { text: 'LAN Academy · Latin Aviation Network' },
+      timestamp: new Date().toISOString()
+    }]
+  };
+}
+
 // --- Página del formulario ---
 app.get('/dashboard/formulario-lan-academy', requireVerificado, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'formulario-lan-academy.html'));
@@ -425,7 +500,7 @@ app.get('/api/academy/status', requireAuth, async (req, res) => {
     const ids = await obtenerRangosIds(discordId);
 
     const [rows] = await pool.query(
-      `SELECT status, score, total, created_at FROM academy_submissions
+      `SELECT status, score, total, created_at, denied_ack FROM academy_submissions
        WHERE discord_id = ? ORDER BY id DESC LIMIT 1`,
       [discordId]
     );
@@ -437,7 +512,8 @@ app.get('/api/academy/status', requireAuth, async (req, res) => {
       status: last ? last.status : 'none',   // none | submitted | graded | approved | denied
       score: last && last.score != null ? last.score : null,
       total: last && last.total != null ? last.total : 20,
-      submitted_at: last ? last.created_at : null
+      submitted_at: last ? last.created_at : null,
+      denied_ack: last ? !!last.denied_ack : false   // true cuando ya aceptó el aviso de denegado
     });
   } catch (err) {
     console.error('Error academy/status:', err.message);
@@ -451,11 +527,19 @@ app.post('/api/academy/submit', requireAuth, async (req, res) => {
     const discordId = String(req.session.discordUser.id);
 
     const [prev] = await pool.query(
-      'SELECT status FROM academy_submissions WHERE discord_id = ? ORDER BY id DESC LIMIT 1',
+      'SELECT status, denied_ack FROM academy_submissions WHERE discord_id = ? ORDER BY id DESC LIMIT 1',
       [discordId]
     );
-    if (prev.length && (prev[0].status === 'submitted' || prev[0].status === 'graded')) {
-      return res.status(409).json({ error: 'Tu formulario ya está en revisión.' });
+    if (prev.length) {
+      if (prev[0].status === 'submitted' || prev[0].status === 'graded') {
+        return res.status(409).json({ error: 'Tu formulario ya está en revisión.' });
+      }
+      if (prev[0].status === 'approved') {
+        return res.status(409).json({ error: 'Tu formulario ya fue aprobado.' });
+      }
+      if (prev[0].status === 'denied' && !prev[0].denied_ack) {
+        return res.status(409).json({ error: 'Primero acepta el aviso de formulario denegado.' });
+      }
     }
 
     const answers = (req.body && req.body.answers) ? req.body.answers : {};
@@ -477,6 +561,28 @@ app.post('/api/academy/submit', requireAuth, async (req, res) => {
     res.json({ success: true, status: 'submitted' });
   } catch (err) {
     console.error('Error academy/submit:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// --- El usuario acepta el aviso de "denegado" (después puede rehacer el formulario) ---
+app.post('/api/academy/ack-denied', requireAuth, async (req, res) => {
+  try {
+    const discordId = String(req.session.discordUser.id);
+
+    const [rows] = await pool.query(
+      'SELECT id, status FROM academy_submissions WHERE discord_id = ? ORDER BY id DESC LIMIT 1',
+      [discordId]
+    );
+    if (!rows.length || rows[0].status !== 'denied') {
+      return res.status(409).json({ error: 'No tienes un formulario denegado pendiente de aceptar.' });
+    }
+
+    await pool.query('UPDATE academy_submissions SET denied_ack = 1 WHERE id = ?', [rows[0].id]);
+    console.log(`♻️ Academy: ${discordId} aceptó el aviso de denegado (#${rows[0].id})`);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error academy/ack-denied:', err.message);
     res.status(500).json({ error: 'Error interno' });
   }
 });
@@ -610,7 +716,7 @@ app.post('/api/academy/grade/:id', requireAuth, async (req, res) => {
   }
 });
 
-// --- DECISIÓN: aprobar (cambia rol) o denegar (puede rehacer) ---
+// --- DECISIÓN: aprobar (cambia rol) o denegar (puede rehacer + DM) ---
 app.post('/api/academy/decision/:id', requireAuth, async (req, res) => {
   try {
     const discordId = String(req.session.discordUser.id);
@@ -623,11 +729,19 @@ app.post('/api/academy/decision/:id', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'Acción no válida' });
     }
 
-    const [rows] = await pool.query('SELECT id, status, score FROM academy_submissions WHERE id = ?', [req.params.id]);
+    const [rows] = await pool.query(
+      'SELECT id, discord_id, status, score, total FROM academy_submissions WHERE id = ?',
+      [req.params.id]
+    );
     if (!rows.length) return res.status(404).json({ error: 'Formulario no encontrado' });
 
+    const sub = rows[0];
+    if (sub.status !== 'graded') {
+      return res.status(409).json({ error: 'Este formulario ya fue cerrado o aún no está calificado.' });
+    }
+
     if (action === 'approve') {
-      if (rows[0].score == null) {
+      if (sub.score == null) {
         return res.status(400).json({ error: 'Primero califica el formulario.' });
       }
       // APROBADO → el bot le quita "Piloto En Formación" y le da "Piloto En Práctica"
@@ -635,18 +749,27 @@ app.post('/api/academy/decision/:id', requireAuth, async (req, res) => {
         `UPDATE academy_submissions
          SET status = 'approved', role_action = 1, role_action_done = 0
          WHERE id = ?`,
-        [rows[0].id]
+        [sub.id]
       );
-      console.log(`🎓 Academy: formulario #${rows[0].id} APROBADO → cambio de rol en cola`);
+      console.log(`🎓 Academy: formulario #${sub.id} APROBADO → cambio de rol en cola`);
       res.json({ success: true, status: 'approved' });
     } else {
-      // DENEGADO → el user puede volver a hacer el formulario
+      // DENEGADO → el user ve el aviso en la web del formulario hasta que lo acepte
+      //            y recibe un DM (si no se puede enviar, queda en cola para el bot)
       await pool.query(
-        `UPDATE academy_submissions SET status = 'denied' WHERE id = ?`,
-        [rows[0].id]
+        `UPDATE academy_submissions
+         SET status = 'denied', denied_ack = 0, dm_pending = 1
+         WHERE id = ?`,
+        [sub.id]
       );
-      console.log(`🚫 Academy: formulario #${rows[0].id} DENEGADO`);
-      res.json({ success: true, status: 'denied' });
+
+      const enviado = await enviarDM(sub.discord_id, mensajeDenegado(sub.score, sub.total));
+      if (enviado) {
+        await pool.query('UPDATE academy_submissions SET dm_pending = 0 WHERE id = ?', [sub.id]);
+      }
+
+      console.log(`🚫 Academy: formulario #${sub.id} DENEGADO | DM ${enviado ? 'enviado' : 'pendiente'}`);
+      res.json({ success: true, status: 'denied', dm_sent: enviado });
     }
   } catch (err) {
     console.error('Error academy/decision:', err.message);
