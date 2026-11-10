@@ -31,7 +31,31 @@
       overflow-x: hidden;
     }
     a { text-decoration: none; color: inherit; }
+    [hidden] { display: none !important; }
     .container { max-width: 900px; margin: 0 auto; padding: 0 24px; width: 100%; }
+
+    /* ===== ICONOS CSS ===== */
+    .ico { display: inline-block; position: relative; flex-shrink: 0; width: 1.1em; height: 1.1em; vertical-align: -0.16em; color: inherit; }
+    .ico::before, .ico::after { content: ""; position: absolute; display: block; }
+    .ico-check::before { left: 30%; top: 6%; width: 30%; height: 60%; border: solid currentColor; border-width: 0 .17em .17em 0; transform: rotate(45deg); }
+    .ico-x::before, .ico-x::after { left: 8%; top: 43%; width: 84%; height: .17em; background: currentColor; border-radius: 3px; }
+    .ico-x::before { transform: rotate(45deg); }
+    .ico-x::after { transform: rotate(-45deg); }
+    .ico-clock { border: .13em solid currentColor; border-radius: 50%; }
+    .ico-clock::before { left: 44%; top: 10%; width: .12em; height: 40%; background: currentColor; border-radius: 2px; transform-origin: 50% 100%; animation: tick 6s linear infinite; }
+    .ico-clock::after { left: 44%; top: 44%; width: 28%; height: .12em; background: currentColor; border-radius: 2px; }
+    @keyframes tick { to { transform: rotate(360deg); } }
+    .ico-send { background: currentColor; clip-path: polygon(0 4%, 100% 50%, 0 96%, 22% 50%); }
+    .ico-plane { background: currentColor; clip-path: polygon(50% 0, 62% 38%, 100% 62%, 100% 74%, 60% 62%, 56% 86%, 70% 94%, 70% 100%, 50% 95%, 30% 100%, 30% 94%, 44% 86%, 40% 62%, 0 74%, 0 62%, 38% 38%); }
+    .ico-chev::before { left: 24%; top: 18%; width: 42%; height: 42%; border: solid currentColor; border-width: 0 .17em .17em 0; transform: rotate(45deg); }
+    .ico-left { transform: rotate(90deg); }
+    .ico-right { transform: rotate(-90deg); }
+    .ico-retry { border: .14em solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin 2.4s linear infinite; }
+    .ico-retry::after { right: -.12em; top: -.06em; width: 0; height: 0; border-left: .26em solid transparent; border-right: .26em solid transparent; border-top: .3em solid currentColor; transform: rotate(-35deg); }
+    .ico-warn { background: currentColor; clip-path: polygon(50% 0, 100% 92%, 0 92%); }
+    .ico-warn::before { left: 46%; top: 36%; width: 8%; height: 30%; background: var(--card); border-radius: 2px; }
+    .ico-warn::after { left: 45%; top: 72%; width: 10%; height: 10%; background: var(--card); border-radius: 50%; }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
     .bg-page {
       position: fixed; inset: 0; z-index: -2;
@@ -41,13 +65,11 @@
         var(--black);
     }
     .bg-page::after {
-      content: "";
-      position: absolute; inset: 0;
+      content: ""; position: absolute; inset: 0;
       background-image:
         linear-gradient(rgba(0,102,255,0.05) 1px, transparent 1px),
         linear-gradient(90deg, rgba(0,102,255,0.05) 1px, transparent 1px);
-      background-size: 46px 46px;
-      animation: gridMove 18s linear infinite;
+      background-size: 46px 46px; animation: gridMove 18s linear infinite;
     }
     @keyframes gridMove { to { background-position: 46px 46px, 46px 46px; } }
 
@@ -63,11 +85,9 @@
       animation: navDrop 0.7s cubic-bezier(.2,.8,.2,1) both;
     }
     nav::after {
-      content: "";
-      position: absolute; left: 8%; right: 8%; bottom: 0; height: 2px;
+      content: ""; position: absolute; left: 8%; right: 8%; bottom: 0; height: 2px;
       background: linear-gradient(90deg, transparent, var(--blue), var(--cyan), var(--blue), transparent);
-      background-size: 200% 100%;
-      animation: lightFlow 3.5s linear infinite;
+      background-size: 200% 100%; animation: lightFlow 3.5s linear infinite;
     }
     .nav-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
     .nav-brand {
@@ -84,10 +104,10 @@
       padding: 10px 20px; border-radius: 14px;
       background: rgba(255,255,255,0.05); border: 1px solid var(--border);
       color: var(--white-soft); font-weight: 800; font-size: 0.85rem;
-      cursor: pointer; transition: 0.3s;
-      animation: slideLeft 0.6s 0.4s ease-out both;
+      cursor: pointer; transition: 0.3s; animation: slideLeft 0.6s 0.4s ease-out both;
     }
     .btn-back:hover { border-color: var(--blue); color: var(--white); transform: translateY(-2px); box-shadow: 0 8px 22px var(--blue-glow); }
+    a:focus-visible, button:focus-visible, textarea:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
 
     @keyframes navDrop { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     @keyframes slideRight { from { transform: translateX(-24px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
@@ -98,7 +118,7 @@
     /* ===== HERO ===== */
     .hero { text-align: center; padding: 54px 0 30px; animation: fadeUp 0.7s 0.45s ease-out both; }
     .hero .badge {
-      display: inline-flex; align-items: center; gap: 7px;
+      display: inline-flex; align-items: center; gap: 8px;
       font-family: 'Orbitron', monospace; font-size: 0.62rem; font-weight: 900;
       letter-spacing: 3px; text-transform: uppercase; color: var(--cyan);
       border: 1px solid rgba(0,212,255,0.3); background: rgba(0,212,255,0.08);
@@ -112,21 +132,76 @@
     }
     .hero p { color: var(--gray); font-size: 0.95rem; }
     .progress-wrap { margin-top: 22px; }
-    .progress-track {
-      height: 10px; border-radius: 50px; background: rgba(255,255,255,0.07);
-      border: 1px solid var(--border); overflow: hidden;
-    }
+    .progress-track { height: 10px; border-radius: 50px; background: rgba(255,255,255,0.07); border: 1px solid var(--border); overflow: hidden; }
     .progress-bar {
       height: 100%; width: 0%;
       background: linear-gradient(90deg, var(--blue), var(--cyan));
       box-shadow: 0 0 18px var(--blue-glow);
       transition: width 0.4s cubic-bezier(.3,1.2,.5,1);
     }
-    .progress-text {
-      display: block; margin-top: 8px;
-      font-family: 'Orbitron', monospace; font-size: 0.72rem;
-      letter-spacing: 2px; color: var(--cyan);
+    .progress-text { display: block; margin-top: 8px; font-family: 'Orbitron', monospace; font-size: 0.72rem; letter-spacing: 2px; color: var(--cyan); }
+
+    /* ===== TARJETA DE ESTADO (revisión / denegado / aprobado) ===== */
+    .status-card {
+      --c: var(--cyan); --cbg: rgba(0,212,255,0.10);
+      position: relative; overflow: hidden; margin-top: 10px;
+      display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px;
+      padding: 44px 32px 36px; border-radius: 28px;
+      background:
+        radial-gradient(520px 240px at 50% 0%, var(--cbg), transparent 70%),
+        linear-gradient(160deg, rgba(20,22,32,0.97), rgba(13,13,18,0.97));
+      border: 1px solid var(--c);
+      box-shadow: 0 26px 60px rgba(0,0,0,0.6), 0 0 50px var(--cbg);
+      animation: fadeUp 0.6s ease-out both;
     }
+    .status-card::before {
+      content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px;
+      background: linear-gradient(90deg, transparent, var(--c), #fff, var(--c), transparent);
+      background-size: 200% 100%; animation: lightFlow 2.6s linear infinite;
+    }
+    .status-card.review   { --c: #3399ff; --cbg: rgba(51,153,255,0.14); }
+    .status-card.denied   { --c: #f43f5e; --cbg: rgba(244,63,94,0.14); }
+    .status-card.approved { --c: #22c55e; --cbg: rgba(34,197,94,0.14); }
+    .status-card.loading  { --c: #1f2937; --cbg: rgba(0,102,255,0.06); padding: 34px; }
+    .sc-badge {
+      width: 88px; height: 88px; border-radius: 26px; display: flex; align-items: center; justify-content: center;
+      font-size: 2.7rem; color: var(--c); background: var(--cbg); border: 1px solid var(--c);
+      box-shadow: 0 0 36px var(--cbg); animation: badgePop 0.6s 0.15s cubic-bezier(.3,1.4,.5,1) both;
+    }
+    .status-card.denied .sc-badge { animation: badgePop 0.6s 0.15s cubic-bezier(.3,1.4,.5,1) both, shake 0.55s 0.7s ease-in-out; }
+    @keyframes badgePop { from { transform: scale(0.4) rotate(-12deg); opacity: 0; } to { transform: scale(1) rotate(0); opacity: 1; } }
+    @keyframes shake { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-7px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(3px); } }
+    .sc-title { font-family: 'Orbitron', monospace; font-size: clamp(1.15rem, 3.4vw, 1.6rem); font-weight: 900; color: var(--white); line-height: 1.25; }
+    .sc-text { max-width: 520px; color: var(--white-soft); font-size: 0.93rem; }
+    .sc-meta { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+    .sc-chip {
+      display: inline-flex; align-items: center; gap: 7px; padding: 6px 14px; border-radius: 50px;
+      font-size: 0.76rem; font-weight: 800; color: var(--c); background: var(--cbg); border: 1px solid var(--c);
+    }
+    .sc-steps { display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 460px; text-align: left; margin-top: 4px; }
+    .sc-step {
+      display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 13px;
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border); font-size: 0.85rem; color: var(--white-soft); font-weight: 600;
+    }
+    .sc-step b {
+      width: 26px; height: 26px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
+      border-radius: 8px; font-family: 'Orbitron', monospace; font-size: 0.72rem; color: #fff; background: var(--c);
+    }
+    .sc-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 8px; }
+    .btn-main, .btn-ghost {
+      display: inline-flex; align-items: center; gap: 10px; padding: 14px 30px; border-radius: 14px; cursor: pointer;
+      font-family: inherit; font-weight: 800; font-size: 0.92rem; transition: 0.3s; border: none;
+    }
+    .btn-main { color: #fff; background: linear-gradient(135deg, var(--c), color-mix(in srgb, var(--c) 55%, #fff)); box-shadow: 0 10px 28px var(--cbg); }
+    .status-card.denied .btn-main { background: linear-gradient(135deg, #e11d48, #f43f5e); box-shadow: 0 10px 28px rgba(244,63,94,0.4); }
+    .status-card.review .btn-main { background: linear-gradient(135deg, var(--blue), var(--blue-light)); box-shadow: 0 10px 28px var(--blue-glow); }
+    .status-card.approved .btn-main { background: linear-gradient(135deg, #16a34a, #22c55e); box-shadow: 0 10px 28px rgba(34,197,94,0.4); }
+    .btn-main:hover { transform: translateY(-3px); filter: brightness(1.12); }
+    .btn-main:disabled { opacity: .6; cursor: wait; transform: none; }
+    .btn-ghost { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--white-soft); }
+    .btn-ghost:hover { border-color: var(--blue); color: #fff; transform: translateY(-2px); }
+    .sc-loading-text { display: inline-flex; align-items: center; gap: 12px; color: var(--gray); font-weight: 700; font-size: 0.9rem; }
+    .sc-loading-text .ico { font-size: 1.4rem; color: var(--cyan); }
 
     /* ===== MÓDULOS Y PREGUNTAS ===== */
     .module { margin-top: 40px; }
@@ -135,80 +210,57 @@
       font-family: 'Orbitron', monospace; font-size: 0.9rem; font-weight: 900;
       letter-spacing: 1px; text-transform: uppercase; color: var(--white);
       padding-bottom: 12px; margin-bottom: 18px;
-      border-bottom: 2px solid rgba(0,102,255,0.4);
-      animation: fadeUp 0.6s ease-out both;
+      border-bottom: 2px solid rgba(0,102,255,0.4); animation: fadeUp 0.6s ease-out both;
     }
     .module-title .m-num {
-      width: 34px; height: 34px; flex-shrink: 0;
-      display: inline-flex; align-items: center; justify-content: center;
+      width: 34px; height: 34px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
       border-radius: 10px; background: linear-gradient(135deg, var(--blue), var(--blue-light));
       font-size: 0.9rem; color: #fff; box-shadow: 0 6px 18px var(--blue-glow);
     }
     .question {
-      background: rgba(13,13,18,0.9);
-      border: 1px solid var(--border); border-radius: 20px;
-      padding: 22px 24px; margin-bottom: 16px;
-      transition: 0.3s; animation: fadeUp 0.55s ease-out both;
+      background: rgba(13,13,18,0.9); border: 1px solid var(--border); border-radius: 20px;
+      padding: 22px 24px; margin-bottom: 16px; transition: 0.3s; animation: fadeUp 0.55s ease-out both;
     }
     .question:hover { border-color: rgba(0,102,255,0.5); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
     .question.answered { border-color: rgba(0,212,255,0.45); background: rgba(0,102,255,0.05); }
     .q-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
     .q-num {
-      font-family: 'Orbitron', monospace; font-size: 0.68rem; font-weight: 900;
-      letter-spacing: 1.5px; text-transform: uppercase; color: var(--cyan);
-      background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.25);
-      padding: 4px 12px; border-radius: 50px;
+      font-family: 'Orbitron', monospace; font-size: 0.68rem; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase; color: var(--cyan);
+      background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.25); padding: 4px 12px; border-radius: 50px;
     }
     .q-type { font-size: 0.7rem; font-weight: 700; color: var(--gray); letter-spacing: 0.5px; }
     .q-text { font-size: 0.98rem; font-weight: 600; color: var(--white-soft); margin-bottom: 16px; }
     .options { display: flex; flex-direction: column; gap: 9px; }
     .option {
-      display: flex; align-items: flex-start; gap: 11px;
-      padding: 12px 15px; border-radius: 13px; cursor: pointer;
-      background: rgba(255,255,255,0.03); border: 1px solid var(--border);
-      font-size: 0.9rem; color: var(--white-soft); transition: 0.25s;
+      display: flex; align-items: flex-start; gap: 11px; padding: 12px 15px; border-radius: 13px; cursor: pointer;
+      background: rgba(255,255,255,0.03); border: 1px solid var(--border); font-size: 0.9rem; color: var(--white-soft); transition: 0.25s;
     }
     .option:hover { background: rgba(0,102,255,0.1); border-color: rgba(0,102,255,0.45); transform: translateX(4px); }
     .option input { display: none; }
     .option .letter {
-      width: 26px; height: 26px; flex-shrink: 0;
-      display: inline-flex; align-items: center; justify-content: center;
-      border-radius: 8px; background: rgba(255,255,255,0.07);
-      font-family: 'Orbitron', monospace; font-size: 0.72rem; font-weight: 900;
+      width: 26px; height: 26px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
+      border-radius: 8px; background: rgba(255,255,255,0.07); font-family: 'Orbitron', monospace; font-size: 0.72rem; font-weight: 900;
       color: var(--cyan); border: 1px solid var(--border); transition: 0.25s;
     }
     .option input:checked ~ .letter { background: linear-gradient(135deg, var(--blue), var(--blue-light)); color: #fff; border-color: transparent; box-shadow: 0 0 14px var(--blue-glow); }
-    .option:has(input:checked) {
-      background: rgba(0,102,255,0.14); border-color: var(--blue); color: var(--white);
-      box-shadow: 0 6px 20px rgba(0,102,255,0.25);
-    }
+    .option:has(input:checked) { background: rgba(0,102,255,0.14); border-color: var(--blue); color: var(--white); box-shadow: 0 6px 20px rgba(0,102,255,0.25); }
     textarea {
-      width: 100%; min-height: 130px; resize: vertical;
-      background: rgba(0,0,0,0.45); border: 1px solid var(--border);
-      border-radius: 14px; padding: 14px 16px;
-      color: var(--white); font-family: inherit; font-size: 0.93rem;
-      transition: 0.25s; outline: none;
+      width: 100%; min-height: 130px; resize: vertical; background: rgba(0,0,0,0.45); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px 16px; color: var(--white); font-family: inherit; font-size: 0.93rem; transition: 0.25s; outline: none;
     }
     textarea:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(0,212,255,0.18); }
     textarea::placeholder { color: var(--gray); }
 
     /* ===== ENVIAR ===== */
-    .submit-box {
-      margin: 42px 0 70px; text-align: center;
-      animation: fadeUp 0.6s ease-out both;
-    }
+    .submit-box { margin: 42px 0 70px; text-align: center; animation: fadeUp 0.6s ease-out both; }
     .btn-send {
-      position: relative; overflow: hidden;
-      display: inline-flex; align-items: center; gap: 10px;
-      padding: 16px 52px; border: none; border-radius: 16px;
-      background: linear-gradient(135deg, var(--blue), var(--blue-light));
-      color: #fff; font-family: 'Orbitron', monospace; font-weight: 900;
-      font-size: 1rem; letter-spacing: 1.5px; text-transform: uppercase;
+      position: relative; overflow: hidden; display: inline-flex; align-items: center; gap: 12px;
+      padding: 16px 52px; border: none; border-radius: 16px; background: linear-gradient(135deg, var(--blue), var(--blue-light));
+      color: #fff; font-family: 'Orbitron', monospace; font-weight: 900; font-size: 1rem; letter-spacing: 1.5px; text-transform: uppercase;
       cursor: pointer; transition: 0.3s; box-shadow: 0 12px 34px var(--blue-glow);
     }
     .btn-send::after {
-      content: ""; position: absolute; top: 0; left: -80%;
-      width: 50%; height: 100%;
+      content: ""; position: absolute; top: 0; left: -80%; width: 50%; height: 100%;
       background: linear-gradient(100deg, transparent, rgba(255,255,255,0.35), transparent);
       transform: skewX(-20deg); animation: shine 4s 1.5s ease-in-out infinite;
     }
@@ -218,44 +270,33 @@
     .btn-send:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
     .hint { display: block; margin-top: 14px; color: var(--gray); font-size: 0.83rem; }
     .alert {
-      display: none; margin-bottom: 20px; padding: 13px 18px;
-      border-radius: 13px; background: rgba(244,63,94,0.12);
-      border: 1px solid rgba(244,63,94,0.5); color: #fda4af;
-      font-size: 0.88rem; font-weight: 600;
+      display: none; align-items: center; gap: 10px; margin-bottom: 20px; padding: 13px 18px; border-radius: 13px;
+      background: rgba(244,63,94,0.12); border: 1px solid rgba(244,63,94,0.5); color: #fda4af; font-size: 0.88rem; font-weight: 600;
     }
-    .alert.show { display: block; animation: fadeUp 0.3s ease-out; }
+    .alert.show { display: flex; animation: fadeUp 0.3s ease-out; }
 
     /* ===== OVERLAY ÉXITO ===== */
     .success-overlay {
-      position: fixed; inset: 0; z-index: 1000;
-      background: rgba(0,0,0,0.82); backdrop-filter: blur(10px);
+      position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.82); backdrop-filter: blur(10px);
       display: none; align-items: center; justify-content: center; padding: 20px;
     }
     .success-overlay.active { display: flex; animation: fadeIn 0.3s ease-out; }
     .success-card {
-      background: var(--card); border: 1px solid rgba(0,102,255,0.5);
-      border-radius: 26px; padding: 46px 34px; max-width: 430px; width: 100%;
+      background: var(--card); border: 1px solid rgba(0,102,255,0.5); border-radius: 26px; padding: 46px 34px; max-width: 430px; width: 100%;
       text-align: center; box-shadow: 0 34px 70px rgba(0,0,0,0.85), 0 0 60px rgba(0,102,255,0.2);
       animation: modalPop 0.4s cubic-bezier(.3,1.3,.5,1);
     }
     .success-icon {
-      width: 92px; height: 92px; margin: 0 auto 20px;
-      display: flex; align-items: center; justify-content: center;
-      border-radius: 50%; font-size: 2.6rem;
-      background: rgba(0,102,255,0.14); border: 2px solid var(--blue);
+      width: 92px; height: 92px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;
+      border-radius: 28px; font-size: 2.6rem; color: var(--cyan); background: rgba(0,102,255,0.14); border: 2px solid var(--blue);
       box-shadow: 0 0 44px var(--blue-glow); animation: pulseRing 2s ease-in-out infinite;
     }
     @keyframes pulseRing { 0%,100% { box-shadow: 0 0 20px var(--blue-glow); } 50% { box-shadow: 0 0 55px var(--blue-glow); } }
-    .success-card h2 {
-      font-family: 'Orbitron', monospace; font-size: 1.35rem; font-weight: 900;
-      margin-bottom: 10px; color: var(--white);
-    }
+    .success-card h2 { font-family: 'Orbitron', monospace; font-size: 1.35rem; font-weight: 900; margin-bottom: 10px; color: var(--white); }
     .success-card p { color: var(--gray); font-size: 0.92rem; margin-bottom: 26px; }
     .success-card .btn-back-home {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 13px 30px; border-radius: 50px; border: none;
-      background: linear-gradient(135deg, var(--blue), var(--blue-light));
-      color: #fff; font-weight: 800; font-size: 0.92rem; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 8px; padding: 13px 30px; border-radius: 50px; border: none;
+      background: linear-gradient(135deg, var(--blue), var(--blue-light)); color: #fff; font-weight: 800; font-size: 0.92rem; cursor: pointer;
       transition: 0.3s; box-shadow: 0 10px 26px var(--blue-glow);
     }
     .success-card .btn-back-home:hover { transform: translateY(-2px); filter: brightness(1.12); }
@@ -270,6 +311,8 @@
       .question { padding: 18px 16px; }
       .btn-send { width: 100%; justify-content: center; padding: 16px 20px; }
       .module-title { font-size: 0.76rem; }
+      .status-card { padding: 34px 20px 28px; }
+      .btn-main, .btn-ghost { width: 100%; justify-content: center; }
     }
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -286,29 +329,39 @@
         <svg viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>
         LAN Academy
       </span>
-      <a href="/dashboard" class="btn-back">← Volver al dashboard</a>
+      <a href="/dashboard" class="btn-back"><i class="ico ico-chev ico-left"></i> Volver al dashboard</a>
     </div>
   </nav>
 
   <main class="container">
 
     <header class="hero">
-      <span class="badge">✈ Evaluación oficial</span>
+      <span class="badge"><i class="ico ico-plane"></i> Evaluación oficial</span>
       <h1>Formulario LAN Academy</h1>
       <p>4 módulos · 20 preguntas · Lee con calma antes de responder</p>
-      <div class="progress-wrap">
+      <div class="progress-wrap" id="progress-wrap" hidden>
         <div class="progress-track"><div class="progress-bar" id="progress-bar"></div></div>
         <span class="progress-text" id="progress-text">0 / 20 respondidas</span>
       </div>
     </header>
 
+    <!-- Aviso de estado (cargando / en revisión / denegado / aprobado) -->
+    <div id="status-box">
+      <div class="status-card loading">
+        <span class="sc-loading-text"><i class="ico ico-retry"></i> Comprobando el estado de tu formulario…</span>
+      </div>
+    </div>
+
     <div class="alert" id="alert"></div>
 
-    <form id="academy-form" autocomplete="off"><!-- generado por JavaScript --></form>
+    <!-- Formulario: solo visible cuando el usuario puede responder -->
+    <div id="form-area" hidden>
+      <form id="academy-form" autocomplete="off"><!-- generado por JavaScript --></form>
 
-    <div class="submit-box">
-      <button type="button" class="btn-send" id="btn-send">📤 Enviar formulario</button>
-      <span class="hint">Al enviar, tu formulario quedará <b>en revisión</b> hasta que un staff lo califique.</span>
+      <div class="submit-box">
+        <button type="button" class="btn-send" id="btn-send"><i class="ico ico-send"></i> Enviar formulario</button>
+        <span class="hint">Al enviar, tu formulario quedará <b>en revisión</b> hasta que un staff lo califique.</span>
+      </div>
     </div>
 
   </main>
@@ -316,10 +369,10 @@
   <!-- Overlay: enviado -->
   <div class="success-overlay" id="success-overlay">
     <div class="success-card">
-      <div class="success-icon">📨</div>
+      <div class="success-icon"><i class="ico ico-send"></i></div>
       <h2>Tu formulario está en revisión</h2>
-      <p>Recibimos tus respuestas correctamente. Un staff de LAN Academy lo calificará y verás el resultado en tu dashboard.</p>
-      <button class="btn-back-home" onclick="window.location.href='/dashboard'">Ir al dashboard →</button>
+      <p>Recibimos tus respuestas correctamente. Un staff de LAN Academy lo calificará y verás el resultado aquí y en tu dashboard.</p>
+      <button class="btn-back-home" onclick="window.location.href='/dashboard'">Ir al dashboard <i class="ico ico-chev ico-right"></i></button>
     </div>
   </div>
 
@@ -428,6 +481,9 @@
     const LETRAS = ['A', 'B', 'C', 'D'];
     const form = document.getElementById('academy-form');
     const alertBox = document.getElementById('alert');
+    const statusBox = document.getElementById('status-box');
+    const formArea = document.getElementById('form-area');
+    const progressWrap = document.getElementById('progress-wrap');
 
     /* ---------- Renderizar preguntas ---------- */
     MODULOS.forEach((mod, mi) => {
@@ -507,10 +563,8 @@
       const pct = Math.round((hechas / totalPreguntas) * 100);
       document.getElementById('progress-bar').style.width = pct + '%';
       document.getElementById('progress-text').textContent = `${hechas} / ${totalPreguntas} respondidas`;
-
       form.querySelectorAll('.question').forEach(q => {
-        const n = q.dataset.q;
-        q.classList.toggle('answered', !!answers[n]);
+        q.classList.toggle('answered', !!answers[q.dataset.q]);
       });
     }
 
@@ -518,9 +572,129 @@
     form.addEventListener('input', actualizarProgreso);
     actualizarProgreso();
 
+    /* =========================================================
+       ESTADO DEL FORMULARIO
+       - en revisión / calificado → aviso, sin formulario
+       - denegado → aviso fijo hasta pulsar "Aceptar y volver a hacer"
+       - aprobado → aviso de aprobado
+       - nuevo (o denegado ya aceptado) → formulario
+       ========================================================= */
+    function mostrarFormulario() {
+      statusBox.hidden = true;
+      statusBox.innerHTML = '';
+      formArea.hidden = false;
+      progressWrap.hidden = false;
+      actualizarProgreso();
+    }
+
+    function esc(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function fechaLarga(v) {
+      if (!v) return '';
+      const d = new Date(v);
+      if (isNaN(d)) return '';
+      return d.toLocaleString('es', { dateStyle: 'long', timeStyle: 'short' });
+    }
+
+    function mostrarTarjeta(tipo, st) {
+      formArea.hidden = true;
+      progressWrap.hidden = true;
+      statusBox.hidden = false;
+
+      const fecha = fechaLarga(st && st.submitted_at);
+      const total = (st && st.total) || 20;
+      const tieneScore = st && st.score != null;
+      const chipFecha = fecha ? `<span class="sc-chip"><i class="ico ico-clock"></i> Enviado: ${esc(fecha)}</span>` : '';
+
+      if (tipo === 'review') {
+        statusBox.innerHTML = `
+          <div class="status-card review">
+            <div class="sc-badge"><i class="ico ico-clock"></i></div>
+            <h2 class="sc-title">Tu formulario está en revisión</h2>
+            <p class="sc-text">Recibimos tus respuestas. Un staff de LAN Academy las está revisando. Mientras tanto no puedes enviar otro formulario. Cuando haya un resultado lo verás aquí y en tu dashboard.</p>
+            <div class="sc-meta">${chipFecha}</div>
+            <div class="sc-actions">
+              <a href="/dashboard" class="btn-main"><i class="ico ico-chev ico-left"></i> Volver al dashboard</a>
+            </div>
+          </div>`;
+      } else if (tipo === 'approved') {
+        statusBox.innerHTML = `
+          <div class="status-card approved">
+            <div class="sc-badge"><i class="ico ico-check"></i></div>
+            <h2 class="sc-title">Formulario aprobado</h2>
+            <p class="sc-text">Un staff aprobó tu formulario. Ya tienes el rango Piloto En Práctica, no necesitas volver a hacerlo.</p>
+            <div class="sc-meta">
+              ${tieneScore ? `<span class="sc-chip"><i class="ico ico-check"></i> Puntaje: ${st.score}/${total}</span>` : ''}
+            </div>
+            <div class="sc-actions">
+              <a href="/dashboard" class="btn-main">Ir al dashboard <i class="ico ico-chev ico-right"></i></a>
+            </div>
+          </div>`;
+      } else if (tipo === 'denied') {
+        statusBox.innerHTML = `
+          <div class="status-card denied">
+            <div class="sc-badge"><i class="ico ico-x"></i></div>
+            <h2 class="sc-title">Tu formulario fue denegado</h2>
+            <p class="sc-text">Un staff revisó tus respuestas y esta vez no fue aprobado. Este aviso se queda aquí hasta que lo aceptes.</p>
+            <div class="sc-meta">
+              ${tieneScore ? `<span class="sc-chip"><i class="ico ico-x"></i> Puntaje: ${st.score}/${total}</span>` : ''}
+              ${chipFecha}
+            </div>
+            <div class="sc-steps">
+              <div class="sc-step"><b>1</b> Acepta este aviso</div>
+              <div class="sc-step"><b>2</b> Responde de nuevo los 4 módulos y envía</div>
+            </div>
+            <div class="sc-actions">
+              <button type="button" class="btn-main" id="btn-ack"><i class="ico ico-retry"></i> Aceptar y volver a hacer</button>
+              <a href="/dashboard" class="btn-ghost">Volver al dashboard</a>
+            </div>
+          </div>`;
+        document.getElementById('btn-ack').addEventListener('click', aceptarDenegado);
+      }
+    }
+
+    async function aceptarDenegado() {
+      const btn = document.getElementById('btn-ack');
+      btn.disabled = true;
+      try {
+        const res = await fetch('/api/academy/ack-denied', { method: 'POST' });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'No se pudo aceptar el aviso');
+        mostrarFormulario();
+        alertBox.classList.remove('show');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (e) {
+        btn.disabled = false;
+        mostrarAlerta(e.message);
+      }
+    }
+
+    function aplicarEstado(st) {
+      const status = st.status || 'none';
+      if (status === 'submitted' || status === 'graded') return mostrarTarjeta('review', st);
+      if (status === 'approved') return mostrarTarjeta('approved', st);
+      if (status === 'denied' && !st.denied_ack) return mostrarTarjeta('denied', st);
+      mostrarFormulario();
+    }
+
+    async function cargarEstado() {
+      try {
+        const res = await fetch('/api/academy/status');
+        if (res.status === 401) { window.location.href = '/iniciar-seccion.html'; return; }
+        if (!res.ok) throw new Error('estado no disponible');
+        aplicarEstado(await res.json());
+      } catch (e) {
+        console.error(e);
+        mostrarFormulario(); /* el servidor igual bloquea envíos no permitidos */
+      }
+    }
+
     /* ---------- Enviar ---------- */
     function mostrarAlerta(msg) {
-      alertBox.textContent = msg;
+      alertBox.innerHTML = '<i class="ico ico-warn"></i><span></span>';
+      alertBox.querySelector('span').textContent = msg;
       alertBox.classList.add('show');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -529,7 +703,7 @@
       const { answers, faltantes } = respuestasActuales();
 
       if (faltantes.length > 0) {
-        mostrarAlerta(`⚠️ Te faltan ${faltantes.length} pregunta(s): ${faltantes.join(', ')}. Responde todo antes de enviar.`);
+        mostrarAlerta(`Te faltan ${faltantes.length} pregunta(s): ${faltantes.join(', ')}. Responde todo antes de enviar.`);
         const first = form.querySelector(`[data-q="${faltantes[0]}"]`);
         if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
@@ -549,16 +723,20 @@
         const data = await res.json();
 
         if (!res.ok) {
+          if (res.status === 409) { await cargarEstado(); }
           throw new Error(data.error || 'No se pudo enviar el formulario');
         }
 
         document.getElementById('success-overlay').classList.add('active');
+        mostrarTarjeta('review', { submitted_at: new Date().toISOString() });
       } catch (e) {
-        mostrarAlerta('❌ ' + e.message);
+        mostrarAlerta(e.message);
         btn.disabled = false;
-        btn.textContent = '📤 Enviar formulario';
+        btn.innerHTML = '<i class="ico ico-send"></i> Enviar formulario';
       }
     });
+
+    cargarEstado();
   </script>
 </body>
 </html>
