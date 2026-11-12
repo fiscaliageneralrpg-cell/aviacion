@@ -133,6 +133,13 @@ async function ensureVerifiedUsersTable() {
       }
       console.log('✅ Duplicados de verified_users eliminados.');
     }
+    // Ruta elegida por el usuario tras verificar: 'piloto' | 'atc' | NULL (sin elegir)
+    try {
+      await pool.query('ALTER TABLE verified_users ADD COLUMN track VARCHAR(10) DEFAULT NULL');
+      console.log('🧭 Columna verified_users.track lista.');
+    } catch (e) {
+      if (e.code !== 'ER_DUP_FIELDNAME') console.error('Error agregando verified_users.track:', e.message);
+    }
     await pool.query('ALTER TABLE verified_users ADD UNIQUE KEY uniq_verified_discord (discord_id)');
     console.log('🔑 Índice único verified_users.discord_id listo.');
   } catch (err) {
@@ -390,6 +397,7 @@ async function ensureAcademyTables() {
         role_action_done TINYINT NOT NULL DEFAULT 0,
         denied_ack TINYINT NOT NULL DEFAULT 0,
         dm_pending TINYINT NOT NULL DEFAULT 0,
+        denied_at DATETIME DEFAULT NULL,
         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         KEY idx_academy_discord (discord_id)
@@ -399,9 +407,11 @@ async function ensureAcademyTables() {
     // Tablas que ya existían sin las columnas nuevas:
     //   denied_ack → el usuario ya aceptó el aviso de "denegado" en la web del formulario
     //   dm_pending → el DM de "denegado" aún no se ha enviado (lo puede enviar el bot)
+    //   denied_at  → cuándo se denegó (controla el cooldown de 1 hora para reintentar)
     const columnasNuevas = [
       'ALTER TABLE academy_submissions ADD COLUMN denied_ack TINYINT NOT NULL DEFAULT 0',
-      'ALTER TABLE academy_submissions ADD COLUMN dm_pending TINYINT NOT NULL DEFAULT 0'
+      'ALTER TABLE academy_submissions ADD COLUMN dm_pending TINYINT NOT NULL DEFAULT 0',
+      'ALTER TABLE academy_submissions ADD COLUMN denied_at DATETIME DEFAULT NULL'
     ];
     for (const sql of columnasNuevas) {
       try {
@@ -493,6 +503,43 @@ app.get('/formulario-lan-academy.html', requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'formulario-lan-academy.html'));
 });
 
+// --- Cooldowns de reenvío del formulario ---
+//   • Denegado  → puede volver a enviarlo 1 hora después de la denegación.
+//   • En revisión sin respuesta → puede volver a enviarlo 24 horas después del envío.
+const COOLDOWN_DENEGADO_MS = 60 * 60 * 1000;        // 1 hora
+const COOLDOWN_REVISION_MS = 24 * 60 * 60 * 1000;   // 24 horas
+
+function tiempoHumano(seg) {
+  if (seg <= 0) return 'ya';
+  const m = Math.ceil(seg / 60);
+  if (m < 60) return `${m} min`;
+  const h = Math.floor(m / 60), mm = m % 60;
+  return mm ? `${h} h ${mm} min` : `${h} h`;
+}
+
+// Calcula si el usuario ya puede volver a enviar y cuánto falta (en segundos)
+function calcularReintento(last) {
+  if (!last) return { retry_ready: true, retry_wait: 0 };
+  const ahora = Date.now();
+
+  if (last.status === 'approved') {
+    return { retry_ready: false, retry_wait: 0 };           // aprobado: ya no hace falta
+  }
+  if (last.status === 'denied') {
+    const base = new Date(last.denied_at || last.updated_at).getTime();
+    const libre = base + COOLDOWN_DENEGADO_MS;
+    if (ahora < libre) return { retry_ready: false, retry_wait: Math.ceil((libre - ahora) / 1000) };
+    return { retry_ready: true, retry_wait: 0 };
+  }
+  if (last.status === 'submitted') {
+    const libre = new Date(last.created_at).getTime() + COOLDOWN_REVISION_MS;
+    if (ahora < libre) return { retry_ready: false, retry_wait: Math.ceil((libre - ahora) / 1000) };
+    return { retry_ready: true, retry_wait: 0 };
+  }
+  // 'graded' → el staff ya calificó, se espera su decisión
+  return { retry_ready: false, retry_wait: 0 };
+}
+
 // --- Estado del formulario del usuario ---
 app.get('/api/academy/status', requireAuth, async (req, res) => {
   try {
@@ -500,11 +547,13 @@ app.get('/api/academy/status', requireAuth, async (req, res) => {
     const ids = await obtenerRangosIds(discordId);
 
     const [rows] = await pool.query(
-      `SELECT status, score, total, created_at, denied_ack FROM academy_submissions
+      `SELECT status, score, total, created_at, updated_at, denied_at, denied_ack
+       FROM academy_submissions
        WHERE discord_id = ? ORDER BY id DESC LIMIT 1`,
       [discordId]
     );
     const last = rows[0] || null;
+    const reintento = calcularReintento(last);
 
     res.json({
       has_form_role: ids.includes(ACADEMY_FORM_ROLE),
@@ -513,7 +562,9 @@ app.get('/api/academy/status', requireAuth, async (req, res) => {
       score: last && last.score != null ? last.score : null,
       total: last && last.total != null ? last.total : 20,
       submitted_at: last ? last.created_at : null,
-      denied_ack: last ? !!last.denied_ack : false   // true cuando ya aceptó el aviso de denegado
+      denied_ack: last ? !!last.denied_ack : false,   // true cuando ya aceptó el aviso de denegado
+      retry_ready: reintento.retry_ready,             // true → ya puede volver a enviar
+      retry_wait: reintento.retry_wait                // segundos restantes del cooldown
     });
   } catch (err) {
     console.error('Error academy/status:', err.message);
@@ -527,18 +578,42 @@ app.post('/api/academy/submit', requireAuth, async (req, res) => {
     const discordId = String(req.session.discordUser.id);
 
     const [prev] = await pool.query(
-      'SELECT status, denied_ack FROM academy_submissions WHERE discord_id = ? ORDER BY id DESC LIMIT 1',
+      'SELECT id, status, denied_ack, created_at, updated_at, denied_at FROM academy_submissions WHERE discord_id = ? ORDER BY id DESC LIMIT 1',
       [discordId]
     );
+
+    let reemplazarId = null;   // si hay un envío viejo sin respuesta (>24h), se reemplaza
     if (prev.length) {
-      if (prev[0].status === 'submitted' || prev[0].status === 'graded') {
-        return res.status(409).json({ error: 'Tu formulario ya está en revisión.' });
-      }
-      if (prev[0].status === 'approved') {
+      const p = prev[0];
+      const reintento = calcularReintento(p);
+
+      if (p.status === 'approved') {
         return res.status(409).json({ error: 'Tu formulario ya fue aprobado.' });
       }
-      if (prev[0].status === 'denied' && !prev[0].denied_ack) {
-        return res.status(409).json({ error: 'Primero acepta el aviso de formulario denegado.' });
+      if (p.status === 'graded') {
+        return res.status(409).json({ error: 'Tu formulario ya fue calificado: esperando la decisión del staff.' });
+      }
+      if (p.status === 'denied') {
+        if (!p.denied_ack) {
+          return res.status(409).json({ error: 'Primero acepta el aviso de formulario denegado.' });
+        }
+        if (!reintento.retry_ready) {
+          return res.status(409).json({
+            error: `Tu intento fue denegado: podrás volver a enviarlo en ${tiempoHumano(reintento.retry_wait)}.`,
+            retry_wait: reintento.retry_wait
+          });
+        }
+        // denegado + aceptado + 1 hora cumplida → se guarda como intento nuevo
+      }
+      if (p.status === 'submitted') {
+        if (!reintento.retry_ready) {
+          return res.status(409).json({
+            error: `Tu formulario está en revisión. Si en 24 h no hay respuesta podrás volver a enviarlo (faltan ${tiempoHumano(reintento.retry_wait)}).`,
+            retry_wait: reintento.retry_wait
+          });
+        }
+        // sin respuesta después de 24 h → se reemplaza el mismo envío
+        reemplazarId = p.id;
       }
     }
 
@@ -551,13 +626,25 @@ app.post('/api/academy/submit', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'Faltan preguntas: ' + faltantes.join(', ') });
     }
 
-    await pool.query(
-      `INSERT INTO academy_submissions (discord_id, answers, status, total)
-       VALUES (?, ?, 'submitted', 20)`,
-      [discordId, JSON.stringify(answers)]
-    );
+    if (reemplazarId != null) {
+      await pool.query(
+        `UPDATE academy_submissions
+         SET answers = ?, status = 'submitted', score = NULL, staff_discord_id = NULL,
+             graded_at = NULL, denied_ack = 0, dm_pending = 0, denied_at = NULL,
+             created_at = NOW(), updated_at = NOW()
+         WHERE id = ?`,
+        [JSON.stringify(answers), reemplazarId]
+      );
+      console.log(`📝 Academy: envío reemplazado (sin respuesta >24 h) de ${discordId}`);
+    } else {
+      await pool.query(
+        `INSERT INTO academy_submissions (discord_id, answers, status, total)
+         VALUES (?, ?, 'submitted', 20)`,
+        [discordId, JSON.stringify(answers)]
+      );
+      console.log(`📝 Academy: formulario recibido de ${discordId}`);
+    }
 
-    console.log(`📝 Academy: formulario recibido de ${discordId}`);
     res.json({ success: true, status: 'submitted' });
   } catch (err) {
     console.error('Error academy/submit:', err.message);
@@ -583,6 +670,49 @@ app.post('/api/academy/ack-denied', requireAuth, async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error('Error academy/ack-denied:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// --- RUTA: Piloto o ATC (elegida después de verificar) ---
+app.get('/api/track', requireAuth, async (req, res) => {
+  try {
+    const discordId = String(req.session.discordUser.id);
+    const [rows] = await pool.query('SELECT track FROM verified_users WHERE discord_id = ?', [discordId]);
+    const t = rows.length ? rows[0].track : null;
+    res.json({ track: (t === 'piloto' || t === 'atc') ? t : null });
+  } catch (err) {
+    console.error('Error track/get:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+app.post('/api/track', requireAuth, async (req, res) => {
+  try {
+    const discordId = String(req.session.discordUser.id);
+    const t = req.body && req.body.track;
+    if (t !== 'piloto' && t !== 'atc') {
+      return res.status(400).json({ error: 'Ruta no válida (piloto | atc)' });
+    }
+
+    const [upd] = await pool.query(
+      'UPDATE verified_users SET track = ?, updated_at = NOW() WHERE discord_id = ?',
+      [t, discordId]
+    );
+    if (!upd.affectedRows) {
+      // por si la fila aún no existe (no debería pasar: se crea al iniciar sesión)
+      await pool.query(
+        `INSERT INTO verified_users (discord_id, track, fully_verified, updated_at)
+         VALUES (?, ?, 0, NOW())
+         ON DUPLICATE KEY UPDATE track = VALUES(track), updated_at = NOW()`,
+        [discordId, t]
+      );
+    }
+
+    console.log(`🧭 Ruta de ${discordId} → ${t}`);
+    res.json({ success: true, track: t });
+  } catch (err) {
+    console.error('Error track/set:', err.message);
     res.status(500).json({ error: 'Error interno' });
   }
 });
@@ -758,7 +888,7 @@ app.post('/api/academy/decision/:id', requireAuth, async (req, res) => {
       //            y recibe un DM (si no se puede enviar, queda en cola para el bot)
       await pool.query(
         `UPDATE academy_submissions
-         SET status = 'denied', denied_ack = 0, dm_pending = 1
+         SET status = 'denied', denied_ack = 0, dm_pending = 1, denied_at = NOW()
          WHERE id = ?`,
         [sub.id]
       );

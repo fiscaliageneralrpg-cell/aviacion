@@ -274,6 +274,9 @@
       background: rgba(244,63,94,0.12); border: 1px solid rgba(244,63,94,0.5); color: #fda4af; font-size: 0.88rem; font-weight: 600;
     }
     .alert.show { display: flex; animation: fadeUp 0.3s ease-out; }
+    /* Aviso informativo (cooldown cumplido / sin respuesta >24 h) */
+    .alert.info { background: rgba(0,102,255,0.12); border: 1px solid rgba(0,102,255,0.5); color: #93c5fd; }
+    .alert.info .ico { color: var(--cyan, #00d4ff); }
 
     /* ===== OVERLAY ÉXITO ===== */
     .success-overlay {
@@ -585,6 +588,52 @@
       formArea.hidden = false;
       progressWrap.hidden = false;
       actualizarProgreso();
+      /* por si había un cooldown activo: el botón vuelve a su estado normal */
+      const btnSend = document.getElementById('btn-send');
+      btnSend.disabled = false;
+      btnSend.innerHTML = '<i class="ico ico-send"></i> Enviar formulario';
+    }
+
+    /* ===== Cooldowns: 1 h tras denegar · 24 h sin respuesta ===== */
+    function tiempoHumano(seg) {
+      if (seg <= 0) return 'ya';
+      const m = Math.ceil(seg / 60);
+      if (m < 60) return `${m} min`;
+      const h = Math.floor(m / 60), mm = m % 60;
+      return mm ? `${h} h ${mm} min` : `${h} h`;
+    }
+
+    function reloj(seg) {
+      const h = String(Math.floor(seg / 3600)).padStart(2, '0');
+      const m = String(Math.floor((seg % 3600) / 60)).padStart(2, '0');
+      const s = String(seg % 60).padStart(2, '0');
+      return `${h}:${m}:${s}`;
+    }
+
+    function mostrarAvisoInfo(msg) {
+      alertBox.className = 'alert info show';
+      alertBox.innerHTML = '<i class="ico ico-check"></i><span></span>';
+      alertBox.querySelector('span').textContent = msg;
+    }
+
+    let cooldownTimer = null;
+    function bloquearReintento(seg) {
+      const btn = document.getElementById('btn-send');
+      if (cooldownTimer) { clearInterval(cooldownTimer); cooldownTimer = null; }
+      const pintar = () => { btn.innerHTML = `<i class="ico ico-clock"></i> Reintento disponible en ${reloj(seg)}`; };
+      pintar();
+      btn.disabled = true;
+      cooldownTimer = setInterval(() => {
+        seg--;
+        if (seg <= 0) {
+          clearInterval(cooldownTimer); cooldownTimer = null;
+          btn.disabled = false;
+          btn.innerHTML = '<i class="ico ico-send"></i> Enviar formulario';
+          mostrarAvisoInfo('Cooldown cumplido: ya puedes volver a enviar tu formulario.');
+          return;
+        }
+        pintar();
+      }, 1000);
     }
 
     function esc(s) {
@@ -641,6 +690,7 @@
             <div class="sc-meta">
               ${tieneScore ? `<span class="sc-chip"><i class="ico ico-x"></i> Puntaje: ${st.score}/${total}</span>` : ''}
               ${chipFecha}
+              ${(st && st.retry_wait > 0) ? `<span class="sc-chip"><i class="ico ico-clock"></i> Reintento disponible en ${tiempoHumano(st.retry_wait)}</span>` : ''}
             </div>
             <div class="sc-steps">
               <div class="sc-step"><b>1</b> Acepta este aviso</div>
@@ -662,8 +712,7 @@
         const res = await fetch('/api/academy/ack-denied', { method: 'POST' });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || 'No se pudo aceptar el aviso');
-        mostrarFormulario();
-        alertBox.classList.remove('show');
+        await cargarEstado();   /* aplica el cooldown de 1 h si aún no se cumplió */
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } catch (e) {
         btn.disabled = false;
@@ -673,10 +722,24 @@
 
     function aplicarEstado(st) {
       const status = st.status || 'none';
+      alertBox.className = 'alert';
+
+      /* Enviado hace >24 h y sin respuesta → ya puede volver a enviarlo */
+      if (status === 'submitted' && st.retry_ready) {
+        mostrarFormulario();
+        mostrarAvisoInfo('Hace más de 24 horas que enviaste tu formulario y aún no hay respuesta: ya puedes volver a enviarlo.');
+        return;
+      }
+
       if (status === 'submitted' || status === 'graded') return mostrarTarjeta('review', st);
       if (status === 'approved') return mostrarTarjeta('approved', st);
       if (status === 'denied' && !st.denied_ack) return mostrarTarjeta('denied', st);
+
+      /* none, o denegado ya aceptado (con o sin cooldown de 1 h) */
       mostrarFormulario();
+      if (status === 'denied' && st.retry_wait > 0) {
+        bloquearReintento(st.retry_wait);
+      }
     }
 
     async function cargarEstado() {
@@ -693,6 +756,7 @@
 
     /* ---------- Enviar ---------- */
     function mostrarAlerta(msg) {
+      alertBox.className = 'alert';
       alertBox.innerHTML = '<i class="ico ico-warn"></i><span></span>';
       alertBox.querySelector('span').textContent = msg;
       alertBox.classList.add('show');
