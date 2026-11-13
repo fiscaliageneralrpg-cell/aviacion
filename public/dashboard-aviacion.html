@@ -516,6 +516,19 @@
     .invite-text p { color: var(--gray); font-size: 0.87rem; font-weight: 600; line-height: 1.6; margin-top: 7px; }
     .invite-options { position: relative; z-index: 2; max-width: 760px; width: 100%; margin: 0 auto; }
 
+    /* Botón cerrar: embed de aceptación + modal de ruta */
+    .pop-close {
+      position: absolute; top: 14px; right: 16px; z-index: 4;
+      width: 40px; height: 40px; border-radius: 12px; cursor: pointer;
+      background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+      color: var(--white-soft); display: grid; place-items: center; transition: 0.25s;
+    }
+    .pop-close .ico { width: 1em; height: 1em; }
+    .pop-close:hover {
+      border-color: var(--cyan); color: var(--cyan);
+      transform: rotate(90deg); box-shadow: 0 0 18px rgba(0,212,255,0.35);
+    }
+
     .tab-sep { width: 1px; height: 34px; background: linear-gradient(180deg, transparent, rgba(0,212,255,0.55), transparent); flex-shrink: 0; }
     .tab-sep[hidden] { display: none !important; }
 
@@ -932,6 +945,7 @@
   <!-- ===== EMBED: FORMULARIO ACEPTADO → ELIGE TU RUTA ===== -->
   <section class="invite-section" id="invite-section" hidden>
     <div class="invite-card">
+      <button class="pop-close" id="invite-close" type="button" aria-label="Cerrar aviso"><i class="ico ico-x"></i></button>
       <div class="invite-head">
         <span class="invite-badge"><i class="ico ico-check"></i></span>
         <div class="invite-text">
@@ -990,9 +1004,10 @@
     </div>
   </div>
 
-  <!-- Modal RUTA: Piloto/ATC — aparece SOLO cuando el staff aprueba el formulario -->
+  <!-- Modal RUTA: Piloto/ATC — se abre desde "Cambiar ruta" -->
   <div class="modal-overlay" id="track-modal">
     <div class="track-card">
+      <button class="pop-close" id="track-close" type="button" aria-label="Cerrar"><i class="ico ico-x"></i></button>
       <div class="track-head-ico"><i class="ico ico-plane"></i></div>
       <h3>Elige tu ruta en LAN</h3>
       <p class="track-sub">¡Tu formulario fue aprobado! Selecciona el área que seguirás. Habilitará tu examen teórico (próximamente). Puedes cambiarla cuando quieras desde tu dashboard.</p>
@@ -1207,28 +1222,13 @@
         document.getElementById('tab-sep').hidden = staffBtn.hidden;
 
         const section = document.getElementById('academy-section');
-        const cta = document.getElementById('academy-cta');
-        const hint = document.getElementById('academy-hint');
         section.hidden = false;
-        hint.hidden = false;
 
-        /* El CTA siempre está visible: "Formulario" (sin/historial) o "Examen Próximamente" */
-        cta.hidden = false;
-
-        if (st.status === 'approved') {
-          /* Aprobado → UN solo botón: examen teórico "Próximamente" (referido a tu ruta) */
-          cta.innerHTML = '<i class="ico ico-clock"></i> Examen teórico · Próximamente';
-          cta.className = 'tab-item soon';
-          cta.dataset.mode = 'soon';
-        } else {
-          /* Sin formulario o con historial (en revisión / denegado / calificado):
-             botón clicable que entra directo a la página del formulario */
-          cta.innerHTML = '<i class="ico ico-cap"></i> Formulario';
-          cta.className = 'tab-item';
-          cta.dataset.mode = 'start';
-        }
-        renderHint();
+        /* El CTA se dibuja con renderCta() (depende de estado + ruta) */
         maybeShowInvite();   /* embed "aceptado → elige tu ruta" solo si aprobado y sin ruta */
+        renderCta();         /* Formulario / Elegir ruta / Examen Próximamente */
+        actualizarFilaRuta();/* chip "Tu ruta": SOLO con formulario aprobado */
+        renderHint();
       } catch (e) {
         console.error('Error academy status:', e);
       }
@@ -1244,6 +1244,11 @@
         if (trackActual) {
           hint.hidden = false;
           hint.innerHTML = '<i class="ico ico-check"></i>Formulario aprobado · Tu ruta: ' + (trackActual === 'atc' ? 'ATC' : 'Piloto') + '. El examen teórico se habilitará Próximamente.';
+        } else if (inviteCerrado) {
+          /* Cerraron el embed: el aviso vuelve a la tarjeta para que no se
+             pierda la indicación (el botón "Elegir ruta" reabre el embed) */
+          hint.hidden = false;
+          hint.innerHTML = '<i class="ico ico-plane"></i>Tu formulario fue aprobado — elige tu ruta Piloto o ATC para continuar.';
         } else {
           hint.hidden = true;   /* el embed de aceptación ya pide elegir ruta */
         }
@@ -1255,10 +1260,52 @@
       }
     }
 
+    /* Botón principal de la tarjeta según estado + ruta:
+       - sin/historial de formulario → "Formulario" (clicable)
+       - aprobado SIN ruta → "Elegir ruta" (reabre el embed si lo cerraron)
+       - aprobado CON ruta → "Examen teórico · Próximamente" */
+    function renderCta() {
+      if (!academyStatus) return;
+      const cta = document.getElementById('academy-cta');
+      cta.hidden = false;
+      const aprobado = academyStatus.status === 'approved';
+      if (aprobado && !trackActual) {
+        cta.innerHTML = '<i class="ico ico-plane"></i> Elegir ruta';
+        cta.className = 'tab-item';
+        cta.dataset.mode = 'route';
+      } else if (aprobado) {
+        cta.innerHTML = '<i class="ico ico-clock"></i> Examen teórico · Próximamente';
+        cta.className = 'tab-item soon';
+        cta.dataset.mode = 'soon';
+      } else {
+        cta.innerHTML = '<i class="ico ico-cap"></i> Formulario';
+        cta.className = 'tab-item';
+        cta.dataset.mode = 'start';
+      }
+    }
+
+    /* Chip "Tu ruta: X" + "Cambiar ruta": SOLO se muestra cuando el
+       formulario está aprobado (nunca antes, aunque haya ruta guardada) */
+    function actualizarFilaRuta() {
+      const row = document.getElementById('track-row');
+      const aprobado = !!(academyStatus && academyStatus.status === 'approved');
+      row.hidden = !(aprobado && trackActual);
+      if (!row.hidden) {
+        document.getElementById('track-name').textContent = (trackActual === 'atc') ? 'ATC' : 'Piloto';
+      }
+    }
+
     function abrirFormulario() {
       const cta = document.getElementById('academy-cta');
       if (cta.hidden) return;
-      if (cta.dataset.mode === 'approved') return;
+      if (cta.dataset.mode === 'route') {
+        /* Aprobado sin ruta: (re)abrir el embed de elección que se había cerrado */
+        inviteCerrado = false;
+        maybeShowInvite();
+        const invite = document.getElementById('invite-section');
+        if (!invite.hidden) invite.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'center' });
+        return;
+      }
       if (cta.dataset.mode === 'soon') return;   // Próximamente: aún no está disponible
       window.location.href = '/dashboard/formulario-lan-academy';
     }
@@ -1273,14 +1320,14 @@
     const trackModal = document.getElementById('track-modal');
     let trackActual = null;
     let rutaCargada = false;   /* true cuando ya se consultó /api/track */
+    let inviteCerrado = false; /* true si el usuario cerró el embed de aceptación
+                                  (se reabre con el botón "Elegir ruta") */
 
     function pintarRuta(t) {
       trackActual = t;
-      const row = document.getElementById('track-row');
-      const name = document.getElementById('track-name');
-      if (!t) { row.hidden = true; return; }
-      row.hidden = false;
-      name.textContent = (t === 'atc') ? 'ATC' : 'Piloto';
+      /* La fila "Tu ruta / Cambiar ruta" SOLO se muestra con formulario
+         aprobado → lo decide actualizarFilaRuta(), nunca aquí a pelo */
+      actualizarFilaRuta();
       document.querySelectorAll('.track-opt').forEach(o => {
         o.classList.toggle('sel', o.dataset.track === t);
       });
@@ -1293,8 +1340,10 @@
         const data = await res.json();
         rutaCargada = true;
         pintarRuta(data.track || null);
-        renderHint();   /* si el estado ya cargó, refresca "Tu ruta: X" */
         maybeShowInvite();
+        renderCta();           /* "Elegir ruta" / "Examen Próximamente" */
+        actualizarFilaRuta();  /* chip solo con formulario aprobado */
+        renderHint();          /* si el estado ya cargó, refresca "Tu ruta: X" */
       } catch (e) {
         console.error('Error cargar ruta:', e);
       }
@@ -1302,11 +1351,12 @@
 
     /* Embed "¡Formulario aceptado! → elige tu ruta": aparece SOLO cuando el
        staff aprobó (status 'approved') y todavía no hay ruta elegida.
+       Se puede cerrar (inviteCerrado) y se reabre con el botón "Elegir ruta".
        El modal queda únicamente para "Cambiar ruta". */
     function maybeShowInvite() {
       const invite = document.getElementById('invite-section');
       if (!academyStatus || !rutaCargada) { invite.hidden = true; return; }
-      invite.hidden = !(academyStatus.status === 'approved' && !trackActual);
+      invite.hidden = !(academyStatus.status === 'approved' && !trackActual && !inviteCerrado);
     }
 
     async function elegirRuta(t) {
@@ -1325,6 +1375,7 @@
         pintarRuta(data.track);
         trackModal.classList.remove('active');
         maybeShowInvite();   /* ya hay ruta: el embed de aceptación desaparece */
+        renderCta();         /* → "Examen teórico · Próximamente" */
         renderHint();        /* "Formulario aprobado · Tu ruta: X" */
       } catch (e) {
         console.error('Error guardar ruta:', e);
@@ -1343,6 +1394,21 @@
       document.querySelectorAll('.track-opt').forEach(o => {
         o.classList.toggle('sel', o.dataset.track === trackActual);
       });
+    });
+    /* Cerrar el embed "aceptado → elige tu ruta" (vuelve con "Elegir ruta") */
+    document.getElementById('invite-close').addEventListener('click', () => {
+      inviteCerrado = true;
+      document.getElementById('invite-section').hidden = true;
+      renderCta();   /* el CTA ya está en modo "Elegir ruta" */
+      renderHint();
+    });
+    /* Cerrar el modal de ruta (solo se abre desde "Cambiar ruta") */
+    document.getElementById('track-close').addEventListener('click', () => {
+      trackModal.classList.remove('active');
+    });
+    /* Cerrar el modal al pulsar el fondo (ahora que tiene botón X es opcional) */
+    trackModal.addEventListener('click', (e) => {
+      if (e.target === trackModal) trackModal.classList.remove('active');
     });
 
     /* =========================================================
