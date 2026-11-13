@@ -1,0 +1,1663 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard | Latin Aviation Network</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --black: #030305;
+      --card: #0d0d12;
+      --white: #ffffff;
+      --white-soft: #cbd5e1;
+      --gray: #64748b;
+      --blue: #0066ff;
+      --blue-light: #3399ff;
+      --cyan: #00d4ff;
+      --gold: #ffd700;
+      --green: #22c55e;
+      --red: #f43f5e;
+      --blue-glow: rgba(0, 102, 255, 0.45);
+      --border: #1f2937;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--black);
+      color: var(--white);
+      line-height: 1.5;
+      overflow-x: hidden;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+    a { text-decoration: none; color: inherit; }
+    img { max-width: 100%; display: block; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; width: 100%; }
+
+    .bg-dashboard {
+      position: fixed; inset: 0; z-index: -2;
+      background-size: cover;
+      background-position: center;
+      background-image: linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.75)),
+        url("https://i.imgur.com/rjEhr3O.jpeg");
+    }
+
+    /* =========================================================
+       ICONOS CSS (reemplazan los emojis convencionales)
+       ========================================================= */
+    .ico {
+      display: inline-block; position: relative; flex-shrink: 0;
+      width: 1.1em; height: 1.1em; vertical-align: -0.16em; color: inherit;
+    }
+    .ico::before, .ico::after { content: ""; position: absolute; display: block; }
+
+    .ico-check::before {
+      left: 30%; top: 6%; width: 30%; height: 60%;
+      border: solid currentColor; border-width: 0 .17em .17em 0; transform: rotate(45deg);
+    }
+    .ico-x::before, .ico-x::after {
+      left: 8%; top: 43%; width: 84%; height: .17em; background: currentColor; border-radius: 3px;
+    }
+    .ico-x::before { transform: rotate(45deg); }
+    .ico-x::after  { transform: rotate(-45deg); }
+
+    .ico-clock { border: .13em solid currentColor; border-radius: 50%; }
+    .ico-clock::before {
+      left: 44%; top: 10%; width: .12em; height: 40%; background: currentColor; border-radius: 2px;
+      transform-origin: 50% 100%; animation: tick 6s linear infinite;
+    }
+    .ico-clock::after { left: 44%; top: 44%; width: 28%; height: .12em; background: currentColor; border-radius: 2px; }
+    @keyframes tick { to { transform: rotate(360deg); } }
+
+    .ico-shield {
+      background: currentColor;
+      clip-path: polygon(50% 0, 100% 14%, 100% 55%, 50% 100%, 0 55%, 0 14%);
+    }
+    .ico-shield::before {
+      left: 33%; top: 22%; width: 22%; height: 42%;
+      border: solid var(--card); border-width: 0 .14em .14em 0; transform: rotate(45deg);
+    }
+
+    .ico-cap::before {
+      left: 0; top: 10%; width: 100%; height: 48%; background: currentColor;
+      clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+    }
+    .ico-cap::after {
+      left: 20%; top: 50%; width: 60%; height: 34%; background: currentColor;
+      border-radius: 0 0 50% 50% / 0 0 100% 100%; opacity: .75;
+    }
+
+    .ico-cal { border: .12em solid currentColor; border-radius: .22em; }
+    .ico-cal::before { left: 0; top: 0; width: 100%; height: 32%; background: currentColor; }
+    .ico-cal::after {
+      left: 20%; top: 48%; width: .17em; height: .17em; background: currentColor; border-radius: 1px;
+      box-shadow: .3em 0 currentColor, 0 .27em currentColor, .3em .27em currentColor;
+    }
+
+    .ico-user::before { left: 28%; top: 0; width: 44%; height: 44%; border-radius: 50%; background: currentColor; }
+    .ico-user::after  { left: 10%; top: 54%; width: 80%; height: 46%; border-radius: 50% 50% 0 0; background: currentColor; }
+
+    .ico-doc { border: .12em solid currentColor; border-radius: .18em; width: .9em; }
+    .ico-doc::before {
+      left: 20%; top: 22%; width: 60%; height: .1em; background: currentColor;
+      box-shadow: 0 .24em currentColor, 0 .48em currentColor;
+    }
+
+    .ico-lock::before { left: 10%; bottom: 0; width: 80%; height: 54%; background: currentColor; border-radius: .16em; }
+    .ico-lock::after {
+      left: 26%; top: 0; width: 48%; height: 56%; border: .13em solid currentColor;
+      border-bottom: 0; border-radius: .5em .5em 0 0;
+    }
+
+    .ico-send {
+      background: currentColor;
+      clip-path: polygon(0 4%, 100% 50%, 0 96%, 22% 50%);
+    }
+    .ico-star {
+      background: currentColor;
+      clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+    }
+    .ico-crown {
+      height: .9em; background: currentColor;
+      clip-path: polygon(0 88%, 0 22%, 25% 55%, 50% 8%, 75% 55%, 100% 22%, 100% 88%);
+    }
+    .ico-home {
+      background: currentColor;
+      clip-path: polygon(50% 0, 100% 46%, 84% 46%, 84% 100%, 16% 100%, 16% 46%, 0 46%);
+    }
+    .ico-chev::before {
+      left: 24%; top: 18%; width: 42%; height: 42%;
+      border: solid currentColor; border-width: 0 .17em .17em 0; transform: rotate(45deg);
+    }
+    .ico-search::before { left: 4%; top: 4%; width: 62%; height: 62%; border: .13em solid currentColor; border-radius: 50%; }
+    .ico-search::after  { left: 62%; top: 72%; width: 46%; height: .15em; background: currentColor; border-radius: 3px; transform-origin: 0 50%; transform: rotate(45deg); }
+    .ico-retry { border: .14em solid currentColor; border-top-color: transparent; border-radius: 50%; }
+    .ico-retry::after {
+      right: -.12em; top: -.06em; width: 0; height: 0;
+      border-left: .26em solid transparent; border-right: .26em solid transparent;
+      border-top: .3em solid currentColor; transform: rotate(-35deg);
+    }
+    .ico-plane { background: currentColor; clip-path: polygon(50% 0, 62% 38%, 100% 62%, 100% 74%, 60% 62%, 56% 86%, 70% 94%, 70% 100%, 50% 95%, 30% 100%, 30% 94%, 44% 86%, 40% 62%, 0 74%, 0 62%, 38% 38%); }
+
+    /* Torre de control (ATC) */
+    .ico-tower { border-bottom: .13em solid currentColor; }
+    .ico-tower::before {
+      left: 12%; top: 4%; width: 76%; height: 34%; background: currentColor;
+      clip-path: polygon(20% 0, 80% 0, 100% 100%, 0 100%);
+    }
+    .ico-tower::after {
+      left: 42%; top: 38%; width: 16%; height: 62%; background: currentColor;
+    }
+
+    /* ===== BARRA SUPERIOR ===== */
+    nav {
+      position: relative;
+      z-index: 100;
+      overflow: visible;
+      background:
+        radial-gradient(600px 200px at 8% 0%, rgba(0,102,255,0.28), transparent 70%),
+        radial-gradient(400px 160px at 100% 100%, rgba(0,212,255,0.12), transparent 70%),
+        linear-gradient(180deg, rgba(8,10,18,0.96), rgba(3,3,5,0.94));
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(0,102,255,0.35);
+      border-radius: 0 0 28px 28px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.6), 0 8px 36px rgba(0,102,255,0.15);
+      padding: 20px 0 18px;
+    }
+    nav::after {
+      content: "";
+      position: absolute; left: 8%; right: 8%; bottom: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--blue), var(--cyan), var(--blue), transparent);
+      background-size: 200% 100%;
+      animation: lightFlow 3.5s linear infinite;
+      opacity: 0.9;
+    }
+    .nav-inner { position: relative; z-index: 2; display: flex; flex-direction: column; gap: 14px; }
+    .nav-top { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+
+    .nav-profile { display: flex; align-items: center; gap: 18px; min-width: 0; flex: 1; }
+    .avatar-wrap {
+      position: relative; flex-shrink: 0; padding: 4px; border-radius: 50%;
+      background: none; box-shadow: 0 0 30px var(--blue-glow);
+    }
+    .avatar-wrap::before {
+      content: ""; position: absolute; inset: 0; border-radius: 50%;
+      background: conic-gradient(from 0deg, var(--blue), var(--cyan), var(--blue-light), var(--blue));
+      animation: spin 4s linear infinite;
+    }
+    .nav-avatar {
+      position: relative; z-index: 1; width: 76px; height: 76px; border-radius: 50%;
+      border: 3px solid var(--black); object-fit: cover; background: var(--card);
+    }
+    .status-dot {
+      position: absolute; right: 4px; bottom: 4px; z-index: 2; width: 15px; height: 15px;
+      border-radius: 50%; background: #22c55e; border: 3px solid var(--black);
+      box-shadow: 0 0 10px rgba(34,197,94,0.8); animation: pulseDot 2s ease-in-out infinite;
+    }
+    .nav-info { min-width: 0; }
+    .nav-brand {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: 'Orbitron', monospace; font-size: 0.56rem; font-weight: 900;
+      letter-spacing: 2.5px; text-transform: uppercase; color: var(--cyan);
+      margin-bottom: 4px; padding: 3px 11px; border: 1px solid rgba(0,212,255,0.28);
+      border-radius: 50px; background: rgba(0,212,255,0.07); max-width: 100%;
+    }
+    .nav-brand svg { width: 11px; height: 11px; fill: currentColor; flex-shrink: 0; }
+    .nav-welcome {
+      font-family: 'Orbitron', monospace; font-size: clamp(1.05rem, 2.8vw, 1.6rem);
+      font-weight: 900; line-height: 1.2; letter-spacing: -0.3px; margin-bottom: 6px;
+      background: linear-gradient(135deg, var(--white) 30%, var(--cyan));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      overflow-wrap: anywhere;
+    }
+    .nav-id {
+      display: inline-flex; align-items: center; gap: 7px; max-width: 100%;
+      font-size: 0.78rem; font-weight: 600; color: var(--white-soft);
+      background: rgba(88,101,242,0.14); border: 1px solid rgba(88,101,242,0.45);
+      padding: 2px 12px 2px 8px; border-radius: 9px;
+    }
+    .nav-id svg { width: 14px; height: 14px; fill: #8b94ff; flex-shrink: 0; }
+    .nav-id span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .logout-link {
+      flex-shrink: 0; display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 10px 16px; border-radius: 18px; background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border); transition: 0.3s;
+      animation: slideLeft 0.6s 0.6s ease-out both;
+    }
+    .logout-link img {
+      width: 46px; height: 46px; object-fit: contain;
+      filter: drop-shadow(0 0 10px var(--blue-glow)); animation: floaty 3s ease-in-out infinite;
+    }
+    .logout-link .logout-text { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.5px; color: var(--white-soft); }
+    .logout-link:hover {
+      transform: translateY(-2px); border-color: var(--blue);
+      background: rgba(0,102,255,0.12); box-shadow: 0 8px 24px var(--blue-glow);
+    }
+
+    .nav-bottom { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; animation: riseUp 0.6s 0.85s ease-out both; }
+    .btn-roblox {
+      display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+      background: linear-gradient(135deg, var(--blue), var(--blue-light)); color: var(--white);
+      padding: 10px 24px; border-radius: 14px; font-family: inherit; font-weight: 800;
+      font-size: 0.88rem; border: 1px solid rgba(255,255,255,0.18); cursor: pointer;
+      transition: 0.3s; box-shadow: 0 8px 22px var(--blue-glow); position: relative; overflow: hidden;
+    }
+    .btn-roblox svg { width: 17px; height: 17px; fill: currentColor; }
+    .btn-roblox::after {
+      content: ""; position: absolute; top: 0; left: -80%; width: 50%; height: 100%;
+      background: linear-gradient(100deg, transparent, rgba(255,255,255,0.35), transparent);
+      transform: skewX(-20deg); animation: shine 4s 2s ease-in-out infinite;
+    }
+    @keyframes shine { 0% { left: -80%; } 35%, 100% { left: 140%; } }
+    .btn-roblox:hover { transform: translateY(-2px); filter: brightness(1.12); }
+    a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+
+    /* ===== RANGOS ===== */
+    .rank-box { position: relative; display: flex; align-items: center; gap: 8px; min-width: 0; }
+    .rank-main {
+      display: inline-flex; align-items: center; gap: 8px; max-width: 100%;
+      padding: 10px 18px; border-radius: 14px; background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border); font-weight: 800; font-size: 0.85rem; color: var(--white-soft);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: 0.3s;
+    }
+    .rank-main .rank-dot {
+      width: 10px; height: 10px; border-radius: 50%; background: var(--gray);
+      flex-shrink: 0; box-shadow: 0 0 8px currentColor;
+    }
+    .rank-main .rank-label {
+      font-size: 0.62rem; font-weight: 900; letter-spacing: 1.5px;
+      text-transform: uppercase; opacity: 0.65; margin-right: 2px;
+    }
+    .rank-more {
+      width: 40px; height: 40px; flex-shrink: 0; border-radius: 14px;
+      background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+      color: var(--white-soft); font-size: 1.3rem; font-weight: 800; line-height: 1;
+      cursor: pointer; transition: 0.3s; display: none; align-items: center; justify-content: center;
+      animation: riseUp 0.5s 1s ease-out both;
+    }
+    .rank-more:hover { border-color: var(--cyan); color: var(--cyan); transform: translateY(-2px); box-shadow: 0 0 18px rgba(0,212,255,0.35); }
+    .rank-more.show { display: inline-flex; }
+    .rank-list {
+      position: absolute; top: calc(100% + 10px); left: 0; z-index: 300;
+      min-width: 280px; max-width: 90vw; display: none; flex-direction: column; gap: 7px;
+      padding: 14px; background: rgba(8,10,18,0.97); backdrop-filter: blur(18px);
+      border: 1px solid rgba(0,102,255,0.35); border-radius: 18px;
+      box-shadow: 0 24px 55px rgba(0,0,0,0.7), 0 8px 30px rgba(0,102,255,0.15);
+    }
+    .rank-list.open { display: flex; animation: modalPop 0.3s cubic-bezier(.3,1.3,.5,1); }
+    .rank-list-title {
+      font-family: 'Orbitron', monospace; font-size: 0.6rem; font-weight: 900;
+      letter-spacing: 2px; text-transform: uppercase; color: var(--cyan);
+      padding-bottom: 6px; border-bottom: 1px solid var(--border); margin-bottom: 2px;
+    }
+    .rank-item {
+      display: flex; align-items: center; gap: 9px; font-size: 0.84rem; font-weight: 700;
+      color: var(--white-soft); padding: 7px 10px; border-radius: 10px;
+      background: rgba(255,255,255,0.03); border: 1px solid transparent; transition: 0.25s;
+    }
+    .rank-item:hover { background: rgba(0,102,255,0.1); border-color: rgba(0,102,255,0.35); transform: translateX(4px); }
+    .rank-item.is-top { border-color: rgba(255,215,0,0.35); background: rgba(255,215,0,0.07); }
+    .rank-item .rank-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 8px currentColor; }
+    .rank-item .rank-crown { margin-left: auto; font-size: 0.72rem; color: var(--gold); display: inline-flex; align-items: center; gap: 6px; }
+
+    /* ===== TARJETA FORMULARIO LAN ACADEMY ===== */
+    .academy-section { width: 100%; margin-top: 26px; margin-bottom: 6px; padding: 0; }
+    .academy-card {
+      position: relative; overflow: hidden; width: 100%;
+      display: flex; flex-direction: column; gap: 16px;
+      padding: 26px 34px; border-radius: 0 0 28px 28px; text-align: left;
+      background:
+        radial-gradient(620px 280px at 0% 0%, rgba(0,102,255,0.30), transparent 70%),
+        radial-gradient(520px 260px at 100% 100%, rgba(0,212,255,0.16), transparent 70%),
+        linear-gradient(135deg, rgba(13,13,18,0.98), rgba(8,10,18,0.96));
+      border: 1px solid rgba(0,102,255,0.5);
+      box-shadow: 0 22px 50px rgba(0,0,0,0.65), 0 10px 40px rgba(0,102,255,0.16), inset 0 1px 0 rgba(255,255,255,0.06);
+      transition: 0.3s;
+      animation: riseUp 0.7s 1s ease-out both;
+    }
+    .academy-card::after {
+      content: ""; position: absolute; top: 0; left: -80%; width: 45%; height: 100%;
+      background: linear-gradient(100deg, transparent, rgba(0,212,255,0.16), transparent);
+      transform: skewX(-20deg); animation: shine 6s 2s ease-in-out infinite; pointer-events: none;
+    }
+    .academy-card:hover {
+      border-color: rgba(0,102,255,0.65);
+      box-shadow: 0 26px 56px rgba(0,0,0,0.7), 0 12px 46px rgba(0,102,255,0.2), inset 0 1px 0 rgba(255,255,255,0.08);
+    }
+    .academy-hint {
+      position: relative; z-index: 2; display: block; text-align: center;
+      color: var(--gray); font-size: 0.78rem; font-weight: 600;
+      padding-top: 16px; margin-top: 4px; border-top: 1px dashed rgba(0,102,255,0.35);
+    }
+    .academy-hint[hidden] { display: none; }
+    .academy-hint .ico { margin-right: 6px; color: var(--cyan); }
+
+    .tabs-row { position: relative; z-index: 2; display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; }
+    .tab-item {
+      position: relative; z-index: 2; display: inline-flex; align-items: center; gap: 10px;
+      padding: 15px 40px; border-radius: 14px; cursor: pointer;
+      background: rgba(255,255,255,0.045); border: 1px solid rgba(0,102,255,0.4);
+      color: var(--white-soft); font-family: 'Orbitron', monospace; font-weight: 900;
+      font-size: 0.88rem; letter-spacing: 1.6px; text-transform: uppercase;
+      transition: 0.3s; animation: riseUp 0.55s 1.05s ease-out both;
+    }
+    .tab-item::after {
+      content: ""; position: absolute; left: 12%; right: 12%; bottom: -1px; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--blue), var(--cyan), var(--blue), transparent);
+      background-size: 200% 100%; opacity: 0; transition: 0.3s; animation: lightFlow 3s linear infinite;
+    }
+    .tab-item:hover {
+      transform: translateY(-3px); color: var(--white); background: rgba(0,102,255,0.16);
+      border-color: var(--cyan); box-shadow: 0 12px 30px rgba(0,102,255,0.35);
+    }
+    .tab-item:hover::after { opacity: 1; }
+    .tab-item:active { transform: scale(0.97); }
+
+    .tab-item.approved {
+      color: #fff; cursor: default;
+      background: linear-gradient(135deg, rgba(22,163,74,0.9), rgba(34,197,94,0.9));
+      border-color: transparent; box-shadow: 0 10px 26px rgba(34,197,94,0.4);
+    }
+    .tab-item.approved:hover { transform: none; color: #fff; box-shadow: 0 10px 26px rgba(34,197,94,0.4); }
+    .tab-item.approved::after { opacity: 1; background: linear-gradient(90deg, transparent, #fff, transparent); }
+
+    .tab-item.staff { color: var(--gold); background: rgba(255,215,0,0.07); border-color: rgba(255,215,0,0.42); animation-delay: 1.2s; }
+    .tab-item.staff:hover { color: var(--gold); background: rgba(255,215,0,0.16); border-color: var(--gold); box-shadow: 0 12px 30px rgba(255,215,0,0.28); }
+    .tab-item.staff::after { background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+    .tab-item[hidden] { display: none !important; }
+
+    /* Estado: examen teórico "Próximamente" */
+    .tab-item.soon {
+      color: var(--white-soft); cursor: default;
+      background: rgba(255,255,255,0.05); border-color: var(--border);
+    }
+    .tab-item.soon:hover {
+      transform: none; color: var(--white-soft);
+      background: rgba(255,255,255,0.05); border-color: var(--border); box-shadow: none;
+    }
+    .tab-item.soon::after { opacity: 0.55; animation-duration: 5s; }
+    .tab-item.soon .ico { color: var(--cyan); animation: radar 2.2s ease-in-out infinite; }
+
+    /* ===== RUTA: Piloto / ATC ===== */
+    .track-row {
+      position: relative; z-index: 2;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      margin-top: -4px; flex-wrap: wrap;
+      animation: riseUp 0.5s 0.25s ease-out both;
+    }
+    .track-chip {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 7px 16px; border-radius: 50px;
+      background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.4);
+      color: var(--white-soft); font-size: 0.76rem; font-weight: 700; letter-spacing: 0.6px;
+    }
+    .track-chip .ico { color: var(--cyan); }
+    .track-chip b {
+      color: var(--cyan); font-family: 'Orbitron', monospace;
+      font-size: 0.76rem; letter-spacing: 1.6px; text-transform: uppercase;
+      text-shadow: 0 0 12px rgba(0,212,255,0.6);
+    }
+    .track-change {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 7px 15px; border-radius: 50px; cursor: pointer;
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+      color: var(--white-soft); font-family: inherit; font-weight: 700; font-size: 0.74rem;
+      transition: 0.25s;
+    }
+    .track-change:hover {
+      border-color: var(--blue); color: var(--cyan);
+      transform: translateY(-2px); box-shadow: 0 8px 22px rgba(0,102,255,0.25);
+    }
+
+    /* Modal de ruta (obligatorio: sin X ni cierre por fondo) */
+    .track-card {
+      position: relative; overflow: hidden;
+      background: rgba(8,10,18,0.99);
+      border: 1px solid rgba(0,102,255,0.5);
+      border-radius: 26px; padding: 38px 32px;
+      max-width: 560px; width: 100%; text-align: center;
+      box-shadow: 0 40px 90px rgba(0,0,0,0.85), 0 0 60px rgba(0,102,255,0.2);
+      animation: modalPop 0.45s cubic-bezier(.3,1.3,.5,1);
+    }
+    .track-card::before {
+      content: ""; position: absolute; left: 0; top: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, transparent, var(--blue), var(--cyan), #fff, var(--cyan), var(--blue), transparent);
+      background-size: 200% 100%;
+      animation: lightFlow 4s linear infinite;
+    }
+    .track-head-ico {
+      width: 74px; height: 74px; margin: 0 auto;
+      display: grid; place-items: center; border-radius: 50%;
+      background: rgba(0,102,255,0.14); border: 2px solid var(--blue);
+      box-shadow: 0 0 34px rgba(0,102,255,0.45);
+      animation: floaty 3s ease-in-out infinite;
+    }
+    .track-head-ico .ico { font-size: 1.9rem; color: var(--cyan); width: 2em; height: 2em; }
+    .track-card h3 {
+      font-family: 'Orbitron', monospace; font-size: 1.22rem; font-weight: 900;
+      margin: 16px 0 8px; color: var(--white);
+    }
+    .track-card p.track-sub { color: var(--gray); font-size: 0.88rem; margin-bottom: 24px; line-height: 1.6; }
+    .track-options { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .track-opt {
+      position: relative; overflow: hidden;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      padding: 24px 14px; border-radius: 18px; cursor: pointer;
+      background: rgba(13,13,18,0.9); border: 1px solid var(--border);
+      color: var(--white); font-family: inherit; transition: 0.3s;
+      animation: riseUp 0.5s ease-out both;
+    }
+    .track-opt:nth-child(2) { animation-delay: 0.1s; }
+    .track-opt:hover {
+      transform: translateY(-4px); border-color: var(--cyan);
+      box-shadow: 0 16px 34px rgba(0,0,0,0.5), 0 0 26px rgba(0,102,255,0.3);
+    }
+    .track-opt.sel {
+      border-color: var(--cyan);
+      background: linear-gradient(160deg, rgba(0,102,255,0.22), rgba(0,212,255,0.08));
+      box-shadow: 0 0 26px rgba(0,212,255,0.3);
+    }
+    .track-opt.sel::after {
+      content: ""; position: absolute; right: 12px; top: 12px;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: var(--cyan); box-shadow: 0 0 12px var(--cyan);
+      animation: popIn 0.3s ease-out;
+    }
+    .track-opt .ico { font-size: 1.8rem; width: 2em; height: 2em; color: var(--cyan); }
+    .track-opt b { font-family: 'Orbitron', monospace; font-size: 0.98rem; letter-spacing: 1.6px; }
+    .track-opt small { color: var(--gray); font-size: 0.75rem; font-weight: 600; line-height: 1.45; }
+    .track-opt:disabled { opacity: 0.6; cursor: wait; transform: none; }
+    .track-loading {
+      margin-top: 16px; color: var(--cyan); font-size: 0.8rem;
+      font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase;
+      animation: radar 1.2s ease-in-out infinite;
+    }
+    .track-loading[hidden] { display: none; }
+
+    .tab-sep { width: 1px; height: 34px; background: linear-gradient(180deg, transparent, rgba(0,212,255,0.55), transparent); flex-shrink: 0; }
+    .tab-sep[hidden] { display: none !important; }
+
+    /* =========================================================
+       PANEL STAFF
+       ========================================================= */
+    .staff-overlay {
+      position: fixed; inset: 0; z-index: 1200; background: rgba(0,0,0,0.82);
+      backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; padding: 18px;
+    }
+    .staff-overlay.active { display: flex; animation: fadeIn 0.25s ease-out; }
+    .staff-panel {
+      position: relative; width: min(1040px, 100%); max-height: 90vh;
+      display: flex; flex-direction: column; overflow: hidden;
+      background:
+        radial-gradient(520px 220px at 0% 0%, rgba(0,102,255,0.20), transparent 70%),
+        radial-gradient(460px 220px at 100% 100%, rgba(255,215,0,0.06), transparent 70%),
+        rgba(8,10,18,0.98);
+      border: 1px solid rgba(0,102,255,0.45); border-radius: 26px;
+      box-shadow: 0 40px 90px rgba(0,0,0,0.85), 0 0 60px rgba(0,102,255,0.14);
+      animation: modalPop 0.35s cubic-bezier(.3,1.3,.5,1);
+    }
+    .staff-panel::before {
+      content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px; z-index: 5;
+      background: linear-gradient(90deg, transparent, var(--blue), var(--cyan), var(--gold), var(--cyan), var(--blue), transparent);
+      background-size: 200% 100%; animation: lightFlow 4s linear infinite;
+    }
+    .staff-head {
+      display: flex; align-items: center; justify-content: space-between; gap: 14px;
+      padding: 20px 26px 16px; border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(0,102,255,0.12), transparent); flex-wrap: wrap;
+    }
+    .staff-id { display: flex; align-items: center; gap: 14px; min-width: 0; }
+    .staff-badge {
+      position: relative; overflow: hidden; width: 50px; height: 50px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; border-radius: 16px;
+      font-size: 1.6rem; color: var(--gold);
+      background: linear-gradient(135deg, rgba(255,215,0,0.18), rgba(255,215,0,0.04));
+      border: 1px solid rgba(255,215,0,0.5); box-shadow: 0 0 26px rgba(255,215,0,0.2);
+      animation: badgeFloat 3.4s ease-in-out infinite;
+    }
+    .staff-badge::after {
+      content: ""; position: absolute; top: 0; left: -80%; width: 50%; height: 100%;
+      background: linear-gradient(100deg, transparent, rgba(255,255,255,0.4), transparent);
+      transform: skewX(-20deg); animation: shine 3.5s 1s ease-in-out infinite;
+    }
+    @keyframes badgeFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+    .staff-titles { min-width: 0; }
+    .staff-title { font-family: 'Orbitron', monospace; font-size: 1rem; font-weight: 900; letter-spacing: 1.5px; color: var(--white); }
+    .staff-hello { font-size: 0.8rem; font-weight: 600; color: var(--gray); overflow-wrap: anywhere; }
+    .staff-hello b { color: var(--cyan); font-weight: 800; }
+    .staff-tabs { display: flex; gap: 8px; padding: 5px; border-radius: 16px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); }
+    .staff-tab {
+      display: inline-flex; align-items: center; gap: 8px; padding: 9px 20px; border-radius: 12px; cursor: pointer;
+      background: transparent; border: 1px solid transparent; color: var(--white-soft);
+      font-family: inherit; font-weight: 800; font-size: 0.8rem; transition: 0.25s;
+    }
+    .staff-tab:hover { color: var(--white); background: rgba(0,102,255,0.1); }
+    .staff-tab.active {
+      background: linear-gradient(135deg, var(--blue), var(--blue-light)); color: #fff;
+      box-shadow: 0 6px 18px var(--blue-glow);
+    }
+    .staff-close {
+      width: 40px; height: 40px; border-radius: 12px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; font-size: 1.05rem;
+      background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+      color: var(--white-soft); transition: 0.25s;
+    }
+    .staff-close:hover { border-color: var(--red); color: var(--red); transform: rotate(90deg); }
+    .staff-body { padding: 22px 26px 26px; overflow-y: auto; }
+    .staff-body::-webkit-scrollbar { width: 8px; }
+    .staff-body::-webkit-scrollbar-thumb { background: rgba(0,102,255,0.4); border-radius: 8px; }
+    .staff-body > div:not([hidden]) { animation: fadeUp 0.35s ease-out; }
+
+    .staff-subtitle {
+      display: flex; align-items: center; gap: 10px;
+      font-family: 'Orbitron', monospace; font-size: 0.76rem; font-weight: 900;
+      letter-spacing: 2px; text-transform: uppercase; color: var(--cyan);
+      margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
+    }
+
+    /* --- Tarjetas de estadísticas --- */
+    .stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(176px, 1fr)); gap: 14px; }
+    .stat-card {
+      --c: var(--cyan); --cbg: rgba(0,212,255,0.12);
+      position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 4px;
+      padding: 18px 18px 16px; border-radius: 18px;
+      background: linear-gradient(160deg, rgba(20,22,32,0.95), rgba(13,13,18,0.95));
+      border: 1px solid var(--border); border-top: 2px solid var(--c);
+      transition: 0.3s; animation: riseUp 0.5s calc(var(--i, 0) * 70ms) ease-out both;
+    }
+    .stat-card::after {
+      content: ""; position: absolute; left: 0; right: 0; top: 0; height: 60px;
+      background: linear-gradient(180deg, var(--cbg), transparent); pointer-events: none;
+    }
+    .stat-card:hover { transform: translateY(-4px); border-color: var(--c); box-shadow: 0 14px 30px var(--cbg); }
+    .stat-ico {
+      position: relative; z-index: 1; width: 40px; height: 40px; border-radius: 12px; margin-bottom: 8px;
+      display: flex; align-items: center; justify-content: center; font-size: 1.25rem;
+      color: var(--c); background: var(--cbg); border: 1px solid var(--c);
+    }
+    .stat-card .num { position: relative; z-index: 1; font-family: 'Orbitron', monospace; font-size: 1.9rem; font-weight: 900; color: var(--c); line-height: 1.1; }
+    .stat-card .lbl { position: relative; z-index: 1; color: var(--gray); font-size: 0.74rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+    .sc-total    { --c: #00d4ff; --cbg: rgba(0,212,255,0.12); }
+    .sc-pend     { --c: #3399ff; --cbg: rgba(51,153,255,0.14); }
+    .sc-graded   { --c: #ffd700; --cbg: rgba(255,215,0,0.12); }
+    .sc-approved { --c: #22c55e; --cbg: rgba(34,197,94,0.14); }
+    .sc-denied   { --c: #f43f5e; --cbg: rgba(244,63,94,0.14); }
+
+    .dist-box { margin-top: 20px; padding: 18px; border-radius: 18px; background: rgba(13,13,18,0.9); border: 1px solid var(--border); animation: riseUp 0.5s 0.45s ease-out both; }
+    .dist-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+    .dist-title { font-size: 0.78rem; font-weight: 800; color: var(--white-soft); letter-spacing: 0.5px; }
+    .dist-rate { display: inline-flex; align-items: center; gap: 7px; font-size: 0.78rem; font-weight: 800; color: #86efac; }
+    .dist { display: flex; height: 12px; border-radius: 50px; overflow: hidden; background: rgba(255,255,255,0.06); gap: 2px; }
+    .dist span { height: 100%; width: 0; transition: width 0.9s cubic-bezier(.2,.8,.2,1); }
+    .dist .d-pend { background: linear-gradient(90deg, var(--blue), var(--blue-light)); }
+    .dist .d-graded { background: linear-gradient(90deg, #eab308, var(--gold)); }
+    .dist .d-approved { background: linear-gradient(90deg, #16a34a, var(--green)); }
+    .dist .d-denied { background: linear-gradient(90deg, #e11d48, var(--red)); }
+
+    /* --- Barra de filtros --- */
+    .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+    .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 8px; padding: 8px 15px; border-radius: 50px; cursor: pointer;
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--white-soft);
+      font-family: inherit; font-weight: 800; font-size: 0.76rem; transition: 0.25s;
+    }
+    .chip b { font-family: 'Orbitron', monospace; font-size: 0.68rem; padding: 1px 8px; border-radius: 50px; background: rgba(255,255,255,0.08); }
+    .chip:hover { border-color: var(--blue); color: var(--white); transform: translateY(-2px); }
+    .chip.active { background: rgba(0,102,255,0.2); border-color: var(--blue-light); color: #fff; box-shadow: 0 0 18px rgba(0,102,255,0.3); }
+    .search {
+      display: flex; align-items: center; gap: 9px; padding: 8px 14px; border-radius: 14px;
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--gray);
+      transition: 0.25s; min-width: 220px; flex: 0 1 280px;
+    }
+    .search:focus-within { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 18px rgba(0,212,255,0.2); }
+    .search input { flex: 1; min-width: 0; background: none; border: none; outline: none; color: var(--white); font-family: inherit; font-size: 0.82rem; font-weight: 600; }
+    .search input::placeholder { color: var(--gray); }
+
+    /* --- Grupos por fecha --- */
+    .date-group {
+      border: 1px solid var(--border); border-radius: 20px; overflow: hidden; margin-bottom: 14px;
+      background: rgba(13,13,18,0.85); transition: 0.25s; animation: riseUp 0.45s ease-out both;
+    }
+    .date-group:hover { border-color: rgba(0,102,255,0.4); }
+    .date-group[hidden] { display: none; }
+    .date-head { display: flex; align-items: center; gap: 12px; padding: 14px 18px; flex-wrap: wrap; cursor: pointer; }
+    .date-badge {
+      width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; color: var(--cyan); background: rgba(0,212,255,0.1); border: 1px solid rgba(0,212,255,0.35);
+    }
+    .date-title { font-family: 'Orbitron', monospace; font-size: 0.9rem; font-weight: 900; color: var(--white); letter-spacing: 1px; }
+    .date-count {
+      font-size: 0.74rem; font-weight: 700; color: var(--gray);
+      background: rgba(255,255,255,0.05); border: 1px solid var(--border); padding: 4px 12px; border-radius: 50px;
+    }
+    .date-pend {
+      display: inline-flex; align-items: center; gap: 6px; font-size: 0.72rem; font-weight: 800; color: var(--blue-light);
+      background: rgba(51,153,255,0.12); border: 1px solid rgba(51,153,255,0.4); padding: 4px 12px; border-radius: 50px;
+    }
+    .date-pend[hidden] { display: none; }
+    .date-chev { margin-left: auto; font-size: 1.05rem; color: var(--gray); transition: transform 0.3s; }
+    .date-group.open .date-chev { transform: rotate(180deg); color: var(--cyan); }
+    .btn-open-date {
+      padding: 8px 20px; border-radius: 12px; cursor: pointer; background: linear-gradient(135deg, var(--blue), var(--blue-light));
+      border: none; color: #fff; font-family: inherit; font-weight: 800; font-size: 0.8rem; transition: 0.3s; box-shadow: 0 6px 18px var(--blue-glow);
+    }
+    .btn-open-date:hover { transform: translateY(-2px); filter: brightness(1.12); }
+    .date-items { display: none; flex-direction: column; gap: 12px; padding: 0 16px 16px; }
+    .date-items.open { display: flex; animation: fadeUp 0.3s ease-out; }
+
+    .sub-embed {
+      border: 1px solid var(--border); border-radius: 16px; padding: 14px 16px;
+      background: rgba(255,255,255,0.03); transition: 0.25s;
+    }
+    .sub-embed[hidden] { display: none; }
+    .sub-embed:hover { border-color: rgba(0,102,255,0.45); background: rgba(0,102,255,0.04); }
+    .sub-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .sub-avatar {
+      width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+      font-family: 'Orbitron', monospace; font-weight: 900; font-size: 0.95rem; color: #fff;
+      background: linear-gradient(135deg, var(--blue), var(--cyan)); box-shadow: 0 6px 16px var(--blue-glow);
+    }
+    .sub-user { font-weight: 800; font-size: 0.92rem; color: var(--white); min-width: 0; overflow-wrap: anywhere; }
+    .sub-user small { display: block; font-weight: 600; font-size: 0.72rem; color: var(--gray); }
+    .tag {
+      display: inline-flex; align-items: center; gap: 6px; font-size: 0.68rem; font-weight: 900; padding: 5px 13px; border-radius: 50px;
+      letter-spacing: 0.8px; text-transform: uppercase; border: 1px solid transparent;
+    }
+    .tag.submitted { background: rgba(51,153,255,0.12); color: var(--blue-light); border-color: rgba(51,153,255,0.4); }
+    .tag.graded    { background: rgba(255,215,0,0.12); color: var(--gold); border-color: rgba(255,215,0,0.4); }
+    .tag.approved  { background: rgba(34,197,94,0.16); color: #86efac; border-color: rgba(34,197,94,0.45); }
+    .tag.denied    { background: rgba(244,63,94,0.14); color: #fda4af; border-color: rgba(244,63,94,0.45); }
+    .btn-grade {
+      margin-left: auto; padding: 9px 20px; border-radius: 12px; cursor: pointer;
+      background: rgba(0,102,255,0.16); border: 1px solid rgba(0,102,255,0.5);
+      color: var(--cyan); font-family: inherit; font-weight: 800; font-size: 0.8rem; transition: 0.25s;
+    }
+    .btn-grade:hover { background: var(--blue); color: #fff; transform: translateY(-2px); }
+
+    .empty-state { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 34px 10px; color: var(--gray); font-size: 0.87rem; font-weight: 600; text-align: center; }
+    .empty-state .ico { font-size: 2rem; color: var(--blue-light); opacity: .7; }
+    .empty-state[hidden] { display: none; }
+
+    /* --- Vista de calificación --- */
+    .grade-view { display: none; flex-direction: column; gap: 12px; margin-top: 16px; }
+    .grade-view.open { display: flex; animation: fadeUp 0.3s ease-out; }
+    .grade-q { border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; background: rgba(0,0,0,0.35); }
+    .gq-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+    .gq-num {
+      font-family: 'Orbitron', monospace; font-size: 0.62rem; font-weight: 900; letter-spacing: 1.2px; color: var(--cyan);
+      background: rgba(0,212,255,0.1); border: 1px solid rgba(0,212,255,0.3); padding: 3px 10px; border-radius: 50px;
+    }
+    .gq-kind { font-size: 0.68rem; font-weight: 700; color: var(--gray); }
+    .gq-text { font-size: 0.87rem; color: var(--white-soft); margin-bottom: 9px; }
+    .gq-answer {
+      font-size: 0.87rem; color: var(--white); white-space: pre-wrap; word-break: break-word;
+      background: rgba(255,255,255,0.05); border-left: 3px solid var(--blue); padding: 10px 13px; border-radius: 8px;
+    }
+    .gq-answer.empty { color: var(--gray); font-style: italic; border-left-color: var(--gray); }
+    .gq-meta { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; font-size: 0.78rem; font-weight: 800; margin-top: 9px; }
+    .gq-meta.ok { color: #4ade80; }
+    .gq-meta.bad { color: #fda4af; }
+    .gq-meta.info { color: var(--gray); }
+    .open-grade { display: flex; gap: 9px; margin-top: 11px; }
+    .open-btn {
+      flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px; border-radius: 11px; cursor: pointer;
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+      color: var(--white-soft); font-family: inherit; font-weight: 800; font-size: 0.79rem; transition: 0.25s;
+    }
+    .open-btn.good.sel { background: rgba(34,197,94,0.18); border-color: #22c55e; color: #86efac; }
+    .open-btn.bad.sel  { background: rgba(244,63,94,0.18); border-color: #f43f5e; color: #fda4af; }
+    .open-btn:hover { transform: translateY(-2px); }
+
+    .grade-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+    .btn-send-grade, .btn-approve, .btn-deny {
+      display: inline-flex; align-items: center; gap: 9px; padding: 13px 28px; border-radius: 14px; cursor: pointer;
+      font-family: inherit; font-weight: 900; font-size: 0.87rem; border: none; transition: 0.3s;
+    }
+    .btn-send-grade { background: linear-gradient(135deg, var(--blue), var(--blue-light)); color: #fff; box-shadow: 0 8px 22px var(--blue-glow); }
+    .btn-approve { background: linear-gradient(135deg, #16a34a, #22c55e); color: #fff; box-shadow: 0 8px 22px rgba(34,197,94,0.4); }
+    .btn-deny    { background: linear-gradient(135deg, #e11d48, #f43f5e); color: #fff; box-shadow: 0 8px 22px rgba(244,63,94,0.4); }
+    .btn-send-grade:hover, .btn-approve:hover, .btn-deny:hover { transform: translateY(-2px); filter: brightness(1.12); }
+    .btn-send-grade:disabled, .btn-approve:disabled, .btn-deny:disabled { opacity: .6; cursor: wait; transform: none; }
+    .grade-note { font-size: 0.8rem; color: var(--gray); margin-top: 4px; }
+    .grade-done {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 13px 16px; border-radius: 13px; margin-top: 14px;
+      background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.4); color: #86efac; font-weight: 800; font-size: 0.86rem;
+    }
+    .grade-done.bad { background: rgba(244,63,94,0.1); border-color: rgba(244,63,94,0.4); color: #fda4af; }
+
+    /* Modal Roblox */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+      display: none; align-items: center; justify-content: center; padding: 16px;
+    }
+    .modal-overlay.active { display: flex; animation: fadeIn 0.25s ease-out; }
+    .modal-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 40px;
+      max-width: 400px; width: 100%; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+      animation: modalPop 0.35s cubic-bezier(.3,1.3,.5,1);
+    }
+    .modal-card .roblox-avatar {
+      width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--blue);
+      margin: 0 auto 20px; box-shadow: 0 0 40px var(--blue-glow);
+    }
+    .modal-card h3 { font-family: 'Orbitron', monospace; font-size: 1.5rem; margin-bottom: 8px; color: var(--white); overflow-wrap: anywhere; }
+    .modal-card p { color: var(--gray); margin-bottom: 25px; }
+    .modal-close {
+      background: var(--blue); color: #fff; border: none; padding: 12px 24px; border-radius: 50px;
+      font-weight: 800; cursor: pointer; transition: 0.3s;
+    }
+    .modal-close:hover { background: var(--blue-light); transform: translateY(-2px); }
+
+    footer { margin-top: auto; border-top: 1px solid var(--border); background: var(--black); padding: 20px 0; text-align: center; }
+    .footer-text { color: var(--gray); font-size: 0.8rem; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px 12px; }
+    .version {
+      background: var(--card); border: 1px solid var(--border); padding: 3px 10px; border-radius: 6px;
+      font-family: 'Orbitron', monospace; font-size: 0.7rem; color: var(--blue);
+    }
+
+    /* ===== ANIMACIONES ===== */
+    nav { animation: navDrop 0.8s cubic-bezier(.2,.8,.2,1) both; }
+    @keyframes navDrop { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .avatar-wrap  { animation: popIn 0.7s 0.35s cubic-bezier(.3,1.4,.5,1) both; }
+    .nav-brand    { animation: slideRight 0.6s 0.5s ease-out both; }
+    .nav-welcome  { animation: slideRight 0.6s 0.62s ease-out both; }
+    .nav-id       { animation: slideRight 0.6s 0.74s ease-out both; }
+    @keyframes popIn { from { transform: scale(0.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    @keyframes slideRight { from { transform: translateX(-24px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes slideLeft { from { transform: translateX(24px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes riseUp { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes radar { 0%, 100% { transform: scale(1); opacity: 0.65; } 50% { transform: scale(1.12); opacity: 1; } }
+    @keyframes pulseDot { 0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.7); } 50% { box-shadow: 0 0 0 7px rgba(34,197,94,0); } }
+    @keyframes lightFlow { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+    .nav-plane {
+      position: absolute; bottom: 4px; left: 0; width: 18px; height: 18px; z-index: 3; pointer-events: none;
+      animation: fly 9s 1.5s linear infinite; filter: drop-shadow(0 0 6px rgba(0,212,255,0.9)); opacity: 0;
+    }
+    .nav-plane svg { width: 100%; height: 100%; fill: var(--cyan); transform: rotate(90deg); }
+    @keyframes fly { 0% { left: -30px; opacity: 0; } 8% { opacity: 1; } 92% { opacity: 1; } 100% { left: calc(100% + 10px); opacity: 0; } }
+    .btn-roblox:active, .logout-link:active, .rank-more:active { transform: scale(0.96); }
+    @keyframes floaty { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes modalPop { from { transform: scale(0.85) translateY(20px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+    @keyframes fadeUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .container { padding: 0 16px; }
+      nav { padding: 16px 0 14px; border-radius: 0 0 22px 22px; }
+      .nav-profile { gap: 14px; }
+      .nav-avatar { width: 64px; height: 64px; }
+      .status-dot { width: 13px; height: 13px; }
+      .logout-link { padding: 8px 12px; }
+      .logout-link img { width: 38px; height: 38px; }
+      .logout-link .logout-text { display: none; }
+      .rank-main { font-size: 0.78rem; padding: 9px 14px; }
+      .academy-card { padding: 22px 18px; }
+      .tab-item { padding: 13px 26px; font-size: 0.8rem; }
+      .track-options { grid-template-columns: 1fr; }
+      .track-card { padding: 30px 20px; }
+      .track-row { gap: 8px; }
+      .staff-head { padding: 18px 16px 14px; }
+      .staff-body { padding: 18px 16px 22px; }
+      .date-chev { margin-left: 0; }
+    }
+    @media (max-width: 480px) {
+      .nav-inner { gap: 12px; }
+      .nav-profile { gap: 12px; }
+      .nav-avatar { width: 54px; height: 54px; border-width: 2px; }
+      .nav-brand { font-size: 0.48rem; letter-spacing: 1.5px; padding: 2px 8px; }
+      .nav-id { font-size: 0.7rem; }
+      .logout-link { padding: 6px 9px; border-radius: 14px; }
+      .logout-link img { width: 32px; height: 32px; }
+      .nav-bottom .btn-roblox { width: 100%; }
+      .rank-box { width: 100%; }
+      .rank-main { flex: 1; min-width: 0; }
+      .rank-list { left: 0; right: 0; min-width: 0; }
+      .modal-card { padding: 28px 20px; }
+      .tab-item { padding: 12px 18px; letter-spacing: 1px; }
+      .tabs-row { gap: 8px; }
+      .staff-tabs { width: 100%; }
+      .staff-tab { flex: 1; justify-content: center; padding: 9px 10px; }
+      .search { flex: 1 1 100%; }
+    }
+    @media (max-width: 340px) { .nav-brand { display: none; } }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+      .nav-plane { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-dashboard"></div>
+
+  <nav id="navbar">
+    <div class="nav-plane" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>
+    </div>
+    <div class="nav-inner container">
+
+      <div class="nav-top">
+        <div class="nav-profile">
+          <div class="avatar-wrap">
+            <img id="user-avatar" class="nav-avatar" alt="Avatar de Discord" src="https://cdn.discordapp.com/embed/avatars/0.png">
+            <span class="status-dot"></span>
+          </div>
+          <div class="nav-info">
+            <span class="nav-brand">
+              <svg viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>
+              Latin Aviation Network
+            </span>
+            <h1 class="nav-welcome" id="welcome-name">Bienvenido</h1>
+            <span class="nav-id">
+              <svg viewBox="0 0 24 24"><path d="M20.3 4.4A19.8 19.8 0 0 0 15.4 3l-.2.4a14 14 0 0 1 4.2 2.1 15.5 15.5 0 0 0-14.8 0A14 14 0 0 1 8.8 3.4L8.6 3a19.8 19.8 0 0 0-4.9 1.4C.6 9-.3 13.5.1 18a19.9 19.9 0 0 0 6 3l1.3-2.1a12.9 12.9 0 0 1-2-1l.5-.4a14.2 14.2 0 0 0 12.2 0l.5.4a12.9 12.9 0 0 1-2 1l1.3 2.1a19.9 19.9 0 0 0 6-3c.5-5.2-.8-9.7-3.6-13.6zM8.5 15.3c-1.2 0-2.1-1.1-2.1-2.4s.9-2.4 2.1-2.4 2.1 1.1 2.1 2.4-.9 2.4-2.1 2.4zm7 0c-1.2 0-2.1-1.1-2.1-2.4s.9-2.4 2.1-2.4 2.1 1.1 2.1 2.4-.9 2.4-2.1 2.4z"/></svg>
+              <span id="user-id">ID Discord: —</span>
+            </span>
+          </div>
+        </div>
+
+        <a href="/auth/logout" class="logout-link" title="Cerrar sesión">
+          <img src="https://i.pinimg.com/originals/ab/23/a5/ab23a5baec3591af66206c2c14adbba8.png" alt="Cerrar sesión"
+               onerror="this.style.display='none'; this.parentElement.querySelector('.logout-text').style.display='inline'">
+          <span class="logout-text">Cerrar sesión</span>
+        </a>
+      </div>
+
+      <div class="nav-bottom">
+        <button class="btn-roblox" id="btn-roblox">
+          <svg viewBox="0 0 24 24"><path d="M5.2 0 0 18.8 18.8 24 24 5.2 5.2 0zm8.6 15.1-4.9-1.3 1.3-4.9 4.9 1.3-1.3 4.9z"/></svg>
+          Cuenta de Roblox
+        </button>
+
+        <div class="rank-box">
+          <span class="rank-main" id="rank-main">
+            <span class="rank-dot" id="rank-dot"></span>
+            <span class="rank-label">Rango</span>
+            <span id="rank-name">Cargando…</span>
+          </span>
+          <button class="rank-more" id="rank-more" title="Ver todos mis rangos" aria-label="Ver todos mis rangos">+</button>
+          <div class="rank-list" id="rank-list">
+            <span class="rank-list-title">Mis rangos en LAN</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </nav>
+
+  <!-- ===== EMBED LARGO: accesos (Formulario + Panel Staff) ===== -->
+  <section class="academy-section" id="academy-section">
+    <div class="academy-card" id="academy-card">
+      <div class="tabs-row" role="tablist">
+        <button class="tab-item soon" id="academy-cta" data-mode="soon"><i class="ico ico-clock"></i> Examen teórico · Próximamente</button>
+        <span class="tab-sep" id="tab-sep" hidden></span>
+        <button class="tab-item staff" id="quick-staff" hidden><i class="ico ico-shield"></i> Panel Staff</button>
+      </div>
+      <div class="track-row" id="track-row" hidden>
+        <span class="track-chip"><i class="ico ico-plane"></i> Tu ruta: <b id="track-name">—</b></span>
+        <button class="track-change" id="track-change" type="button"><i class="ico ico-retry"></i> Cambiar ruta</button>
+      </div>
+      <span class="academy-hint" id="academy-hint"><i class="ico ico-clock"></i>Próximamente: el examen teórico se habilitará pronto para tu ruta.</span>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <div class="footer-text">
+        <span class="version">0.0.0.0.1</span>
+        <span>© 2026 Latin Aviation Network. Todos los derechos reservados.</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Modal Roblox -->
+  <div class="modal-overlay" id="roblox-modal">
+    <div class="modal-card">
+      <img id="roblox-modal-avatar" class="roblox-avatar" alt="Roblox Avatar" src="https://www.roblox.com/headshot-thumbnail/image?userId=0&width=420&height=420&format=png">
+      <h3 id="roblox-modal-name">Cargando...</h3>
+      <p id="roblox-modal-id">ID: —</p>
+      <button class="modal-close" onclick="document.getElementById('roblox-modal').classList.remove('active')">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- Modal RUTA: Piloto / ATC (obligatorio la primera vez, siempre cambiable) -->
+  <div class="modal-overlay" id="track-modal">
+    <div class="track-card">
+      <div class="track-head-ico"><i class="ico ico-plane"></i></div>
+      <h3>Elige tu ruta en LAN</h3>
+      <p class="track-sub">Selecciona el área que seguirás. Habilitará tu examen teórico (próximamente). Puedes cambiarla cuando quieras desde tu dashboard.</p>
+      <div class="track-options">
+        <button class="track-opt" data-track="piloto" type="button">
+          <i class="ico ico-plane"></i>
+          <b>Piloto</b>
+          <small>Formación de vuelo, navegación y operaciones</small>
+        </button>
+        <button class="track-opt" data-track="atc" type="button">
+          <i class="ico ico-tower"></i>
+          <b>ATC</b>
+          <small>Control de tráfico aéreo y procedimientos</small>
+        </button>
+      </div>
+      <div class="track-loading" id="track-loading" hidden>Guardando tu ruta…</div>
+    </div>
+  </div>
+
+  <!-- ===== PANEL STAFF ===== -->
+  <div class="staff-overlay" id="staff-overlay">
+    <div class="staff-panel">
+      <div class="staff-head">
+        <div class="staff-id">
+          <span class="staff-badge"><i class="ico ico-shield"></i></span>
+          <div class="staff-titles">
+            <div class="staff-title">Panel Staff</div>
+            <div class="staff-hello">LAN Academy · Hola, <b id="staff-name">—</b></div>
+          </div>
+        </div>
+        <div class="staff-tabs">
+          <button class="staff-tab active" data-tab="inicio"><i class="ico ico-home"></i> Inicio</button>
+          <button class="staff-tab" data-tab="formularios"><i class="ico ico-doc"></i> Formularios</button>
+        </div>
+        <button class="staff-close" id="staff-close" aria-label="Cerrar panel"><i class="ico ico-x"></i></button>
+      </div>
+      <div class="staff-body">
+        <div id="tab-inicio">
+          <div class="staff-subtitle"><i class="ico ico-cap"></i> Resumen LAN Academy</div>
+          <div class="stat-cards" id="stat-cards"></div>
+          <div class="dist-box">
+            <div class="dist-top">
+              <span class="dist-title">Distribución de formularios</span>
+              <span class="dist-rate" id="dist-rate" hidden></span>
+            </div>
+            <div class="dist" id="dist">
+              <span class="d-pend"></span><span class="d-graded"></span><span class="d-approved"></span><span class="d-denied"></span>
+            </div>
+          </div>
+        </div>
+        <div id="tab-formularios" hidden>
+          <div class="staff-subtitle"><i class="ico ico-cal"></i> Formularios por día</div>
+          <div class="toolbar">
+            <div class="chips" id="chips">
+              <button class="chip active" data-f="all">Todos <b id="cc-all">0</b></button>
+              <button class="chip" data-f="submitted">En revisión <b id="cc-submitted">0</b></button>
+              <button class="chip" data-f="graded">Calificados <b id="cc-graded">0</b></button>
+              <button class="chip" data-f="approved">Aprobados <b id="cc-approved">0</b></button>
+              <button class="chip" data-f="denied">Denegados <b id="cc-denied">0</b></button>
+            </div>
+            <label class="search">
+              <i class="ico ico-search"></i>
+              <input type="search" id="search" placeholder="Buscar usuario o ID" autocomplete="off">
+            </label>
+          </div>
+          <div id="date-list"><p style="color:var(--gray);font-size:.87rem">Cargando…</p></div>
+          <div class="empty-state" id="no-results" hidden><i class="ico ico-search"></i>No hay formularios que coincidan con el filtro.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/academy-bank.js"></script>
+  <script>
+    const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    /* ===== RANGOS DE DISCORD ===== */
+    async function loadRanks() {
+      const rankName = document.getElementById('rank-name');
+      const rankDot = document.getElementById('rank-dot');
+      const rankMain = document.getElementById('rank-main');
+      const moreBtn = document.getElementById('rank-more');
+      const list = document.getElementById('rank-list');
+
+      try {
+        const res = await fetch('/api/roles');
+        const data = await res.json();
+        const ranks = data.ranks || [];
+
+        if (ranks.length === 0) {
+          rankName.textContent = 'Aún sin rangos';
+          rankDot.style.background = '#64748b';
+          rankMain.style.borderColor = 'var(--border)';
+          moreBtn.classList.remove('show');
+          return;
+        }
+
+        const top = ranks[0];
+        rankName.textContent = top.name;
+        rankDot.style.background = top.color;
+        rankDot.style.color = top.color;
+        rankMain.style.color = top.color;
+        rankMain.style.borderColor = top.color + '66';
+        rankMain.style.boxShadow = '0 0 20px ' + top.color + '33';
+        rankMain.style.background = top.color + '12';
+
+        if (ranks.length > 1) {
+          moreBtn.classList.add('show');
+          list.innerHTML =
+            '<span class="rank-list-title">Mis rangos en LAN (' + ranks.length + ')</span>' +
+            ranks.map((r, i) =>
+              '<span class="rank-item' + (i === 0 ? ' is-top' : '') + '">' +
+                '<span class="rank-dot" style="background:' + r.color + '; color:' + r.color + '"></span>' +
+                r.name +
+                (i === 0 ? '<span class="rank-crown"><i class="ico ico-crown"></i> Principal</span>' : '') +
+              '</span>'
+            ).join('');
+        } else {
+          moreBtn.classList.remove('show');
+        }
+      } catch (e) {
+        console.error('Error cargando rangos:', e);
+        rankName.textContent = '—';
+      }
+    }
+
+    document.getElementById('rank-more').addEventListener('click', () => {
+      const list = document.getElementById('rank-list');
+      const moreBtn = document.getElementById('rank-more');
+      const open = list.classList.toggle('open');
+      moreBtn.textContent = open ? '−' : '+';
+    });
+
+    document.addEventListener('click', (e) => {
+      const box = document.querySelector('.rank-box');
+      if (box && !box.contains(e.target)) {
+        document.getElementById('rank-list').classList.remove('open');
+        document.getElementById('rank-more').textContent = '+';
+      }
+    });
+
+    /* ===== USUARIO + ROBLOX ===== */
+    let robloxData = null;
+
+    async function loadUser() {
+      try {
+        const res = await fetch('/api/me');
+        if (res.status === 401) {
+          window.location.href = '/iniciar-seccion.html';
+          return;
+        }
+        const user = await res.json();
+        const name = user.global_name || user.username;
+        document.getElementById('welcome-name').textContent = 'Bienvenido, ' + name;
+        document.getElementById('user-id').textContent = 'ID Discord: ' + user.id;
+        if (user.avatar) {
+          document.getElementById('user-avatar').src = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`;
+        }
+
+        try {
+          const sres = await fetch('/api/user-status');
+          robloxData = await sres.json();
+        } catch (e) {
+          console.error(e);
+          robloxData = { roblox_id: user.roblox_id, roblox_username: user.roblox_username, roblox_avatar: user.roblox_avatar };
+        }
+      } catch (e) {
+        console.error(e);
+        window.location.href = '/iniciar-seccion.html';
+      }
+    }
+
+    document.getElementById('btn-roblox').addEventListener('click', () => {
+      const modal = document.getElementById('roblox-modal');
+      if (robloxData && robloxData.roblox_id) {
+        document.getElementById('roblox-modal-name').textContent =
+          robloxData.roblox_username || 'Usuario de Roblox';
+        document.getElementById('roblox-modal-id').textContent = 'ID: ' + robloxData.roblox_id;
+        document.getElementById('roblox-modal-avatar').src =
+          robloxData.roblox_avatar ||
+          `https://www.roblox.com/headshot-thumbnail/image?userId=${robloxData.roblox_id}&width=420&height=420&format=png`;
+        modal.classList.add('active');
+      } else {
+        alert('Aún no tienes cuenta de Roblox vinculada.\nVe a Verificación → Paso 2 para conectarla.');
+      }
+    });
+
+    document.getElementById('roblox-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'roblox-modal') {
+        document.getElementById('roblox-modal').classList.remove('active');
+      }
+    });
+
+    /* =========================================================
+       LAN ACADEMY — TARJETA DE ACCESO AL FORMULARIO
+       El estado (en revisión / denegado) se muestra DENTRO de la
+       web del formulario, no aquí. Desde el dashboard siempre se
+       puede entrar al formulario.
+       ========================================================= */
+    let academyStatus = null;
+    const HINT_START = '<i class="ico ico-doc"></i>Al enviar, tu formulario quedará en revisión hasta que un staff lo califique.';
+
+    async function loadAcademy() {
+      try {
+        const res = await fetch('/api/academy/status');
+        if (!res.ok) return;
+        const st = await res.json();
+        academyStatus = st;
+
+        const staffBtn = document.getElementById('quick-staff');
+        staffBtn.hidden = (st.is_staff !== true);
+        document.getElementById('tab-sep').hidden = staffBtn.hidden;
+
+        const section = document.getElementById('academy-section');
+        const cta = document.getElementById('academy-cta');
+        const hint = document.getElementById('academy-hint');
+        section.hidden = false;
+        hint.hidden = false;
+
+        const conHistorial = st.status && st.status !== 'none';
+        /* Examen teórico: visible para todos los usuarios (estado "Próximamente") */
+        const mostrarBoton = true;
+        cta.hidden = !mostrarBoton;
+
+        if (st.status === 'approved') {
+          cta.innerHTML = '<i class="ico ico-check"></i> Aprobado';
+          cta.className = 'tab-item approved';
+          cta.dataset.mode = 'approved';
+          hint.hidden = false;
+          hint.innerHTML = '<i class="ico ico-cap"></i>Tu formulario fue aprobado — ya tienes el rango Piloto En Práctica.';
+        } else if (conHistorial) {
+          /* Tiene historial (en revisión / denegado / calificado): entra directo al formulario */
+          cta.innerHTML = '<i class="ico ico-cap"></i> Formulario';
+          cta.className = 'tab-item';
+          cta.dataset.mode = 'start';
+          hint.hidden = true;
+        } else {
+          /* Ruta Piloto / ATC → examen teórico "Próximamente" (aún no disponible) */
+          cta.innerHTML = '<i class="ico ico-clock"></i> Examen teórico · Próximamente';
+          cta.className = 'tab-item soon';
+          cta.dataset.mode = 'soon';
+          hint.hidden = false;
+          hint.innerHTML = '<i class="ico ico-lock"></i>Próximamente: el examen teórico se habilitará pronto para tu ruta.';
+        }
+      } catch (e) {
+        console.error('Error academy status:', e);
+      }
+    }
+
+    function abrirFormulario() {
+      const cta = document.getElementById('academy-cta');
+      if (cta.hidden) return;
+      if (cta.dataset.mode === 'approved') return;
+      if (cta.dataset.mode === 'soon') return;   // Próximamente: aún no está disponible
+      window.location.href = '/dashboard/formulario-lan-academy';
+    }
+    document.getElementById('academy-cta').addEventListener('click', abrirFormulario);
+    document.getElementById('quick-staff').addEventListener('click', () => abrirPanelStaff());
+
+    /* =========================================================
+       RUTA: Piloto / ATC
+       - Obligatoria la primera vez (modal sin X ni cierre por fondo)
+       - Siempre cambiable desde "Cambiar ruta"
+       ========================================================= */
+    const trackModal = document.getElementById('track-modal');
+    let trackActual = null;
+
+    function pintarRuta(t) {
+      trackActual = t;
+      const row = document.getElementById('track-row');
+      const name = document.getElementById('track-name');
+      if (!t) { row.hidden = true; return; }
+      row.hidden = false;
+      name.textContent = (t === 'atc') ? 'ATC' : 'Piloto';
+      document.querySelectorAll('.track-opt').forEach(o => {
+        o.classList.toggle('sel', o.dataset.track === t);
+      });
+    }
+
+    async function cargarRuta() {
+      try {
+        const res = await fetch('/api/track');
+        if (!res.ok) return;
+        const data = await res.json();
+        pintarRuta(data.track || null);
+        if (!data.track) trackModal.classList.add('active');   // primera vez: obligatorio elegir
+      } catch (e) {
+        console.error('Error cargar ruta:', e);
+      }
+    }
+
+    async function elegirRuta(t) {
+      const opts = document.querySelectorAll('.track-opt');
+      const loading = document.getElementById('track-loading');
+      opts.forEach(o => o.disabled = true);
+      loading.hidden = false;
+      try {
+        const res = await fetch('/api/track', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ track: t })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'No se pudo guardar la ruta');
+        pintarRuta(data.track);
+        trackModal.classList.remove('active');
+      } catch (e) {
+        console.error('Error guardar ruta:', e);
+        alert('❌ ' + e.message);
+      } finally {
+        loading.hidden = true;
+        opts.forEach(o => o.disabled = false);
+      }
+    }
+
+    document.querySelectorAll('.track-opt').forEach(o => {
+      o.addEventListener('click', () => elegirRuta(o.dataset.track));
+    });
+    document.getElementById('track-change').addEventListener('click', () => {
+      trackModal.classList.add('active');
+      document.querySelectorAll('.track-opt').forEach(o => {
+        o.classList.toggle('sel', o.dataset.track === trackActual);
+      });
+    });
+
+    /* =========================================================
+       PANEL STAFF
+       ========================================================= */
+    const staffOverlay = document.getElementById('staff-overlay');
+    let staffGroups = [];
+    let curFilter = 'all';
+    let curQuery = '';
+
+    function setTab(name) {
+      document.querySelectorAll('.staff-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+      document.getElementById('tab-inicio').hidden = name !== 'inicio';
+      document.getElementById('tab-formularios').hidden = name !== 'formularios';
+    }
+
+    async function abrirPanelStaff() {
+      staffOverlay.classList.add('active');
+      setTab('inicio');
+      const nombre = (document.getElementById('welcome-name').textContent || '').replace('Bienvenido, ', '');
+      document.getElementById('staff-name').textContent = nombre || 'user';
+      await cargarPanelStaff();
+    }
+
+    document.getElementById('staff-close').addEventListener('click', () => staffOverlay.classList.remove('active'));
+    staffOverlay.addEventListener('click', (e) => {
+      if (e.target === staffOverlay) staffOverlay.classList.remove('active');
+    });
+    document.querySelectorAll('.staff-tab').forEach(tab => {
+      tab.addEventListener('click', () => setTab(tab.dataset.tab));
+    });
+
+    document.querySelectorAll('#chips .chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('#chips .chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        curFilter = chip.dataset.f;
+        applyFilter();
+      });
+    });
+    document.getElementById('search').addEventListener('input', (e) => {
+      curQuery = e.target.value.trim().toLowerCase();
+      applyFilter();
+    });
+
+    async function cargarPanelStaff() {
+      try {
+        const res = await fetch('/api/academy/panel');
+        if (!res.ok) throw new Error('Sin permisos de staff');
+        const data = await res.json();
+        staffGroups = data.groups || [];
+        renderStats();
+        renderDates();
+      } catch (e) {
+        document.getElementById('date-list').innerHTML =
+          '<p style="color:#fda4af;display:flex;align-items:center;gap:8px"><i class="ico ico-x"></i> ' + escapeHtml(e.message) + '</p>';
+      }
+    }
+
+    function countUp(el, to) {
+      if (REDUCED || to === 0) { el.textContent = to; return; }
+      let t0 = null;
+      function step(t) {
+        if (t0 === null) t0 = t;
+        const p = Math.min(1, (t - t0) / 800);
+        el.textContent = Math.round(to * (1 - Math.pow(1 - p, 3)));
+        if (p < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+
+    function renderStats() {
+      let total = 0, pend = 0, grad = 0, apr = 0, den = 0;
+      staffGroups.forEach(g => g.items.forEach(i => {
+        total++;
+        if (i.status === 'submitted') pend++;
+        else if (i.status === 'graded') grad++;
+        else if (i.status === 'approved') apr++;
+        else if (i.status === 'denied') den++;
+      }));
+
+      const cards = [
+        { cls: 'sc-total',    ico: 'ico-doc',   n: total, l: 'Totales' },
+        { cls: 'sc-pend',     ico: 'ico-clock', n: pend,  l: 'En revisión' },
+        { cls: 'sc-graded',   ico: 'ico-star',  n: grad,  l: 'Calificados' },
+        { cls: 'sc-approved', ico: 'ico-check', n: apr,   l: 'Aprobados' },
+        { cls: 'sc-denied',   ico: 'ico-x',     n: den,   l: 'Denegados' }
+      ];
+      document.getElementById('stat-cards').innerHTML = cards.map((c, i) => `
+        <div class="stat-card ${c.cls}" style="--i:${i}">
+          <span class="stat-ico"><i class="ico ${c.ico}"></i></span>
+          <span class="num" data-to="${c.n}">0</span>
+          <span class="lbl">${c.l}</span>
+        </div>`).join('');
+      document.querySelectorAll('#stat-cards .num').forEach(el => countUp(el, Number(el.dataset.to)));
+
+      /* Chips */
+      document.getElementById('cc-all').textContent = total;
+      document.getElementById('cc-submitted').textContent = pend;
+      document.getElementById('cc-graded').textContent = grad;
+      document.getElementById('cc-approved').textContent = apr;
+      document.getElementById('cc-denied').textContent = den;
+
+      /* Barra de distribución */
+      const segs = document.querySelectorAll('#dist span');
+      const vals = [pend, grad, apr, den];
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        segs.forEach((s, i) => { s.style.width = total ? (vals[i] / total * 100) + '%' : '0%'; });
+      }));
+      const rate = document.getElementById('dist-rate');
+      if (apr + den > 0) {
+        rate.hidden = false;
+        rate.innerHTML = '<i class="ico ico-check"></i> Tasa de aprobación: ' + Math.round(apr / (apr + den) * 100) + '%';
+      } else {
+        rate.hidden = true;
+      }
+    }
+
+    function tagFor(status, score, total) {
+      const t = total || 20;
+      if (status === 'submitted') return '<span class="tag submitted"><i class="ico ico-clock"></i> En revisión</span>';
+      if (status === 'graded')    return `<span class="tag graded"><i class="ico ico-star"></i> Calificado · ${score}/${t}</span>`;
+      if (status === 'approved')  return `<span class="tag approved"><i class="ico ico-check"></i> Aprobado · ${score}/${t}</span>`;
+      if (status === 'denied')    return `<span class="tag denied"><i class="ico ico-x"></i> Denegado${score != null ? ' · ' + score + '/' + t : ''}</span>`;
+      return '';
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function renderDates() {
+      const box = document.getElementById('date-list');
+      if (!staffGroups.length) {
+        box.innerHTML = '<div class="empty-state"><i class="ico ico-doc"></i>Aún no hay formularios enviados.</div>';
+        return;
+      }
+
+      box.innerHTML = staffGroups.map((g, gi) => `
+        <div class="date-group" id="group-${gi}" style="animation-delay:${Math.min(gi, 8) * 60}ms">
+          <div class="date-head" data-g="${gi}">
+            <span class="date-badge"><i class="ico ico-cal"></i></span>
+            <span class="date-title">${escapeHtml(g.fecha)}</span>
+            <span class="date-count" id="count-${gi}"></span>
+            <span class="date-pend" id="pend-${gi}" hidden></span>
+            <span class="date-chev"><i class="ico ico-chev"></i></span>
+            <button type="button" class="btn-open-date" id="btn-open-${gi}">Abrir</button>
+          </div>
+          <div class="date-items" id="items-${gi}">
+            ${g.items.map(it => `
+              <div class="sub-embed" id="sub-${it.id}">
+                <div class="sub-head">
+                  <span class="sub-avatar">${escapeHtml(String(it.username || '?').charAt(0).toUpperCase())}</span>
+                  <span class="sub-user">${escapeHtml(it.username)}<small>ID: ${escapeHtml(it.discord_id)}</small></span>
+                  <span class="tag-slot">${tagFor(it.status, it.score, it.total)}</span>
+                  <button class="btn-grade" data-id="${it.id}">${it.status === 'submitted' ? 'Calificar' : 'Ver resultado'}</button>
+                </div>
+                <div class="grade-view" id="grade-${it.id}"></div>
+              </div>`).join('')}
+          </div>
+        </div>`).join('');
+
+      box.querySelectorAll('.date-head').forEach(head => {
+        head.addEventListener('click', () => {
+          const gi = head.dataset.g;
+          const items = document.getElementById('items-' + gi);
+          const open = items.classList.toggle('open');
+          document.getElementById('group-' + gi).classList.toggle('open', open);
+          document.getElementById('btn-open-' + gi).textContent = open ? 'Cerrar' : 'Abrir';
+        });
+      });
+      box.querySelectorAll('.btn-grade').forEach(btn => {
+        btn.addEventListener('click', () => abrirCalificacion(btn.dataset.id));
+      });
+      applyFilter();
+    }
+
+    /* Filtro por estado + búsqueda (oculta/muestra sin volver a pintar) */
+    function applyFilter() {
+      let visibleTotal = 0;
+      staffGroups.forEach((g, gi) => {
+        let vis = 0, pend = 0;
+        g.items.forEach(it => {
+          if (it.status === 'submitted') pend++;
+          const el = document.getElementById('sub-' + it.id);
+          if (!el) return;
+          const okS = curFilter === 'all' || it.status === curFilter;
+          const okQ = !curQuery ||
+            String(it.username).toLowerCase().includes(curQuery) ||
+            String(it.discord_id).includes(curQuery);
+          el.hidden = !(okS && okQ);
+          if (!el.hidden) vis++;
+        });
+        visibleTotal += vis;
+        const grp = document.getElementById('group-' + gi);
+        if (grp) grp.hidden = vis === 0;
+        const c = document.getElementById('count-' + gi);
+        if (c) c.textContent = vis + ' formulario' + (vis === 1 ? '' : 's');
+        const p = document.getElementById('pend-' + gi);
+        if (p) {
+          p.hidden = pend === 0;
+          p.innerHTML = '<i class="ico ico-clock"></i> ' + pend + ' en revisión';
+        }
+      });
+      document.getElementById('no-results').hidden = !(staffGroups.length && visibleTotal === 0);
+    }
+
+    /* ---------- Abrir UN formulario ---------- */
+    async function abrirCalificacion(id) {
+      const slot = document.getElementById('grade-' + id);
+      if (!slot) return;
+      if (slot.classList.contains('open')) { slot.classList.remove('open'); return; }
+
+      try {
+        const res = await fetch('/api/academy/submission/' + id);
+        if (!res.ok) throw new Error('No se pudo cargar el formulario');
+        const sub = await res.json();
+        slot.innerHTML = renderGradeView(sub);
+        slot.classList.add('open');
+        conectarAcciones(id, sub);
+      } catch (e) {
+        slot.innerHTML = `<div class="grade-done bad"><i class="ico ico-x"></i> ${escapeHtml(e.message)}</div>`;
+        slot.classList.add('open');
+      }
+    }
+
+    /* ---------- Render de la vista de calificación ---------- */
+    function renderGradeView(sub) {
+      const mods = window.LAN_ACADEMY_MODULOS || [];
+      const key = window.LAN_ACADEMY_KEY || {};
+      const ROMANOS = ['I', 'II', 'III', 'IV'];
+      const editable = sub.status === 'submitted';
+      let html = '';
+
+      mods.forEach((m, mi) => {
+        html += `<div class="staff-subtitle" style="margin-top:8px"><i class="ico ico-doc"></i> Módulo ${ROMANOS[mi]} — ${escapeHtml(m.titulo)}</div>`;
+        m.preguntas.forEach(p => {
+          const ans = (sub.answers && sub.answers[p.n]) ? String(sub.answers[p.n]) : '';
+          const esCerrada = Object.prototype.hasOwnProperty.call(key, p.n);
+          let meta;
+
+          if (esCerrada) {
+            const ok = ans.trim().toLowerCase() === String(key[p.n]).trim().toLowerCase();
+            meta = ans
+              ? `<div class="gq-meta ${ok ? 'ok' : 'bad'}"><i class="ico ${ok ? 'ico-check' : 'ico-x'}"></i> ${ok ? 'Correcta' : 'Incorrecta'} — correcta: <b>${escapeHtml(key[p.n])}</b></div>`
+              : `<div class="gq-meta info">Sin respuesta — correcta: <b>${escapeHtml(key[p.n])}</b></div>`;
+          } else {
+            meta = `<div class="gq-meta info">${editable ? 'Pregunta abierta — evalúala abajo' : 'Pregunta abierta'}</div>`;
+          }
+
+          html += `
+            <div class="grade-q">
+              <div class="gq-head">
+                <span class="gq-num">Pregunta ${p.n}</span>
+                <span class="gq-kind">${esCerrada ? 'Cerrada · corrección automática' : 'Abierta · manual'}</span>
+              </div>
+              <div class="gq-text">${escapeHtml(p.texto)}</div>
+              <div class="gq-answer${ans ? '' : ' empty'}">${ans ? escapeHtml(ans) : 'Sin respuesta'}</div>
+              ${meta}
+              ${(!esCerrada && editable) ? `
+                <div class="open-grade" data-open="${p.n}">
+                  <button type="button" class="open-btn good" data-val="good"><i class="ico ico-check"></i> Buena</button>
+                  <button type="button" class="open-btn bad" data-val="bad"><i class="ico ico-x"></i> Mala</button>
+                </div>` : ''}
+            </div>`;
+        });
+      });
+
+      if (sub.status === 'submitted') {
+        html += `
+          <div class="grade-actions">
+            <button type="button" class="btn-send-grade" data-send="${sub.id}"><i class="ico ico-send"></i> Enviar calificación</button>
+          </div>
+          <div class="grade-note">Las 15 preguntas cerradas se corrigen automáticamente; solo evalúa las 5 abiertas.</div>`;
+      } else if (sub.status === 'graded') {
+        html += `
+          <div class="grade-done"><i class="ico ico-star"></i> Calificado: <b>${sub.score}/${sub.total || 20}</b></div>
+          <div class="grade-actions">
+            <button type="button" class="btn-approve" data-decision="approve" data-id="${sub.id}"><i class="ico ico-check"></i> Aprobar</button>
+            <button type="button" class="btn-deny" data-decision="deny" data-id="${sub.id}"><i class="ico ico-x"></i> Denegar</button>
+          </div>
+          <div class="grade-note">Aprobar → se quita “Piloto En Formación” y se otorga “Piloto En Práctica” (lo hace el bot).</div>`;
+      } else if (sub.status === 'approved') {
+        html += `<div class="grade-done"><i class="ico ico-cap"></i> Aprobado — ${sub.score}/${sub.total || 20}. El bot ya actualizó el rol.</div>`;
+      } else if (sub.status === 'denied') {
+        html += `<div class="grade-done bad"><i class="ico ico-x"></i> Denegado${sub.score != null ? ' — ' + sub.score + '/' + (sub.total || 20) : ''}. El usuario puede volver a hacerlo.</div>`;
+      }
+
+      return html;
+    }
+
+    /* ---------- Acciones: buena/mala, enviar, aprobar/denegar ---------- */
+    function conectarAcciones(id, sub) {
+      const slot = document.getElementById('grade-' + id);
+      if (!slot) return;
+
+      slot.querySelectorAll('.open-grade').forEach(group => {
+        group.querySelectorAll('.open-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            group.querySelectorAll('.open-btn').forEach(b => b.classList.remove('sel'));
+            btn.classList.add('sel');
+            group.dataset.value = btn.dataset.val;
+          });
+        });
+      });
+
+      const sendBtn = slot.querySelector('[data-send]');
+      if (sendBtn) {
+        sendBtn.addEventListener('click', async () => {
+          const open = {};
+          const sinEvaluar = [];
+          slot.querySelectorAll('.open-grade').forEach(g => {
+            const q = g.dataset.open;
+            if (g.dataset.value) open[q] = g.dataset.value;
+            else sinEvaluar.push(q);
+          });
+          if (sinEvaluar.length) {
+            alert('Faltan preguntas abiertas por evaluar: ' + sinEvaluar.join(', '));
+            return;
+          }
+
+          sendBtn.disabled = true;
+          sendBtn.textContent = 'Enviando...';
+          try {
+            const res = await fetch('/api/academy/grade/' + id, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ open })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'No se pudo calificar');
+
+            const sub2 = Object.assign({}, sub, { status: 'graded', score: data.score, total: data.total });
+            slot.innerHTML = renderGradeView(sub2);
+            conectarAcciones(id, sub2);
+            actualizarFila(id, 'graded', data.score, data.total);
+            actualizarGrupoLocal(id, 'graded', data.score, data.total);
+            renderStats();
+            applyFilter();
+          } catch (e) {
+            alert('Error: ' + e.message);
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = '<i class="ico ico-send"></i> Enviar calificación';
+          }
+        });
+      }
+
+      slot.querySelectorAll('[data-decision]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const action = btn.dataset.decision;
+          btn.disabled = true;
+          btn.textContent = 'Procesando...';
+          try {
+            const res = await fetch('/api/academy/decision/' + id, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'No se pudo procesar');
+
+            const sub2 = Object.assign({}, sub, { status: data.status });
+            slot.innerHTML = renderGradeView(sub2);
+            conectarAcciones(id, sub2);
+            actualizarFila(id, data.status, sub.score, sub.total);
+            actualizarGrupoLocal(id, data.status);
+            renderStats();
+            applyFilter();
+          } catch (e) {
+            alert('Error: ' + e.message);
+            btn.disabled = false;
+            btn.innerHTML = action === 'approve'
+              ? '<i class="ico ico-check"></i> Aprobar'
+              : '<i class="ico ico-x"></i> Denegar';
+          }
+        });
+      });
+    }
+
+    function actualizarFila(id, status, score, total) {
+      const embed = document.getElementById('sub-' + id);
+      if (!embed) return;
+      const slot = embed.querySelector('.tag-slot');
+      if (slot) slot.innerHTML = tagFor(status, score, total);
+      const btn = embed.querySelector('.btn-grade');
+      if (btn) btn.textContent = 'Ver resultado';
+    }
+
+    function actualizarGrupoLocal(id, status, score, total) {
+      staffGroups.forEach(g => g.items.forEach(i => {
+        if (i.id === Number(id) || i.id === id) {
+          i.status = status;
+          if (score !== undefined) i.score = score;
+          if (total !== undefined) i.total = total;
+        }
+      }));
+    }
+
+    loadUser();
+    loadRanks();
+    loadAcademy();
+    cargarRuta();
+  </script>
+</body>
+</html>

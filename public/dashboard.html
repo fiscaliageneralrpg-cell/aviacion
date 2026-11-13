@@ -1161,6 +1161,12 @@
           cta.dataset.mode = 'approved';
           hint.hidden = false;
           hint.innerHTML = '<i class="ico ico-cap"></i>Tu formulario fue aprobado — ya tienes el rango Piloto En Práctica.';
+        } else if (conHistorial) {
+          /* Tiene historial (en revisión / denegado / calificado): entra directo al formulario */
+          cta.innerHTML = '<i class="ico ico-cap"></i> Formulario';
+          cta.className = 'tab-item';
+          cta.dataset.mode = 'start';
+          hint.hidden = true;
         } else {
           /* Ruta Piloto / ATC → examen teórico "Próximamente" (aún no disponible) */
           cta.innerHTML = '<i class="ico ico-clock"></i> Examen teórico · Próximamente';

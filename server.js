@@ -41,6 +41,18 @@ app.use(session({
   }
 }));
 
+// 🔒 Las copias estáticas del dashboard se sirven desde public/ (express.static
+// no aplica middlewares de ruta), así que aquí se exige la MISMA verificación
+// que en /dashboard. Sin esto, cualquier usuario logueado pero sin verificar
+// podía abrir /dashboard.html o /dashboard-aviacion.html a mano y saltarse
+// el paso de Roblox.
+app.use((req, res, next) => {
+  if (req.path === '/dashboard.html' || req.path === '/dashboard-aviacion.html') {
+    return requireVerificado(req, res, next);
+  }
+  next();
+});
+
 // Archivos estáticos
 app.use(express.static(path.join(__dirname, 'public')));
 
