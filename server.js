@@ -53,6 +53,16 @@ app.use((req, res, next) => {
   next();
 });
 
+// 🧹 Sin caché para HTML: así el navegador siempre baja la versión nueva del
+// dashboard/formulario tras cada despliegue (antes quedaba guardada la página
+// vieja y seguía apareciendo el modal de ruta automático).
+app.use((req, res, next) => {
+  if (req.path.endsWith('.html')) {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+  }
+  next();
+});
+
 // Archivos estáticos
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -686,10 +696,22 @@ app.post('/api/academy/ack-denied', requireAuth, async (req, res) => {
   }
 });
 
-// --- RUTA: Piloto o ATC (elegida después de verificar) ---
+// --- RUTA: Piloto o ATC (solo DESPUÉS de que el staff apruebe el formulario) ---
+function ultimoEstadoAcademy(discordId) {
+  return pool.query(
+    'SELECT status FROM academy_submissions WHERE discord_id = ? ORDER BY id DESC LIMIT 1',
+    [discordId]
+  ).then(([rows]) => (rows.length ? rows[0].status : null));
+}
+
 app.get('/api/track', requireAuth, async (req, res) => {
   try {
     const discordId = String(req.session.discordUser.id);
+    // Sin formulario aprobado no hay ruta que mostrar (aunque quede guardada
+    // de una prueba vieja): el chip y el embed los decide el estado del form.
+    const status = await ultimoEstadoAcademy(discordId);
+    if (status !== 'approved') return res.json({ track: null });
+
     const [rows] = await pool.query('SELECT track FROM verified_users WHERE discord_id = ?', [discordId]);
     const t = rows.length ? rows[0].track : null;
     res.json({ track: (t === 'piloto' || t === 'atc') ? t : null });
@@ -705,6 +727,12 @@ app.post('/api/track', requireAuth, async (req, res) => {
     const t = req.body && req.body.track;
     if (t !== 'piloto' && t !== 'atc') {
       return res.status(400).json({ error: 'Ruta no válida (piloto | atc)' });
+    }
+
+    // La ruta se elige/una vez aprobado el formulario (flujo LAN Academy)
+    const status = await ultimoEstadoAcademy(discordId);
+    if (status !== 'approved') {
+      return res.status(403).json({ error: 'Tu formulario debe ser aprobado por el staff antes de elegir ruta.' });
     }
 
     const [upd] = await pool.query(
