@@ -480,6 +480,42 @@
     }
     .track-loading[hidden] { display: none; }
 
+    /* ===== EMBED: FORMULARIO ACEPTADO → ELEGIR RUTA ===== */
+    .invite-section { width: 100%; margin-top: 26px; margin-bottom: 6px; padding: 0; }
+    .invite-section[hidden] { display: none; }
+    .invite-card {
+      position: relative; overflow: hidden; width: 100%;
+      display: flex; flex-direction: column; gap: 18px;
+      padding: 28px 34px; border-radius: 0 0 28px 28px;
+      background:
+        radial-gradient(620px 280px at 0% 0%, rgba(34,197,94,0.22), transparent 70%),
+        radial-gradient(520px 260px at 100% 100%, rgba(0,102,255,0.16), transparent 70%),
+        linear-gradient(135deg, rgba(13,13,18,0.98), rgba(8,10,18,0.96));
+      border: 1px solid rgba(34,197,94,0.55);
+      box-shadow: 0 22px 50px rgba(0,0,0,0.65), 0 10px 40px rgba(34,197,94,0.18), inset 0 1px 0 rgba(255,255,255,0.06);
+      animation: riseUp 0.7s 0.9s ease-out both;
+    }
+    .invite-card::after {
+      content: ""; position: absolute; top: 0; left: -80%; width: 45%; height: 100%;
+      background: linear-gradient(100deg, transparent, rgba(34,197,94,0.16), transparent);
+      transform: skewX(-20deg); animation: shine 6s 1.5s ease-in-out infinite; pointer-events: none;
+    }
+    .invite-head { position: relative; z-index: 2; display: flex; align-items: center; gap: 18px; }
+    .invite-badge {
+      flex-shrink: 0; width: 60px; height: 60px; border-radius: 50%;
+      display: grid; place-items: center;
+      background: linear-gradient(135deg, rgba(22,163,74,0.95), rgba(34,197,94,0.95));
+      box-shadow: 0 0 34px rgba(34,197,94,0.55);
+      animation: badgeFloat 3s ease-in-out infinite;
+    }
+    .invite-badge .ico { font-size: 1.7rem; color: #fff; width: 1.7em; height: 1.7em; }
+    .invite-text h3 {
+      font-family: 'Orbitron', monospace; font-size: 1.06rem; font-weight: 900;
+      letter-spacing: 1.2px; text-transform: uppercase; color: var(--white);
+    }
+    .invite-text p { color: var(--gray); font-size: 0.87rem; font-weight: 600; line-height: 1.6; margin-top: 7px; }
+    .invite-options { position: relative; z-index: 2; max-width: 760px; width: 100%; margin: 0 auto; }
+
     .tab-sep { width: 1px; height: 34px; background: linear-gradient(180deg, transparent, rgba(0,212,255,0.55), transparent); flex-shrink: 0; }
     .tab-sep[hidden] { display: none !important; }
 
@@ -893,6 +929,32 @@
     </div>
   </nav>
 
+  <!-- ===== EMBED: FORMULARIO ACEPTADO → ELIGE TU RUTA ===== -->
+  <section class="invite-section" id="invite-section" hidden>
+    <div class="invite-card">
+      <div class="invite-head">
+        <span class="invite-badge"><i class="ico ico-check"></i></span>
+        <div class="invite-text">
+          <h3>¡Tu formulario para LAN Academy fue aceptado!</h3>
+          <p>Ahora elige la ruta que seguirás en LAN. Podrás cambiarla cuando quieras desde tu dashboard.</p>
+        </div>
+      </div>
+      <div class="track-options invite-options">
+        <button class="track-opt" data-track="piloto" type="button">
+          <i class="ico ico-plane"></i>
+          <b>Piloto</b>
+          <small>Formación de vuelo, navegación y operaciones</small>
+        </button>
+        <button class="track-opt" data-track="atc" type="button">
+          <i class="ico ico-tower"></i>
+          <b>ATC</b>
+          <small>Control de tráfico aéreo y procedimientos</small>
+        </button>
+      </div>
+      <div class="track-loading" id="invite-loading" hidden>Guardando tu ruta…</div>
+    </div>
+  </section>
+
   <!-- ===== EMBED LARGO: accesos (Formulario + Panel Staff) ===== -->
   <section class="academy-section" id="academy-section">
     <div class="academy-card" id="academy-card">
@@ -1166,7 +1228,7 @@
           cta.dataset.mode = 'start';
         }
         renderHint();
-        maybeOpenTrackModal();   /* solo si está aprobado y aún no eligió ruta */
+        maybeShowInvite();   /* embed "aceptado → elige tu ruta" solo si aprobado y sin ruta */
       } catch (e) {
         console.error('Error academy status:', e);
       }
@@ -1179,10 +1241,12 @@
       const hint = document.getElementById('academy-hint');
       const st = academyStatus;
       if (st.status === 'approved') {
-        hint.hidden = false;
-        hint.innerHTML = trackActual
-          ? '<i class="ico ico-check"></i>Formulario aprobado · Tu ruta: ' + (trackActual === 'atc' ? 'ATC' : 'Piloto') + '. El examen teórico se habilitará Próximamente.'
-          : '<i class="ico ico-plane"></i>Tu formulario fue aprobado — elige tu ruta Piloto o ATC para continuar.';
+        if (trackActual) {
+          hint.hidden = false;
+          hint.innerHTML = '<i class="ico ico-check"></i>Formulario aprobado · Tu ruta: ' + (trackActual === 'atc' ? 'ATC' : 'Piloto') + '. El examen teórico se habilitará Próximamente.';
+        } else {
+          hint.hidden = true;   /* el embed de aceptación ya pide elegir ruta */
+        }
       } else if (st.status && st.status !== 'none') {
         hint.hidden = true;   /* estados (en revisión / denegado): aviso dentro del formulario */
       } else {
@@ -1230,28 +1294,26 @@
         rutaCargada = true;
         pintarRuta(data.track || null);
         renderHint();   /* si el estado ya cargó, refresca "Tu ruta: X" */
-        /* El modal NO se abre al cargar: solo si el staff ya aprobó
-           el formulario y aún no se eligió ruta (ver maybeOpenTrackModal) */
-        maybeOpenTrackModal();
+        maybeShowInvite();
       } catch (e) {
         console.error('Error cargar ruta:', e);
       }
     }
 
-    /* El modal de Piloto/ATC aparece ÚNICAMENTE cuando el staff aprobó
-       el formulario (status 'approved') y todavía no hay ruta elegida */
-    function maybeOpenTrackModal() {
-      if (!academyStatus || !rutaCargada) return;
-      if (academyStatus.status === 'approved' && !trackActual) {
-        trackModal.classList.add('active');
-      }
+    /* Embed "¡Formulario aceptado! → elige tu ruta": aparece SOLO cuando el
+       staff aprobó (status 'approved') y todavía no hay ruta elegida.
+       El modal queda únicamente para "Cambiar ruta". */
+    function maybeShowInvite() {
+      const invite = document.getElementById('invite-section');
+      if (!academyStatus || !rutaCargada) { invite.hidden = true; return; }
+      invite.hidden = !(academyStatus.status === 'approved' && !trackActual);
     }
 
     async function elegirRuta(t) {
       const opts = document.querySelectorAll('.track-opt');
-      const loading = document.getElementById('track-loading');
+      const loadings = document.querySelectorAll('.track-loading');
       opts.forEach(o => o.disabled = true);
-      loading.hidden = false;
+      loadings.forEach(l => l.hidden = false);
       try {
         const res = await fetch('/api/track', {
           method: 'POST',
@@ -1262,12 +1324,13 @@
         if (!res.ok) throw new Error(data.error || 'No se pudo guardar la ruta');
         pintarRuta(data.track);
         trackModal.classList.remove('active');
-        renderHint();   /* actualiza el texto: "Formulario aprobado · Tu ruta: X" */
+        maybeShowInvite();   /* ya hay ruta: el embed de aceptación desaparece */
+        renderHint();        /* "Formulario aprobado · Tu ruta: X" */
       } catch (e) {
         console.error('Error guardar ruta:', e);
         alert('❌ ' + e.message);
       } finally {
-        loading.hidden = true;
+        loadings.forEach(l => l.hidden = true);
         opts.forEach(o => o.disabled = false);
       }
     }
