@@ -218,10 +218,15 @@
   </footer>
 
   <script>
-    /* Si el usuario ya inició sesión, llevarlo directo al dashboard */
+    /* Si el usuario ya inició sesión → directo al dashboard.
+       Si cerró sesión → se queda aquí y puede volver a iniciar. */
     (async function redirigirSiYaLogueado() {
       try {
-        const res = await fetch('/api/me', { credentials: 'same-origin' });
+        const res = await fetch('/api/me', {
+          credentials: 'same-origin',
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache' }
+        });
         if (res.ok) {
           const me = await res.json();
           if (me && me.id) {
@@ -229,6 +234,8 @@
             return;
           }
         }
+        // Sin sesión: asegurar que no quede una respuesta cacheada
+        try { sessionStorage.clear(); } catch (e) { /* ignore */ }
       } catch (e) {
         console.warn('No se pudo verificar la sesión:', e);
       }

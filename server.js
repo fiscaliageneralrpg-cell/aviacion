@@ -215,6 +215,11 @@ async function ensureDiscordUserInDB(req, res, next) {
 
 function requireAuth(req, res, next) {
   if (!req.session.discordUser) {
+    // Las peticiones API reciben 401 (para que el JS lo detecte sin seguir redirecciones);
+    // las navegaciones normales siguen yendo al login.
+    if (req.path.startsWith('/api/') || req.xhr) {
+      return res.status(401).json({ error: 'No autenticado' });
+    }
     return res.redirect('/iniciar-seccion.html');
   }
   next();
@@ -1632,11 +1637,13 @@ app.post('/api/verify-complete', requireAuth, async (req, res) => {
   }
 });
 
-// --- Logout ---
+// --- Logout: destruye la sesión y borra la cookie (await para que no reviva) ---
 app.get('/auth/logout', (req, res) => {
-  req.session.destroy();
-  res.clearCookie('connect.sid');
-  res.redirect('/');
+  req.session.destroy(err => {
+    res.clearCookie('connect.sid', { path: '/' });
+    if (err) console.error('Error al destruir sesión:', err.message);
+    res.redirect('/iniciar-seccion.html');   // vuelve al login (sin sesión ya no redirige al dashboard)
+  });
 });
 
 app.listen(PORT, '0.0.0.0', () => {
