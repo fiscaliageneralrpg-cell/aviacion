@@ -1016,8 +1016,8 @@ app.put('/api/flight-plans/:id', requireAuth, async (req, res) => {
     if (!rows.length) return res.status(404).json({ error: 'Plan no encontrado' });
     const fp = rows[0];
     if (fp.discord_id !== discordId) return res.status(403).json({ error: 'No es tu plan' });
-    if (!['draft', 'rejected', 'cancelled'].includes(fp.status)) {
-      return res.status(409).json({ error: 'Solo puedes editar planes en borrador, rechazados o cancelados.' });
+    if (!['draft', 'cancelled'].includes(fp.status)) {
+      return res.status(409).json({ error: 'Este plan ya no se puede editar: los planes rechazados, aprobados, activos o finalizados son definitivos.' });
     }
 
     const { plan, errores } = leerCuerpoPlan(req.body);
@@ -1051,8 +1051,8 @@ app.post('/api/flight-plans/:id/submit', requireAuth, async (req, res) => {
     if (!rows.length) return res.status(404).json({ error: 'Plan no encontrado' });
     const fp = rows[0];
     if (fp.discord_id !== discordId) return res.status(403).json({ error: 'No es tu plan' });
-    if (!['draft', 'rejected', 'cancelled'].includes(fp.status)) {
-      return res.status(409).json({ error: 'Este plan ya fue enviado.' });
+    if (!['draft', 'cancelled'].includes(fp.status)) {
+      return res.status(409).json({ error: 'Este plan ya no se puede reenviar: los planes rechazados o finalizados son definitivos.' });
     }
     await pool.query(
       `UPDATE flight_plans SET status = 'pending', rejection_reason = NULL, updated_at = NOW() WHERE id = ?`,

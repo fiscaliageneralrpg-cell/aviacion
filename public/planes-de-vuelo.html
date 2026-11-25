@@ -175,6 +175,11 @@
     .atc-sel { appearance:none; background:rgba(0,102,255,.14) !important; border-color:rgba(0,102,255,.5) !important; color:var(--white) !important; cursor:pointer; }
     .atc-approve { border-color:rgba(34,197,94,.5) !important; color:var(--green) !important; font-weight:900 !important; }
     .atc-approve:hover { background:rgba(34,197,94,.15) !important; }
+    .plan-bloqueado {
+      display:inline-flex; align-items:center; gap:6px; padding:7px 12px; border-radius:50px;
+      background:rgba(244,63,94,.1); border:1px solid rgba(244,63,94,.4); color:#fda4af;
+      font-size:.7rem; font-weight:800; letter-spacing:.4px;
+    }
     .empty { color:var(--gray); font-size:.86rem; text-align:center; padding:40px 20px; }
     .empty .ico { font-size:2rem; color:rgba(0,212,255,.35); display:block; margin-bottom:12px; }
 
@@ -726,7 +731,8 @@
               ${p.status === 'approved' ? '<button class="mini-btn atc-estatus" data-id="' + p.id + '">⚙ Estatus</button><button class="mini-btn danger atc-cancel" data-id="' + p.id + '">Cancelar</button>' : ''}
               ${p.status === 'active' ? '<button class="mini-btn atc-finish" data-id="' + p.id + '">Finalizar</button>' : ''}
             ` : `
-              ${['draft','rejected','cancelled'].includes(p.status) ? '<button class="mini-btn" data-edit="' + p.id + '">Editar</button><button class="mini-btn" data-send="' + p.id + '">Enviar</button>' : ''}
+              ${['draft','cancelled'].includes(p.status) ? '<button class="mini-btn" data-edit="' + p.id + '">Editar</button><button class="mini-btn" data-send="' + p.id + '">Enviar</button>' : ''}
+              ${['rejected','finished'].includes(p.status) ? '<span class="plan-bloqueado">🔒 Definitivo</span>' : ''}
               ${p.status === 'pending' ? '<button class="mini-btn danger" data-cancel="' + p.id + '">Cancelar</button>' : ''}
             `}
             <button class="mini-btn ver-detalle" data-id="${p.id}">Ver detalle</button>
@@ -870,7 +876,7 @@
           acc.innerHTML = '<button class="btn btn-primary" id="d-finalizar">Finalizar vuelo</button>';
           document.getElementById('d-finalizar').onclick = () => cambiarEstado(p.id, 'finished');
         }
-      } else if (['draft','rejected','cancelled'].includes(p.status)) {
+      } else if (['draft','cancelled'].includes(p.status)) {
         acc.innerHTML = '<button class="btn btn-primary" id="d-reenviar">Enviar a revisión</button>';
         document.getElementById('d-reenviar').onclick = async () => {
           const res = await fetch('/api/flight-plans/' + p.id + '/submit', { method:'POST' });
@@ -878,6 +884,10 @@
           if (!res.ok) { showAlert(errorAmigable(d.error), 'error'); return; }
           detalleModal.classList.remove('active'); showAlert('✅ Plan enviado.', 'ok'); await cargarPlanes(true);
         };
+      } else if (['rejected','finished'].includes(p.status)) {
+        acc.innerHTML = '<div class="plan-bloqueado" style="font-size:.85rem">🔒 Este plan es definitivo: ' +
+          (p.status === 'rejected' ? 'fue rechazado por ATC' : 'el vuelo ya finalizó') +
+          ' y no se puede editar ni reenviar.</div>';
       }
       detalleModal.classList.add('active');
     }
