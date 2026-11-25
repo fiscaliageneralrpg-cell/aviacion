@@ -532,6 +532,101 @@
     .tab-sep { width: 1px; height: 34px; background: linear-gradient(180deg, transparent, rgba(0,212,255,0.55), transparent); flex-shrink: 0; }
     .tab-sep[hidden] { display: none !important; }
 
+    /* ===== OVERLAY BIENVENIDA (cada login hasta elegir ruta) ===== */
+    .welcome-card {
+      position: relative; overflow: hidden;
+      background: rgba(8,10,18,0.99);
+      border: 1px solid rgba(0,102,255,0.5);
+      border-radius: 26px; padding: 38px 32px;
+      max-width: 520px; width: 100%; text-align: center;
+      box-shadow: 0 40px 90px rgba(0,0,0,0.85), 0 0 60px rgba(0,102,255,0.2);
+      animation: modalPop 0.45s cubic-bezier(.3,1.3,.5,1);
+    }
+    .welcome-card::before {
+      content: ""; position: absolute; left: 0; top: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, transparent, var(--blue), var(--cyan), #fff, var(--cyan), var(--blue), transparent);
+      background-size: 200% 100%; animation: lightFlow 4s linear infinite;
+    }
+    .welcome-logo {
+      width: 74px; height: 74px; margin: 0 auto;
+      display: grid; place-items: center; border-radius: 50%;
+      background: rgba(0,102,255,0.14); border: 2px solid var(--blue);
+      box-shadow: 0 0 34px rgba(0,102,255,0.45); animation: floaty 3s ease-in-out infinite;
+    }
+    .welcome-logo .ico { font-size: 1.9rem; color: var(--cyan); width: 2em; height: 2em; }
+    .welcome-card h3 {
+      font-family: 'Orbitron', monospace; font-size: 1.22rem; font-weight: 900;
+      margin: 16px 0 8px; color: var(--white); overflow-wrap: anywhere;
+    }
+    .welcome-card h3 b { color: var(--cyan); text-shadow: 0 0 14px rgba(0,212,255,0.5); }
+    .welcome-card p.welcome-sub { color: var(--gray); font-size: 0.88rem; margin-bottom: 22px; line-height: 1.6; }
+    .welcome-next {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 12px 34px; border-radius: 50px; cursor: pointer;
+      background: linear-gradient(135deg, var(--blue), var(--blue-light));
+      border: 1px solid rgba(255,255,255,0.22); color: #fff;
+      font-family: inherit; font-weight: 800; font-size: 0.86rem; letter-spacing: 0.5px;
+      box-shadow: 0 10px 26px rgba(0,102,255,0.4); transition: 0.3s;
+    }
+    .welcome-next:hover { transform: translateY(-3px); box-shadow: 0 16px 34px rgba(0,102,255,0.6); }
+    .welcome-next:disabled { opacity: 0.6; cursor: wait; transform: none; }
+    .welcome-card .track-options { margin-top: 6px; }
+    .welcome-loading {
+      margin-top: 16px; color: var(--cyan); font-size: 0.8rem;
+      font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase;
+      animation: radar 1.2s ease-in-out infinite;
+    }
+    .welcome-loading[hidden], .welcome-step[hidden] { display: none !important; }
+
+    /* ===== PANEL ATC: PLANES DE VUELO ===== */
+    .fp-atc-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
+    .fp-atc-badge {
+      flex-shrink: 0; width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center;
+      background: rgba(0,102,255,0.14); border: 2px solid var(--blue); box-shadow: 0 0 26px rgba(0,102,255,0.4);
+    }
+    .fp-atc-badge .ico { color: var(--cyan); width: 1.6em; height: 1.6em; }
+    .fp-atc-titles { flex: 1; min-width: 180px; }
+    .fp-atc-title { font-family: 'Orbitron', monospace; font-size: 1.05rem; font-weight: 900; color: var(--white); }
+    .fp-atc-sub { color: var(--gray); font-size: 0.78rem; margin-top: 2px; }
+    .fp-refresh {
+      display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px; border-radius: 50px; cursor: pointer;
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--white-soft);
+      font-family: inherit; font-weight: 700; font-size: 0.74rem; transition: 0.25s;
+    }
+    .fp-refresh:hover { border-color: var(--blue); color: var(--cyan); transform: translateY(-2px); }
+    .fp-row {
+      display: grid; grid-template-columns: 1.5fr 1fr 1fr auto; gap: 12px; align-items: center;
+      padding: 14px 16px; border: 1px solid var(--border); border-radius: 14px;
+      background: rgba(13,13,18,0.8); margin-bottom: 10px; animation: riseUp 0.4s ease-out both;
+    }
+    .fp-row-main { min-width: 0; }
+    .fp-row-route { font-family: 'Orbitron', monospace; font-size: 0.82rem; color: var(--cyan); font-weight: 700; }
+    .fp-row-meta { color: var(--gray); font-size: 0.72rem; margin-top: 3px; overflow-wrap: anywhere; }
+    .fp-row-user { font-size: 0.78rem; color: var(--white-soft); font-weight: 700; overflow-wrap: anywhere; }
+    .fp-row-user small { display: block; color: var(--gray); font-weight: 400; font-size: 0.68rem; }
+    .fp-squawk {
+      display: inline-block; padding: 3px 9px; border-radius: 6px; margin-top: 4px;
+      background: rgba(0,212,255,0.1); border: 1px solid rgba(0,212,255,0.4);
+      color: var(--cyan); font-family: 'Orbitron', monospace; font-size: 0.76rem; letter-spacing: 1.4px;
+    }
+    .fp-status-select {
+      padding: 7px 10px; border-radius: 9px; cursor: pointer;
+      background: rgba(0,0,0,0.5); border: 1px solid var(--border); color: var(--white);
+      font-family: inherit; font-size: 0.75rem; font-weight: 700;
+    }
+    .fp-status-select:focus { outline: none; border-color: var(--cyan); }
+    .fp-empty { color: var(--gray); font-size: 0.86rem; text-align: center; padding: 20px; }
+    .fp-chip {
+      display: inline-block; padding: 3px 9px; border-radius: 50px; font-size: 0.68rem; font-weight: 800;
+      letter-spacing: 0.5px; text-transform: uppercase; border: 1px solid currentColor;
+    }
+    .fp-chip.pending { color: #facc15; } .fp-chip.approved { color: #22c55e; }
+    .fp-chip.active { color: var(--cyan); } .fp-chip.finished { color: var(--gray); }
+    .fp-chip.rejected, .fp-chip.cancelled { color: var(--red); } .fp-chip.draft { color: var(--white-soft); }
+    @media (max-width: 768px) {
+      .fp-row { grid-template-columns: 1fr; }
+    }
+
     /* =========================================================
        PANEL STAFF
        ========================================================= */
@@ -942,46 +1037,30 @@
     </div>
   </nav>
 
-  <!-- ===== EMBED: FORMULARIO ACEPTADO → ELIGE TU RUTA ===== -->
-  <section class="invite-section" id="invite-section" hidden>
-    <div class="invite-card">
-      <button class="pop-close" id="invite-close" type="button" aria-label="Cerrar aviso"><i class="ico ico-x"></i></button>
-      <div class="invite-head">
-        <span class="invite-badge"><i class="ico ico-check"></i></span>
-        <div class="invite-text">
-          <h3>¡Tu formulario para LAN Academy fue aceptado!</h3>
-          <p>Ahora elige la ruta que seguirás en LAN. Podrás cambiarla cuando quieras desde tu dashboard.</p>
-        </div>
-      </div>
-      <div class="track-options invite-options">
-        <button class="track-opt" data-track="piloto" type="button">
-          <i class="ico ico-plane"></i>
-          <b>Piloto</b>
-          <small>Formación de vuelo, navegación y operaciones</small>
-        </button>
-        <button class="track-opt" data-track="atc" type="button">
-          <i class="ico ico-tower"></i>
-          <b>ATC</b>
-          <small>Control de tráfico aéreo y procedimientos</small>
-        </button>
-      </div>
-      <div class="track-loading" id="invite-loading" hidden>Guardando tu ruta…</div>
-    </div>
-  </section>
-
-  <!-- ===== EMBED LARGO: accesos (Formulario + Panel Staff) ===== -->
+  <!-- ===== ACCESOS: Formulario / Planes de vuelo + Panel Staff ===== -->
   <section class="academy-section" id="academy-section">
     <div class="academy-card" id="academy-card">
       <div class="tabs-row" role="tablist">
-        <button class="tab-item soon" id="academy-cta" data-mode="soon"><i class="ico ico-clock"></i> Examen teórico · Próximamente</button>
+        <button class="tab-item soon" id="academy-cta" data-mode="soon"><i class="ico ico-clock"></i> Cargando…</button>
         <span class="tab-sep" id="tab-sep" hidden></span>
         <button class="tab-item staff" id="quick-staff" hidden><i class="ico ico-shield"></i> Panel Staff</button>
       </div>
-      <div class="track-row" id="track-row" hidden>
-        <span class="track-chip"><i class="ico ico-plane"></i> Tu ruta: <b id="track-name">—</b></span>
-        <button class="track-change" id="track-change" type="button"><i class="ico ico-retry"></i> Cambiar ruta</button>
+      <span class="academy-hint" id="academy-hint"><i class="ico ico-clock"></i>Comprobando tu estado…</span>
+    </div>
+  </section>
+
+  <!-- ===== PANEL ATC: PLANES DE VUELO (rol 1555512718046404609) ===== -->
+  <section class="academy-section" id="fp-atc-section" hidden>
+    <div class="academy-card" id="fp-atc-card">
+      <div class="fp-atc-head">
+        <span class="fp-atc-badge"><i class="ico ico-plane"></i></span>
+        <div class="fp-atc-titles">
+          <div class="fp-atc-title">Planes de vuelo</div>
+          <div class="fp-atc-sub">Todos los planes enviados · asigna estado y squawk</div>
+        </div>
+        <button class="fp-refresh" id="fp-refresh" type="button"><i class="ico ico-retry"></i> Actualizar</button>
       </div>
-      <span class="academy-hint" id="academy-hint"><i class="ico ico-clock"></i>Próximamente: el examen teórico se habilitará pronto para tu ruta.</span>
+      <div id="fp-atc-list"><p class="fp-empty">Cargando planes…</p></div>
     </div>
   </section>
 
@@ -1004,26 +1083,35 @@
     </div>
   </div>
 
-  <!-- Modal RUTA: Piloto/ATC — se abre desde "Cambiar ruta" -->
-  <div class="modal-overlay" id="track-modal">
-    <div class="track-card">
-      <button class="pop-close" id="track-close" type="button" aria-label="Cerrar"><i class="ico ico-x"></i></button>
-      <div class="track-head-ico"><i class="ico ico-plane"></i></div>
-      <h3>Elige tu ruta en LAN</h3>
-      <p class="track-sub">¡Tu formulario fue aprobado! Selecciona el área que seguirás. Habilitará tu examen teórico (próximamente). Puedes cambiarla cuando quieras desde tu dashboard.</p>
-      <div class="track-options">
-        <button class="track-opt" data-track="piloto" type="button">
-          <i class="ico ico-plane"></i>
-          <b>Piloto</b>
-          <small>Formación de vuelo, navegación y operaciones</small>
-        </button>
-        <button class="track-opt" data-track="atc" type="button">
-          <i class="ico ico-tower"></i>
-          <b>ATC</b>
-          <small>Control de tráfico aéreo y procedimientos</small>
-        </button>
+  <!-- ===== OVERLAY BIENVENIDA: se muestra EN CADA LOGIN hasta elegir ruta ===== -->
+  <div class="modal-overlay" id="welcome-overlay">
+    <div class="welcome-card">
+      <!-- Paso 1: bienvenida -->
+      <div class="welcome-step" id="welcome-step-1">
+        <div class="welcome-logo"><i class="ico ico-plane"></i></div>
+        <h3>¡Bienvenido, <b id="welcome-user-name">usuario</b>!</h3>
+        <p class="welcome-sub">Gracias por unirte a Latin Aviation Network.<br>Estamos felices de tenerte a bordo.</p>
+        <button class="welcome-next" id="welcome-next" type="button"><i class="ico ico-chev ico-right"></i> Siguiente</button>
       </div>
-      <div class="track-loading" id="track-loading" hidden>Guardando tu ruta…</div>
+      <!-- Paso 2: elegir carrera -->
+      <div class="welcome-step" id="welcome-step-2" hidden>
+        <div class="welcome-logo"><i class="ico ico-tower"></i></div>
+        <h3>¿Qué carrera deseas elegir?</h3>
+        <p class="welcome-sub">Esta decisión es permanente. Elige la ruta que seguirás en LAN.</p>
+        <div class="track-options">
+          <button class="track-opt" data-track="piloto" type="button">
+            <i class="ico ico-plane"></i>
+            <b>Piloto</b>
+            <small>Formación de vuelo, navegación y operaciones</small>
+          </button>
+          <button class="track-opt" data-track="atc" type="button">
+            <i class="ico ico-tower"></i>
+            <b>ATC</b>
+            <small>Control de tráfico aéreo y procedimientos</small>
+          </button>
+        </div>
+        <div class="welcome-loading" id="welcome-loading" hidden>Guardando tu ruta…</div>
+      </div>
     </div>
   </div>
 
@@ -1161,6 +1249,7 @@
         }
         const user = await res.json();
         const name = user.global_name || user.username;
+        userName = name;
         document.getElementById('welcome-name').textContent = 'Bienvenido, ' + name;
         document.getElementById('user-id').textContent = 'ID Discord: ' + user.id;
         if (user.avatar) {
@@ -1202,14 +1291,63 @@
     });
 
     /* =========================================================
-       LAN ACADEMY — TARJETA DE ACCESO AL FORMULARIO
-       El estado (en revisión / denegado) se muestra DENTRO de la
-       web del formulario, no aquí. Desde el dashboard siempre se
-       puede entrar al formulario.
+       LAN ACADEMY + OVERLAY DE BIENVENIDA + PANEL ATC
        ========================================================= */
     let academyStatus = null;
+    let trackActual = null;
+    let userName = '';
     const HINT_START = '<i class="ico ico-doc"></i>Al enviar, tu formulario quedará en revisión hasta que un staff lo califique.';
+    const ESTADOS_PLAN = {
+      draft: 'Borrador', pending: 'Pendiente', approved: 'Aprobado', active: 'Activo',
+      finished: 'Finalizado', rejected: 'Rechazado', cancelled: 'Cancelado'
+    };
 
+    /* ---------- Overlay: bienvenida (cada login hasta elegir ruta) ---------- */
+    function abrirBienvenida() {
+      const ov = document.getElementById('welcome-overlay');
+      document.getElementById('welcome-step-1').hidden = false;
+      document.getElementById('welcome-step-2').hidden = true;
+      const rawName = (document.getElementById('welcome-name').textContent || '').replace('Bienvenido, ', '').trim();
+      document.getElementById('welcome-user-name').textContent = userName || rawName || 'usuario';
+      ov.classList.add('active');
+    }
+
+    document.getElementById('welcome-next').addEventListener('click', () => {
+      document.getElementById('welcome-step-1').hidden = true;
+      document.getElementById('welcome-step-2').hidden = false;
+    });
+
+    document.querySelectorAll('.welcome-step-2 .track-opt').forEach(opt => {
+      opt.addEventListener('click', async () => {
+        const t = opt.dataset.track;
+        const opts = document.querySelectorAll('.welcome-step-2 .track-opt');
+        const loading = document.getElementById('welcome-loading');
+        opts.forEach(o => o.disabled = true);
+        loading.hidden = false;
+        try {
+          const res = await fetch('/api/track', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ track: t })
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'No se pudo guardar la ruta');
+          trackActual = data.track;
+          document.getElementById('welcome-overlay').classList.remove('active');
+          renderCta();
+          renderHint();
+          maybeMostrarPanelAtc();
+        } catch (e) {
+          console.error('Error guardando ruta:', e);
+          alert('❌ ' + e.message);
+        } finally {
+          loading.hidden = true;
+          opts.forEach(o => o.disabled = false);
+        }
+      });
+    });
+
+    /* ---------- Cargar estado del formulario ---------- */
     async function loadAcademy() {
       try {
         const res = await fetch('/api/academy/status');
@@ -1220,196 +1358,151 @@
         const staffBtn = document.getElementById('quick-staff');
         staffBtn.hidden = (st.is_staff !== true);
         document.getElementById('tab-sep').hidden = staffBtn.hidden;
+        document.getElementById('academy-section').hidden = false;
 
-        const section = document.getElementById('academy-section');
-        section.hidden = false;
-
-        /* El CTA se dibuja con renderCta() (depende de estado + ruta) */
-        maybeShowInvite();   /* embed "aceptado → elige tu ruta" solo si aprobado y sin ruta */
-        renderCta();         /* Formulario / Elegir ruta / Examen Próximamente */
-        actualizarFilaRuta();/* chip "Tu ruta": SOLO con formulario aprobado */
+        renderCta();
         renderHint();
+        maybeMostrarPanelAtc();
       } catch (e) {
         console.error('Error academy status:', e);
       }
     }
 
-    /* Texto de ayuda según estado + ruta (el detalle de revisión/denegado
-       vive DENTRO de la página del formulario, no aquí) */
     function renderHint() {
       if (!academyStatus) return;
       const hint = document.getElementById('academy-hint');
       const st = academyStatus;
       if (st.status === 'approved') {
-        if (trackActual) {
-          hint.hidden = false;
-          hint.innerHTML = '<i class="ico ico-check"></i>Formulario aprobado · Tu ruta: ' + (trackActual === 'atc' ? 'ATC' : 'Piloto') + '. El examen teórico se habilitará Próximamente.';
-        } else if (inviteCerrado) {
-          /* Cerraron el embed: el aviso vuelve a la tarjeta para que no se
-             pierda la indicación (el botón "Elegir ruta" reabre el embed) */
-          hint.hidden = false;
-          hint.innerHTML = '<i class="ico ico-plane"></i>Tu formulario fue aprobado — elige tu ruta Piloto o ATC para continuar.';
-        } else {
-          hint.hidden = true;   /* el embed de aceptación ya pide elegir ruta */
-        }
+        hint.hidden = false;
+        hint.innerHTML = '<i class="ico ico-check"></i>Formulario aprobado · Ya puedes gestionar tus planes de vuelo.';
       } else if (st.status && st.status !== 'none') {
-        hint.hidden = true;   /* estados (en revisión / denegado): aviso dentro del formulario */
+        hint.hidden = true;
       } else {
         hint.hidden = false;
-        hint.innerHTML = HINT_START + ' El examen teórico estará Próximamente.';
+        hint.innerHTML = HINT_START;
       }
     }
 
-    /* Botón principal de la tarjeta según estado + ruta:
-       - sin/historial de formulario → "Formulario" (clicable)
-       - aprobado SIN ruta → "Elegir ruta" (reabre el embed si lo cerraron)
-       - aprobado CON ruta → "Examen teórico · Próximamente" */
+    /* Botón principal:
+       - sin aprobar → "Formulario ATC/Piloto LAN Academy" según ruta
+       - aprobado → "Planes de vuelo" → /dashboard/planes-de-vuelo */
     function renderCta() {
       if (!academyStatus) return;
       const cta = document.getElementById('academy-cta');
       cta.hidden = false;
-      const aprobado = academyStatus.status === 'approved';
-      if (aprobado && !trackActual) {
-        cta.innerHTML = '<i class="ico ico-plane"></i> Elegir ruta';
-        cta.className = 'tab-item';
-        cta.dataset.mode = 'route';
-      } else if (aprobado) {
-        cta.innerHTML = '<i class="ico ico-clock"></i> Examen teórico · Próximamente';
-        cta.className = 'tab-item soon';
-        cta.dataset.mode = 'soon';
+      cta.className = 'tab-item';
+      if (academyStatus.status === 'approved') {
+        cta.innerHTML = '<i class="ico ico-plane"></i> Planes de vuelo';
+        cta.dataset.mode = 'planes';
       } else {
-        cta.innerHTML = '<i class="ico ico-cap"></i> Formulario';
-        cta.className = 'tab-item';
+        const ruta = trackActual === 'atc' ? 'ATC' : 'Piloto';
+        cta.innerHTML = '<i class="ico ico-cap"></i> Formulario ' + ruta + ' LAN Academy';
         cta.dataset.mode = 'start';
-      }
-    }
-
-    /* Chip "Tu ruta: X" + "Cambiar ruta": SOLO se muestra cuando el
-       formulario está aprobado (nunca antes, aunque haya ruta guardada) */
-    function actualizarFilaRuta() {
-      const row = document.getElementById('track-row');
-      const aprobado = !!(academyStatus && academyStatus.status === 'approved');
-      row.hidden = !(aprobado && trackActual);
-      if (!row.hidden) {
-        document.getElementById('track-name').textContent = (trackActual === 'atc') ? 'ATC' : 'Piloto';
       }
     }
 
     function abrirFormulario() {
       const cta = document.getElementById('academy-cta');
       if (cta.hidden) return;
-      if (cta.dataset.mode === 'route') {
-        /* Aprobado sin ruta: (re)abrir el embed de elección que se había cerrado */
-        inviteCerrado = false;
-        maybeShowInvite();
-        const invite = document.getElementById('invite-section');
-        if (!invite.hidden) invite.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'center' });
-        return;
+      if (cta.dataset.mode === 'planes') {
+        window.location.href = '/dashboard/planes-de-vuelo';
+      } else {
+        window.location.href = '/dashboard/formulario-lan-academy';
       }
-      if (cta.dataset.mode === 'soon') return;   // Próximamente: aún no está disponible
-      window.location.href = '/dashboard/formulario-lan-academy';
     }
     document.getElementById('academy-cta').addEventListener('click', abrirFormulario);
     document.getElementById('quick-staff').addEventListener('click', () => abrirPanelStaff());
 
-    /* =========================================================
-       RUTA: Piloto / ATC
-       - Obligatoria la primera vez (modal sin X ni cierre por fondo)
-       - Siempre cambiable desde "Cambiar ruta"
-       ========================================================= */
-    const trackModal = document.getElementById('track-modal');
-    let trackActual = null;
-    let rutaCargada = false;   /* true cuando ya se consultó /api/track */
-    let inviteCerrado = false; /* true si el usuario cerró el embed de aceptación
-                                  (se reabre con el botón "Elegir ruta") */
-
-    function pintarRuta(t) {
-      trackActual = t;
-      /* La fila "Tu ruta / Cambiar ruta" SOLO se muestra con formulario
-         aprobado → lo decide actualizarFilaRuta(), nunca aquí a pelo */
-      actualizarFilaRuta();
-      document.querySelectorAll('.track-opt').forEach(o => {
-        o.classList.toggle('sel', o.dataset.track === t);
-      });
-    }
-
+    /* ---------- Ruta: GET /api/track → muestra overlay si es null ---------- */
     async function cargarRuta() {
       try {
         const res = await fetch('/api/track');
         if (!res.ok) return;
         const data = await res.json();
-        rutaCargada = true;
-        pintarRuta(data.track || null);
-        maybeShowInvite();
-        renderCta();           /* "Elegir ruta" / "Examen Próximamente" */
-        actualizarFilaRuta();  /* chip solo con formulario aprobado */
-        renderHint();          /* si el estado ya cargó, refresca "Tu ruta: X" */
+        trackActual = data.track || null;
+        renderCta();
+        if (!trackActual) {
+          abrirBienvenida();   // se muestra en CADA login hasta que elija
+        } else {
+          document.getElementById('welcome-overlay').classList.remove('active');
+        }
+        maybeMostrarPanelAtc();
       } catch (e) {
         console.error('Error cargar ruta:', e);
       }
     }
 
-    /* Embed "¡Formulario aceptado! → elige tu ruta": aparece SOLO cuando el
-       staff aprobó (status 'approved') y todavía no hay ruta elegida.
-       Se puede cerrar (inviteCerrado) y se reabre con el botón "Elegir ruta".
-       El modal queda únicamente para "Cambiar ruta". */
-    function maybeShowInvite() {
-      const invite = document.getElementById('invite-section');
-      if (!academyStatus || !rutaCargada) { invite.hidden = true; return; }
-      invite.hidden = !(academyStatus.status === 'approved' && !trackActual && !inviteCerrado);
+    /* ---------- Panel ATC: planes de vuelo (rol 1555512718046404609) ---------- */
+    function maybeMostrarPanelAtc() {
+      const sec = document.getElementById('fp-atc-section');
+      if (!academyStatus) { sec.hidden = true; return; }
+      sec.hidden = !(academyStatus.is_atc === true && academyStatus.status === 'approved');
+      if (!sec.hidden) cargarPlanesAtc();
     }
 
-    async function elegirRuta(t) {
-      const opts = document.querySelectorAll('.track-opt');
-      const loadings = document.querySelectorAll('.track-loading');
-      opts.forEach(o => o.disabled = true);
-      loadings.forEach(l => l.hidden = false);
+    function escapeHtml(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+    }
+
+    async function cargarPlanesAtc() {
+      const list = document.getElementById('fp-atc-list');
       try {
-        const res = await fetch('/api/track', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ track: t })
-        });
+        const res = await fetch('/api/flight-plans/staff');
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'No se pudo guardar la ruta');
-        pintarRuta(data.track);
-        trackModal.classList.remove('active');
-        maybeShowInvite();   /* ya hay ruta: el embed de aceptación desaparece */
-        renderCta();         /* → "Examen teórico · Próximamente" */
-        renderHint();        /* "Formulario aprobado · Tu ruta: X" */
+        if (!res.ok) throw new Error(data.error || 'No se pudieron cargar los planes');
+        if (!data.plans.length) {
+          list.innerHTML = '<p class="fp-empty">No hay planes de vuelo enviados todavía.</p>';
+          return;
+        }
+        list.innerHTML = data.plans.map(p => `
+          <div class="fp-row" id="fp-${p.id}">
+            <div class="fp-row-main">
+              <div class="fp-row-route">${escapeHtml(p.departure)} → ${escapeHtml(p.destination)} <span class="fp-chip ${escapeHtml(p.status)}">${escapeHtml(ESTADOS_PLAN[p.status] || p.status)}</span></div>
+              <div class="fp-row-meta">${escapeHtml(p.flight_rules)} · ${escapeHtml(p.aircraft)} · ${escapeHtml(p.flight_number || '—')} · ${escapeHtml(p.airline || 'Sin aerolínea')} · Alt ${escapeHtml(p.cruise_altitude || '—')} · Altna ${escapeHtml(p.alternate || '—')}</div>
+              ${p.rejection_reason ? '<div class="fp-row-meta">Motivo: ' + escapeHtml(p.rejection_reason) + '</div>' : ''}
+            </div>
+            <div class="fp-row-user">${escapeHtml(p.username)}<small>${escapeHtml(p.discord_id)}</small></div>
+            <div>
+              ${p.squawk ? '<span class="fp-squawk">SQK ' + escapeHtml(p.squawk) + '</span>' : '<span class="fp-row-meta">Sin squawk</span>'}
+            </div>
+            <select class="fp-status-select" data-id="${p.id}">
+              ${['draft','pending','approved','active','finished','rejected','cancelled'].map(s => '<option value="' + s + '"' + (s === p.status ? ' selected' : '') + '>' + ESTADOS_PLAN[s] + '</option>').join('')}
+            </select>
+          </div>`).join('');
+
+        list.querySelectorAll('.fp-status-select').forEach(sel => {
+          sel.addEventListener('change', async () => {
+            const id = sel.dataset.id;
+            const status = sel.value;
+            let reason = null;
+            if (status === 'rejected') {
+              reason = prompt('Motivo del rechazo:');
+              if (!reason) { sel.value = 'pending'; return; }
+            }
+            sel.disabled = true;
+            try {
+              const res = await fetch('/api/flight-plans/' + id + '/status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status, reason })
+              });
+              const d = await res.json();
+              if (!res.ok) throw new Error(d.error || 'No se pudo actualizar');
+              await cargarPlanesAtc();
+            } catch (e) {
+              console.error('Error actualizando plan:', e);
+              alert('❌ ' + e.message);
+              sel.disabled = false;
+            }
+          });
+        });
       } catch (e) {
-        console.error('Error guardar ruta:', e);
-        alert('❌ ' + e.message);
-      } finally {
-        loadings.forEach(l => l.hidden = true);
-        opts.forEach(o => o.disabled = false);
+        console.error('Error cargar planes ATC:', e);
+        list.innerHTML = '<p class="fp-empty">Error: ' + escapeHtml(e.message) + '</p>';
       }
     }
 
-    document.querySelectorAll('.track-opt').forEach(o => {
-      o.addEventListener('click', () => elegirRuta(o.dataset.track));
-    });
-    document.getElementById('track-change').addEventListener('click', () => {
-      trackModal.classList.add('active');
-      document.querySelectorAll('.track-opt').forEach(o => {
-        o.classList.toggle('sel', o.dataset.track === trackActual);
-      });
-    });
-    /* Cerrar el embed "aceptado → elige tu ruta" (vuelve con "Elegir ruta") */
-    document.getElementById('invite-close').addEventListener('click', () => {
-      inviteCerrado = true;
-      document.getElementById('invite-section').hidden = true;
-      renderCta();   /* el CTA ya está en modo "Elegir ruta" */
-      renderHint();
-    });
-    /* Cerrar el modal de ruta (solo se abre desde "Cambiar ruta") */
-    document.getElementById('track-close').addEventListener('click', () => {
-      trackModal.classList.remove('active');
-    });
-    /* Cerrar el modal al pulsar el fondo (ahora que tiene botón X es opcional) */
-    trackModal.addEventListener('click', (e) => {
-      if (e.target === trackModal) trackModal.classList.remove('active');
-    });
+    document.getElementById('fp-refresh').addEventListener('click', cargarPlanesAtc);
 
     /* =========================================================
        PANEL STAFF
@@ -1639,9 +1732,14 @@
 
     /* ---------- Render de la vista de calificación ---------- */
     function renderGradeView(sub) {
-      const mods = window.LAN_ACADEMY_MODULOS || [];
-      const key = window.LAN_ACADEMY_KEY || {};
-      const ROMANOS = ['I', 'II', 'III', 'IV'];
+      const examKey = sub.exam_key === 'atc' ? 'atc' : 'piloto';
+      const mods = examKey === 'atc'
+        ? (window.LAN_ACADEMY_ATC_MODULOS || [])
+        : (window.LAN_ACADEMY_MODULOS || []);
+      const key = examKey === 'atc'
+        ? (window.LAN_ACADEMY_ATC_KEY || {})
+        : (window.LAN_ACADEMY_KEY || {});
+      const ROMANOS = ['I', 'II', 'III', 'IV', 'V'];
       const editable = sub.status === 'submitted';
       let html = '';
 
@@ -1665,7 +1763,7 @@
             <div class="grade-q">
               <div class="gq-head">
                 <span class="gq-num">Pregunta ${p.n}</span>
-                <span class="gq-kind">${esCerrada ? 'Cerrada · corrección automática' : 'Abierta · manual'}</span>
+                <span class="gq-kind">${esCerrada ? 'Cerrada · corrección automática' : 'Abierta · manual'}${examKey === 'atc' && !esCerrada ? ' · 2 pts' : ''}</span>
               </div>
               <div class="gq-text">${escapeHtml(p.texto)}</div>
               <div class="gq-answer${ans ? '' : ' empty'}">${ans ? escapeHtml(ans) : 'Sin respuesta'}</div>
@@ -1684,7 +1782,7 @@
           <div class="grade-actions">
             <button type="button" class="btn-send-grade" data-send="${sub.id}"><i class="ico ico-send"></i> Enviar calificación</button>
           </div>
-          <div class="grade-note">Las 15 preguntas cerradas se corrigen automáticamente; solo evalúa las 5 abiertas.</div>`;
+          <div class="grade-note">${examKey === 'atc' ? 'Las 10 preguntas cerradas se corrigen automáticamente (1 pt c/u); evalúa las 5 abiertas (2 pts c/u).' : 'Las 15 preguntas cerradas se corrigen automáticamente; solo evalúa las 5 abiertas.'}</div>`;
       } else if (sub.status === 'graded') {
         html += `
           <div class="grade-done"><i class="ico ico-star"></i> Calificado: <b>${sub.score}/${sub.total || 20}</b></div>

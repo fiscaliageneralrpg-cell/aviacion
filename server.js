@@ -47,7 +47,7 @@ app.use(session({
 // podía abrir /dashboard.html o /dashboard-aviacion.html a mano y saltarse
 // el paso de Roblox.
 app.use((req, res, next) => {
-  if (req.path === '/dashboard.html' || req.path === '/dashboard-aviacion.html') {
+  if (req.path === '/dashboard.html' || req.path === '/dashboard-aviacion.html' || req.path === '/planes-de-vuelo.html') {
     return requireVerificado(req, res, next);
   }
   next();
@@ -383,15 +383,54 @@ const STAFF_ROLES = [
   '1559433801162170378'  // Director Académico
 ];
 
-// Respuestas correctas de las preguntas CERRADAS (15)
-const ACADEMY_KEY = {
-  1: 'B', 2: 'C', 3: 'Falso', 4: 'B',
-  6: 'B', 7: 'C', 8: 'Verdadero', 9: 'B',
-  11: 'B', 12: 'Verdadero', 13: 'B', 15: 'B',
-  16: 'B', 18: 'B', 19: 'Verdadero'
+// ============================================
+// Exámenes LAN Academy — UNO POR RUTA
+//   piloto →20 preguntas (15 cerradas ×1 +5 abiertas ×1)
+//   atc    →15 preguntas (10 cerradas ×1 +5 abiertas ×2) =20 pts, mínimo16
+// ============================================
+const EXAMENES = {
+  piloto: {
+    nombre: 'Formulario Piloto LAN Academy',
+    totalPreguntas: 20,
+    total: 20,
+    minAprobar: 16,
+    // Respuestas correctas de las preguntas CERRADAS (15)
+    cerradas: {
+      1: 'B', 2: 'C', 3: 'Falso', 4: 'B',
+      6: 'B', 7: 'C', 8: 'Verdadero', 9: 'B',
+      11: 'B', 12: 'Verdadero', 13: 'B', 15: 'B',
+      16: 'B', 18: 'B', 19: 'Verdadero'
+    },
+    // Preguntas ABIERTAS (las califica el staff: good = buena, bad = mala)
+    abiertas: [5, 10, 14, 17, 20],
+    puntosCerrada: 1,
+    puntosAbierta: 1
+  },
+  atc: {
+    nombre: 'Formulario ATC LAN Academy',
+    totalPreguntas: 15,
+    total: 20,
+    minAprobar: 16,
+    // Evaluación teórica ATC —10 de selección múltiple
+    cerradas: {
+      1: 'B', 2: 'A', 3: 'B', 4: 'C', 5: 'C',
+      6: 'B', 7: 'B', 8: 'C', 9: 'B', 10: 'A'
+    },
+    //5 abiertas (desarrollo) →2 puntos cada una
+    abiertas: [11, 12, 13, 14, 15],
+    puntosCerrada: 1,
+    puntosAbierta: 2
+  }
 };
-// Preguntas ABIERTAS (las califica el staff: good = buena, bad = mala)
-const ACADEMY_ABIERTAS = [5, 10, 14, 17, 20];
+// Compatibilidad con el código viejo (examen piloto)
+const ACADEMY_KEY = EXAMENES.piloto.cerradas;
+const ACADEMY_ABIERTAS = EXAMENES.piloto.abiertas;
+
+// Devuelve el examen que le corresponde al usuario según su ruta
+async function examenDe(discordId) {
+  const track = await obtenerTrack(discordId);
+  return EXAMENES[track === 'atc' ? 'atc' : 'piloto'];
+}
 
 // Tablas necesarias (se crean solas al arrancar)
 async function ensureAcademyTables() {
@@ -443,7 +482,38 @@ async function ensureAcademyTables() {
       }
     }
 
-    console.log('🗂️ Tablas user_roles + academy_submissions listas.');
+    // --------------------------------------------
+    // PLANES DE VUELO (Flight Planning)
+    //   - El piloto crea/envía/cancela sus planes
+    //   - El ATC (rol 1555512718046404609) los revisa, asigna estado y squawk
+    //   - Estados: draft | pending | approved | active | finished | rejected | cancelled
+    // --------------------------------------------
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS flight_plans (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        discord_id VARCHAR(20) NOT NULL,
+        status VARCHAR(20) NOT NULL DEFAULT 'draft',
+        flight_rules VARCHAR(10) NOT NULL DEFAULT 'IFR',
+        departure VARCHAR(12) NOT NULL,
+        destination VARCHAR(12) NOT NULL,
+        airline VARCHAR(60) DEFAULT NULL,
+        registration VARCHAR(20) DEFAULT NULL,
+        flight_number VARCHAR(20) DEFAULT NULL,
+        aircraft VARCHAR(12) NOT NULL,
+        cruise_altitude VARCHAR(20) DEFAULT NULL,
+        'alternate' VARCHAR(12) DEFAULT NULL,
+        squawk VARCHAR(4) DEFAULT NULL,
+        rejection_reason TEXT DEFAULT NULL,
+        reviewed_by VARCHAR(20) DEFAULT NULL,
+        reviewed_at DATETIME DEFAULT NULL,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        KEY idx_fp_discord (discord_id),
+        KEY idx_fp_status (status)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+
+    console.log('🗂️ Tablas user_roles + academy_submissions + flight_plans listas.');
   } catch (err) {
     console.error('Error creando tablas academy:', err.message);
   }
@@ -525,6 +595,20 @@ app.get('/formulario-lan-academy.html', requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'formulario-lan-academy.html'));
 });
 
+// --- Página de PLANES DE VUELO (solo con formulario aprobado) ---
+app.get('/dashboard/planes-de-vuelo', requireVerificado, async (req, res) => {
+  try {
+    const discordId = String(req.session.discordUser.id);
+    if (!(await academyAprobado(discordId))) {
+      return res.redirect('/dashboard');   // sin aprobación no entra
+    }
+    res.sendFile(path.join(__dirname, 'public', 'planes-de-vuelo.html'));
+  } catch (err) {
+    console.error('Error planes-de-vuelo:', err.message);
+    res.redirect('/dashboard');
+  }
+});
+
 // --- Cooldowns de reenvío del formulario ---
 //   • Denegado  → puede volver a enviarlo 1 hora después de la denegación.
 //   • En revisión sin respuesta → puede volver a enviarlo 24 horas después del envío.
@@ -567,6 +651,8 @@ app.get('/api/academy/status', requireAuth, async (req, res) => {
   try {
     const discordId = String(req.session.discordUser.id);
     const ids = await obtenerRangosIds(discordId);
+    const track = await obtenerTrack(discordId);
+    const examen = EXAMENES[track === 'atc' ? 'atc' : 'piloto'];
 
     const [rows] = await pool.query(
       `SELECT status, score, total, created_at, updated_at, denied_at, denied_ack
@@ -580,9 +666,18 @@ app.get('/api/academy/status', requireAuth, async (req, res) => {
     res.json({
       has_form_role: ids.includes(ACADEMY_FORM_ROLE),
       is_staff: STAFF_ROLES.some(r => ids.includes(r)),
+      is_atc: await esAtc(discordId),                   // Controlador Aéreo (rol 1555512718046404609)
+      track,                                          // 'piloto' | 'atc' | null (aún no eligió)
+      exam: {                                         // examen que le corresponde según su ruta
+        key: track === 'atc' ? 'atc' : 'piloto',
+        nombre: examen.nombre,
+        total: examen.total,
+        totalPreguntas: examen.totalPreguntas,
+        minAprobar: examen.minAprobar
+      },
       status: last ? last.status : 'none',   // none | submitted | graded | approved | denied
       score: last && last.score != null ? last.score : null,
-      total: last && last.total != null ? last.total : 20,
+      total: last && last.total != null ? last.total : examen.total,
       submitted_at: last ? last.created_at : null,
       denied_ack: last ? !!last.denied_ack : false,   // true cuando ya aceptó el aviso de denegado
       retry_ready: reintento.retry_ready,             // true → ya puede volver a enviar
@@ -640,8 +735,9 @@ app.post('/api/academy/submit', requireAuth, async (req, res) => {
     }
 
     const answers = (req.body && req.body.answers) ? req.body.answers : {};
+    const examen = await examenDe(discordId);
     const faltantes = [];
-    for (let i = 1; i <= 20; i++) {
+    for (let i = 1; i <= examen.totalPreguntas; i++) {
       if (!answers[i] || !String(answers[i]).trim()) faltantes.push(i);
     }
     if (faltantes.length) {
@@ -661,10 +757,10 @@ app.post('/api/academy/submit', requireAuth, async (req, res) => {
     } else {
       await pool.query(
         `INSERT INTO academy_submissions (discord_id, answers, status, total)
-         VALUES (?, ?, 'submitted', 20)`,
-        [discordId, JSON.stringify(answers)]
+         VALUES (?, ?, 'submitted', ?)`,
+        [discordId, JSON.stringify(answers), examen.total]
       );
-      console.log(`📝 Academy: formulario recibido de ${discordId}`);
+      console.log(`📝 Academy: formulario recibido de ${discordId} (${examen.nombre})`);
     }
 
     res.json({ success: true, status: 'submitted' });
@@ -696,25 +792,19 @@ app.post('/api/academy/ack-denied', requireAuth, async (req, res) => {
   }
 });
 
-// --- RUTA: Piloto o ATC (solo DESPUÉS de que el staff apruebe el formulario) ---
-function ultimoEstadoAcademy(discordId) {
-  return pool.query(
-    'SELECT status FROM academy_submissions WHERE discord_id = ? ORDER BY id DESC LIMIT 1',
-    [discordId]
-  ).then(([rows]) => (rows.length ? rows[0].status : null));
+// --- RUTA: Piloto o ATC (se elige UNA vez, en el overlay de bienvenida) ---
+// Ya NO depende de la aprobación: es la primera cosa que hace el usuario
+// al entrar. Después de elegirla, no se puede cambiar (no hay "Cambiar ruta").
+async function obtenerTrack(discordId) {
+  const [rows] = await pool.query('SELECT track FROM verified_users WHERE discord_id = ?', [discordId]);
+  const t = rows.length ? rows[0].track : null;
+  return (t === 'piloto' || t === 'atc') ? t : null;
 }
 
 app.get('/api/track', requireAuth, async (req, res) => {
   try {
     const discordId = String(req.session.discordUser.id);
-    // Sin formulario aprobado no hay ruta que mostrar (aunque quede guardada
-    // de una prueba vieja): el chip y el embed los decide el estado del form.
-    const status = await ultimoEstadoAcademy(discordId);
-    if (status !== 'approved') return res.json({ track: null });
-
-    const [rows] = await pool.query('SELECT track FROM verified_users WHERE discord_id = ?', [discordId]);
-    const t = rows.length ? rows[0].track : null;
-    res.json({ track: (t === 'piloto' || t === 'atc') ? t : null });
+    res.json({ track: await obtenerTrack(discordId) });
   } catch (err) {
     console.error('Error track/get:', err.message);
     res.status(500).json({ error: 'Error interno' });
@@ -729,10 +819,10 @@ app.post('/api/track', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'Ruta no válida (piloto | atc)' });
     }
 
-    // La ruta se elige/una vez aprobado el formulario (flujo LAN Academy)
-    const status = await ultimoEstadoAcademy(discordId);
-    if (status !== 'approved') {
-      return res.status(403).json({ error: 'Tu formulario debe ser aprobado por el staff antes de elegir ruta.' });
+    // Solo se puede elegir UNA vez (si ya hay ruta válida, no se cambia)
+    const actual = await obtenerTrack(discordId);
+    if (actual) {
+      return res.status(409).json({ error: 'Ya elegiste tu ruta; no se puede cambiar.' });
     }
 
     const [upd] = await pool.query(
@@ -757,6 +847,354 @@ app.post('/api/track', requireAuth, async (req, res) => {
   }
 });
 
+// ============================================
+// PLANES DE VUELO (Flight Planning)
+//   piloto → crea / envía / cancela / consulta los suyos
+//   ATC (1555512718046404609) o staff → ve todos, asigna
+//   estado y squawk (aleatorio de4 dígitos, nunca inicia con7)
+// ============================================
+const ROL_ATC_CONTROLADOR = '1555512718046404609';
+const ESTADOS_PLAN = ['draft', 'pending', 'approved', 'active', 'finished', 'rejected', 'cancelled'];
+
+// Squawk de4 dígitos: el PRIMERO nunca puede ser7 (ej:3457,1328)
+function generarSquawk() {
+  const primeros = ['0', '1', '2', '3', '4', '5', '6', '8', '9'];
+  let s = primeros[Math.floor(Math.random() * primeros.length)];
+  for (let i = 0; i < 3; i++) s += Math.floor(Math.random() * 10);
+  return s;
+}
+
+async function esAtc(discordId) {
+  const ids = await obtenerRangosIds(discordId);
+  return ids.includes(ROL_ATC_CONTROLADOR) || STAFF_ROLES.some(r => ids.includes(r));
+}
+
+// El formulario de admisión debe estar APROBADO para usar planes de vuelo
+async function academyAprobado(discordId) {
+  const [rows] = await pool.query(
+    'SELECT status FROM academy_submissions WHERE discord_id = ? ORDER BY id DESC LIMIT 1',
+    [discordId]
+  );
+  return rows.length ? rows[0].status === 'approved' : false;
+}
+
+async function requiereAprobacion(req, res) {
+  const discordId = String(req.session.discordUser.id);
+  if (!(await academyAprobado(discordId))) {
+    res.status(403).json({ error: 'Primero debes completar y aprobar tu formulario de admisión.' });
+    return null;
+  }
+  return discordId;
+}
+
+function planPublico(r) {
+  return {
+    id: r.id,
+    discord_id: r.discord_id,
+    username: r.discord_global_name || r.discord_username || r.discord_id,
+    status: r.status,
+    flight_rules: r.flight_rules,
+    departure: r.departure,
+    destination: r.destination,
+    airline: r.airline || '',
+    registration: r.registration || '',
+    flight_number: r.flight_number || '',
+    aircraft: r.aircraft,
+    cruise_altitude: r.cruise_altitude || '',
+    alternate: r.alternate || '',
+    squawk: r.squawk || null,
+    rejection_reason: r.rejection_reason || null,
+    created_at: r.created_at,
+    updated_at: r.updated_at
+  };
+}
+
+// --- Mis planes de vuelo (piloto) ---
+app.get('/api/flight-plans', requireAuth, async (req, res) => {
+  try {
+    const discordId = await requiereAprobacion(req, res);
+    if (!discordId) return;
+    const [rows] = await pool.query(
+      `SELECT s.*, u.discord_username, u.discord_global_name
+       FROM flight_plans s
+       LEFT JOIN verified_users u ON u.discord_id = s.discord_id
+       WHERE s.discord_id = ?
+       ORDER BY s.id DESC`,
+      [discordId]
+    );
+    res.json({ plans: rows.map(planPublico) });
+  } catch (err) {
+    console.error('Error flight-plans/list:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// --- Crear plan (draft) o enviarlo directo (pending) ---
+function leerCuerpoPlan(body) {
+  const b = body || {};
+  const limpio = v => (v == null ? '' : String(v).trim().toUpperCase());
+  const plan = {
+    flight_rules: (String(b.flight_rules || 'IFR').toUpperCase() === 'VFR') ? 'VFR' : 'IFR',
+    departure: limpio(b.departure),
+    destination: limpio(b.destination),
+    airline: (b.airline == null ? '' : String(b.airline).trim()),
+    registration: limpio(b.registration),
+    flight_number: limpio(b.flight_number),
+    aircraft: limpio(b.aircraft),
+    cruise_altitude: (b.cruise_altitude == null ? '' : String(b.cruise_altitude).trim()),
+    alternate: limpio(b.alternate)
+  };
+  const errores = [];
+  if (!/^[A-Z]{4}$/.test(plan.departure)) errores.push('Salida (4 letras ICAO, ej. EGKK)');
+  if (!/^[A-Z]{4}$/.test(plan.destination)) errores.push('Destino (4 letras ICAO, ej. MDPC)');
+  if (plan.departure && plan.departure === plan.destination) errores.push('Salida y destino deben ser distintos');
+  if (!plan.aircraft) errores.push('Aeronave');
+  if (plan.aircraft && plan.aircraft.length > 12) errores.push('Aeronave demasiado larga');
+  if (plan.alternate && !/^[A-Z]{4}$/.test(plan.alternate)) errores.push('Alternate (4 letras ICAO)');
+  if (plan.registration.length > 20) errores.push('Matrícula demasiado larga');
+  if (plan.flight_number.length > 20) errores.push('Número de vuelo demasiado largo');
+  return { plan, errores };
+}
+
+app.post('/api/flight-plans', requireAuth, async (req, res) => {
+  try {
+    const discordId = await requiereAprobacion(req, res);
+    if (!discordId) return;
+
+    const { plan, errores } = leerCuerpoPlan(req.body);
+    if (errores.length) return res.status(400).json({ error: 'Revisa: ' + errores.join(' · ') });
+
+    const enviar = !!(req.body && req.body.enviar);
+    const status = enviar ? 'pending' : 'draft';
+    const [r] = await pool.query(
+      `INSERT INTO flight_plans
+        (discord_id, status, flight_rules, departure, destination, airline,
+         registration, flight_number, aircraft, cruise_altitude, alternate)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [discordId, status, plan.flight_rules, plan.departure, plan.destination, plan.airline,
+       plan.registration, plan.flight_number, plan.aircraft, plan.cruise_altitude, plan.alternate]
+    );
+    console.log(`✈️ Plan #${r.insertId} de ${discordId} → ${status} (${plan.departure} → ${plan.destination})`);
+    res.json({ success: true, id: r.insertId, status });
+  } catch (err) {
+    console.error('Error flight-plans/create:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// --- Editar (solo borradores, rechazados o cancelados) y/o reenviar ---
+app.put('/api/flight-plans/:id', requireAuth, async (req, res) => {
+  try {
+    const discordId = await requiereAprobacion(req, res);
+    if (!discordId) return;
+
+    const [rows] = await pool.query('SELECT * FROM flight_plans WHERE id = ?', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'Plan no encontrado' });
+    const fp = rows[0];
+    if (fp.discord_id !== discordId) return res.status(403).json({ error: 'No es tu plan' });
+    if (!['draft', 'rejected', 'cancelled'].includes(fp.status)) {
+      return res.status(409).json({ error: 'Solo puedes editar planes en borrador, rechazados o cancelados.' });
+    }
+
+    const { plan, errores } = leerCuerpoPlan(req.body);
+    if (errores.length) return res.status(400).json({ error: 'Revisa: ' + errores.join(' · ') });
+
+    const enviar = !!(req.body && req.body.enviar);
+    const status = enviar ? 'pending' : 'draft';
+    await pool.query(
+      `UPDATE flight_plans
+       SET status = ?, flight_rules = ?, departure = ?, destination = ?, airline = ?,
+           registration = ?, flight_number = ?, aircraft = ?, cruise_altitude = ?,
+           alternate = ?, rejection_reason = NULL, updated_at = NOW()
+       WHERE id = ?`,
+      [status, plan.flight_rules, plan.departure, plan.destination, plan.airline,
+       plan.registration, plan.flight_number, plan.aircraft, plan.cruise_altitude,
+       plan.alternate, fp.id]
+    );
+    res.json({ success: true, status });
+  } catch (err) {
+    console.error('Error flight-plans/update:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// --- Enviar a revisión (borrador → pendiente) ---
+app.post('/api/flight-plans/:id/submit', requireAuth, async (req, res) => {
+  try {
+    const discordId = await requiereAprobacion(req, res);
+    if (!discordId) return;
+    const [rows] = await pool.query('SELECT * FROM flight_plans WHERE id = ?', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'Plan no encontrado' });
+    const fp = rows[0];
+    if (fp.discord_id !== discordId) return res.status(403).json({ error: 'No es tu plan' });
+    if (!['draft', 'rejected', 'cancelled'].includes(fp.status)) {
+      return res.status(409).json({ error: 'Este plan ya fue enviado.' });
+    }
+    await pool.query(
+      `UPDATE flight_plans SET status = 'pending', rejection_reason = NULL, updated_at = NOW() WHERE id = ?`,
+      [fp.id]
+    );
+    res.json({ success: true, status: 'pending' });
+  } catch (err) {
+    console.error('Error flight-plans/submit:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// --- Cancelar un plan pendiente (piloto) ---
+app.post('/api/flight-plans/:id/cancel', requireAuth, async (req, res) => {
+  try {
+    const discordId = await requiereAprobacion(req, res);
+    if (!discordId) return;
+    const [rows] = await pool.query('SELECT * FROM flight_plans WHERE id = ?', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'Plan no encontrado' });
+    const fp = rows[0];
+    if (fp.discord_id !== discordId) return res.status(403).json({ error: 'No es tu plan' });
+    if (fp.status !== 'pending') {
+      return res.status(409).json({ error: 'Solo se pueden cancelar planes pendientes.' });
+    }
+    await pool.query(
+      `UPDATE flight_plans SET status = 'cancelled', updated_at = NOW() WHERE id = ?`,
+      [fp.id]
+    );
+    console.log(`✈️ Plan #${fp.id} cancelado por ${discordId}`);
+    res.json({ success: true, status: 'cancelled' });
+  } catch (err) {
+    console.error('Error flight-plans/cancel:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// --- Panel ATC/staff: TODOS los planes de vuelo ---
+app.get('/api/flight-plans/staff', requireAuth, async (req, res) => {
+  try {
+    const discordId = String(req.session.discordUser.id);
+    if (!(await esAtc(discordId))) {
+      return res.status(403).json({ error: 'Sin permisos de Controlador Aéreo' });
+    }
+    const [rows] = await pool.query(
+      `SELECT s.*, u.discord_username, u.discord_global_name
+       FROM flight_plans s
+       LEFT JOIN verified_users u ON u.discord_id = s.discord_id
+       ORDER BY FIELD(s.status, 'pending', 'approved', 'active', 'rejected', 'draft', 'cancelled', 'finished'), s.id DESC`
+    );
+    res.json({ plans: rows.map(planPublico) });
+  } catch (err) {
+    console.error('Error flight-plans/staff:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// --- Decisión ATC: aprobar (asigna squawk) o rechazar (con motivo) ---
+app.post('/api/flight-plans/:id/decision', requireAuth, async (req, res) => {
+  try {
+    const discordId = String(req.session.discordUser.id);
+    if (!(await esAtc(discordId))) {
+      return res.status(403).json({ error: 'Sin permisos de Controlador Aéreo' });
+    }
+    const action = req.body && req.body.action;
+    if (action !== 'approve' && action !== 'reject') {
+      return res.status(400).json({ error: 'Acción no válida' });
+    }
+
+    const [rows] = await pool.query('SELECT * FROM flight_plans WHERE id = ?', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'Plan no encontrado' });
+    const fp = rows[0];
+    if (fp.status !== 'pending') {
+      return res.status(409).json({ error: 'Este plan no está pendiente de revisión.' });
+    }
+
+    if (action === 'approve') {
+      // Squawk aleatorio de4 dígitos SIN inicial7
+      let squawk = generarSquawk();
+      for (let i = 0; i < 10; i++) {
+        const [dupe] = await pool.query(
+          'SELECT id FROM flight_plans WHERE squawk = ? AND id != ?',
+          [squawk, fp.id]
+        );
+        if (!dupe.length) break;
+        squawk = generarSquawk();
+      }
+      await pool.query(
+        `UPDATE flight_plans
+         SET status = 'approved', squawk = ?, rejection_reason = NULL,
+             reviewed_by = ?, reviewed_at = NOW(), updated_at = NOW()
+         WHERE id = ?`,
+        [squawk, discordId, fp.id]
+      );
+      console.log(`✅ Plan #${fp.id} APROBADO por ${discordId} → squawk ${squawk}`);
+      res.json({ success: true, status: 'approved', squawk });
+    } else {
+      const motivo = (req.body && req.body.reason ? String(req.body.reason).trim() : '');
+      if (!motivo) return res.status(400).json({ error: 'Indica el motivo del rechazo.' });
+      await pool.query(
+        `UPDATE flight_plans
+         SET status = 'rejected', rejection_reason = ?, squawk = NULL,
+             reviewed_by = ?, reviewed_at = NOW(), updated_at = NOW()
+         WHERE id = ?`,
+        [motivo, discordId, fp.id]
+      );
+      console.log(`🚫 Plan #${fp.id} RECHAZADO por ${discordId}: ${motivo}`);
+      res.json({ success: true, status: 'rejected' });
+    }
+  } catch (err) {
+    console.error('Error flight-plans/decision:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// --- Cambiar estado del vuelo (ATC): cualquier estado + squawk al aprobar ---
+app.post('/api/flight-plans/:id/status', requireAuth, async (req, res) => {
+  try {
+    const discordId = String(req.session.discordUser.id);
+    if (!(await esAtc(discordId))) {
+      return res.status(403).json({ error: 'Sin permisos de Controlador Aéreo' });
+    }
+    const nuevo = req.body && req.body.status;
+    if (!ESTADOS_PLAN.includes(nuevo)) {
+      return res.status(400).json({ error: 'Estado no válido' });
+    }
+    const [rows] = await pool.query('SELECT * FROM flight_plans WHERE id = ?', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'Plan no encontrado' });
+    const fp = rows[0];
+
+    // Aprobar → asigna squawk aleatorio (4 dígitos, nunca inicia con 7) si no tiene
+    let squawk = fp.squawk;
+    let motivo = fp.rejection_reason;
+    if (nuevo === 'approved') {
+      if (!squawk) {
+        squawk = generarSquawk();
+        for (let i = 0; i < 10; i++) {
+          const [dupe] = await pool.query('SELECT id FROM flight_plans WHERE squawk = ? AND id != ?', [squawk, fp.id]);
+          if (!dupe.length) break;
+          squawk = generarSquawk();
+        }
+      }
+      motivo = null;
+    } else if (nuevo === 'rejected') {
+      const reason = (req.body && req.body.reason ? String(req.body.reason).trim() : '');
+      if (!reason) return res.status(400).json({ error: 'Indica el motivo del rechazo.' });
+      motivo = reason;
+      squawk = null;
+    }
+    if (['active', 'finished'].includes(nuevo) && !squawk) {
+      return res.status(409).json({ error: 'Este plan aún no tiene squawk asignado.' });
+    }
+
+    await pool.query(
+      `UPDATE flight_plans
+       SET status = ?, squawk = ?, rejection_reason = ?, reviewed_by = ?, reviewed_at = NOW(), updated_at = NOW()
+       WHERE id = ?`,
+      [nuevo, squawk, motivo, discordId, fp.id]
+    );
+    console.log(`🎛️ Plan #${fp.id} → ${nuevo} por ${discordId}${squawk ? ' · squawk ' + squawk : ''}`);
+    res.json({ success: true, status: nuevo, squawk });
+  } catch (err) {
+    console.error('Error flight-plans/status:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
 // --- PANEL STAFF: formularios agrupados por fecha ---
 app.get('/api/academy/panel', requireAuth, async (req, res) => {
   try {
@@ -768,7 +1206,7 @@ app.get('/api/academy/panel', requireAuth, async (req, res) => {
     const [rows] = await pool.query(
       `SELECT s.id, s.discord_id, s.status, s.score, s.total, s.created_at,
               DATE_FORMAT(s.created_at, '%d/%m/%Y') AS fecha,
-              u.discord_username, u.discord_global_name
+              u.discord_username, u.discord_global_name, u.track
        FROM academy_submissions s
        LEFT JOIN verified_users u ON u.discord_id = s.discord_id
        ORDER BY s.id DESC`
@@ -783,7 +1221,8 @@ app.get('/api/academy/panel', requireAuth, async (req, res) => {
         username: r.discord_global_name || r.discord_username || r.discord_id,
         status: r.status, // submitted | graded | approved | denied
         score: r.score,
-        total: r.total
+        total: r.total,
+        track: (r.track === 'atc' || r.track === 'piloto') ? r.track : 'piloto'
       });
     });
 
@@ -820,6 +1259,7 @@ app.get('/api/academy/submission/:id', requireAuth, async (req, res) => {
     const r = rows[0];
     let answers = {};
     try { answers = JSON.parse(r.answers); } catch (e) { answers = {}; }
+    const trackSub = await obtenerTrack(r.discord_id);
 
     res.json({
       id: r.id,
@@ -829,6 +1269,7 @@ app.get('/api/academy/submission/:id', requireAuth, async (req, res) => {
       score: r.score,
       total: r.total,
       answers,
+      exam_key: trackSub === 'atc' ? 'atc' : 'piloto',   // banco de preguntas que corresponde
       created_at: r.created_at
     });
   } catch (err) {
@@ -855,20 +1296,21 @@ app.post('/api/academy/grade/:id', requireAuth, async (req, res) => {
     let answers = {};
     try { answers = JSON.parse(sub.answers); } catch (e) { answers = {}; }
     const open = (req.body && req.body.open) ? req.body.open : {};
+    const examen = await examenDe(sub.discord_id);
 
     // 1) Preguntas cerradas: se corrigen SOLAS
     let score = 0;
     let aciertos = 0;
-    Object.keys(ACADEMY_KEY).forEach(q => {
+    Object.keys(examen.cerradas).forEach(q => {
       const userAns = String(answers[q] || '').trim().toLowerCase();
-      const correcta = String(ACADEMY_KEY[q]).trim().toLowerCase();
-      if (userAns && userAns === correcta) { score++; aciertos++; }
+      const correcta = String(examen.cerradas[q]).trim().toLowerCase();
+      if (userAns && userAns === correcta) { score += examen.puntosCerrada; aciertos++; }
     });
 
     // 2) Preguntas abiertas: el staff elige buena (good) o mala (bad)
     let abiertasBien = 0;
-    ACADEMY_ABIERTAS.forEach(q => {
-      if (open[q] === 'good') { score++; abiertasBien++; }
+    examen.abiertas.forEach(q => {
+      if (open[q] === 'good') { score += examen.puntosAbierta; abiertasBien++; }
     });
 
     await pool.query(
@@ -878,8 +1320,8 @@ app.post('/api/academy/grade/:id', requireAuth, async (req, res) => {
       [score, discordId, sub.id]
     );
 
-    console.log(`✅ Academy: formulario #${sub.id} calificado → ${score}/20 (cerradas ${aciertos}/15, abiertas ${abiertasBien}/5)`);
-    res.json({ success: true, score, total: 20, cerradas: aciertos, abiertas: abiertasBien });
+    console.log(`✅ Academy: formulario #${sub.id} (${examen.nombre}) calificado → ${score}/${examen.total} (cerradas ${aciertos}/${Object.keys(examen.cerradas).length}, abiertas ${abiertasBien}/${examen.abiertas.length})`);
+    res.json({ success: true, score, total: examen.total, cerradas: aciertos, abiertas: abiertasBien });
   } catch (err) {
     console.error('Error academy/grade:', err.message);
     res.status(500).json({ error: 'Error interno' });

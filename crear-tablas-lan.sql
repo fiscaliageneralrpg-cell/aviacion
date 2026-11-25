@@ -80,8 +80,37 @@ CREATE TABLE IF NOT EXISTS academy_submissions (
   KEY idx_academy_discord (discord_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- ------------------------------------------------------------
+-- 5) PLANES DE VUELO (Flight Planning)
+--    El piloto crea/envía/cancela; el ATC (rol
+--    1555512718046404609) revisa, asigna estado y squawk.
+--    Estados: draft|pending|approved|active|finished|rejected|cancelled
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS flight_plans (
+  id               INT AUTO_INCREMENT PRIMARY KEY,
+  discord_id       VARCHAR(20) NOT NULL,
+  status           VARCHAR(20) NOT NULL DEFAULT 'draft',
+  flight_rules     VARCHAR(10) NOT NULL DEFAULT 'IFR',
+  departure        VARCHAR(12) NOT NULL,
+  destination      VARCHAR(12) NOT NULL,
+  airline          VARCHAR(60) DEFAULT NULL,
+  registration     VARCHAR(20) DEFAULT NULL,
+  flight_number    VARCHAR(20) DEFAULT NULL,
+  aircraft         VARCHAR(12) NOT NULL,
+  cruise_altitude  VARCHAR(20) DEFAULT NULL,
+  `alternate`      VARCHAR(12) DEFAULT NULL,
+  squawk           VARCHAR(4)  DEFAULT NULL,
+  rejection_reason TEXT        DEFAULT NULL,
+  reviewed_by      VARCHAR(20) DEFAULT NULL,
+  reviewed_at      DATETIME    DEFAULT NULL,
+  created_at       DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at       DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  KEY idx_fp_discord (discord_id),
+  KEY idx_fp_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- ============================================================
---  LISTO. Son 4 tablas: verified_users, site_stats,
---  user_roles, academy_submissions.
+--  LISTO. Son 5 tablas: verified_users, site_stats,
+--  user_roles, academy_submissions, flight_plans.
 --  (No existe tabla de sesiones: van en memoria.)
 -- ============================================================

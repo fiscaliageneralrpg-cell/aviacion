@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Planes de vuelo | Latin Aviation Network</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --black:#030305; --card:#0d0d12; --white:#fff; --white-soft:#cbd5e1;
+      --gray:#64748b; --blue:#0066ff; --blue-light:#3399ff; --cyan:#00d4ff;
+      --border:#1f2937; --green:#22c55e; --red:#f43f5e; --yellow:#facc15;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    [hidden] { display:none !important; }
+    body {
+      font-family:'Inter',system-ui,sans-serif; background:var(--black); color:var(--white);
+      line-height:1.55; min-height:100vh; overflow-x:hidden; display:flex; flex-direction:column;
+    }
+    a { text-decoration:none; color:inherit; }
+    .container { max-width:1000px; margin:0 auto; padding:0 24px; width:100%; }
+    .bg-page {
+      position:fixed; inset:0; z-index:-2; background-size:cover; background-position:center;
+      background-image:linear-gradient(rgba(0,0,0,.72),rgba(0,0,0,.86)),url("https://i.imgur.com/rjEhr3O.jpeg");
+    }
+    .ico { display:inline-block; position:relative; flex-shrink:0; width:1.1em; height:1.1em; vertical-align:-.16em; }
+    .ico::before,.ico::after { content:""; position:absolute; display:block; }
+    .ico-plane { background:currentColor; clip-path:polygon(50% 0,62% 38%,100% 62%,100% 74%,60% 62%,56% 86%,70% 94%,70% 100%,50% 95%,30% 100%,30% 94%,44% 86%,40% 62%,0 74%,0 62%,38% 38%); }
+    .ico-chev::before { left:24%; top:18%; width:42%; height:42%; border:solid currentColor; border-width:0 .17em .17em 0; transform:rotate(45deg); }
+    .ico-left { transform:rotate(90deg); }
+    .ico-retry { border:.14em solid currentColor; border-top-color:transparent; border-radius:50%; animation:spin 2.4s linear infinite; }
+    .ico-send { background:currentColor; clip-path:polygon(0 4%,100% 50%,0 96%,22% 50%); }
+    .ico-x::before,.ico-x::after { left:8%; top:43%; width:84%; height:.17em; background:currentColor; border-radius:3px; }
+    .ico-x::before { transform:rotate(45deg); } .ico-x::after { transform:rotate(-45deg); }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    nav {
+      position:sticky; top:0; z-index:50; padding:16px 0 14px;
+      background:linear-gradient(180deg,rgba(3,3,5,.97),rgba(3,3,5,.82));
+      border-bottom:1px solid var(--border); border-radius:0 0 22px 22px;
+      backdrop-filter:blur(14px); animation:navDrop .8s cubic-bezier(.2,.8,.2,1) both;
+    }
+    @keyframes navDrop { from { transform:translateY(-100%); opacity:0; } to { transform:translateY(0); opacity:1; } }
+    .nav-inner { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+    .brand { display:flex; align-items:center; gap:12px; }
+    .brand img { width:46px; height:46px; object-fit:contain; filter:drop-shadow(0 0 8px var(--blue-glow)); }
+    .brand span { font-family:'Orbitron',monospace; font-size:.62rem; letter-spacing:2px; color:var(--white-soft); }
+    .back-btn {
+      display:inline-flex; align-items:center; gap:8px; padding:10px 20px; border-radius:50px; cursor:pointer;
+      background:rgba(0,102,255,.14); border:1px solid rgba(0,102,255,.5); color:var(--white);
+      font-family:inherit; font-weight:800; font-size:.8rem; transition:.25s;
+    }
+    .back-btn:hover { background:var(--blue); transform:translateY(-2px); box-shadow:0 8px 22px var(--blue-glow); }
+
+    main { flex:1; padding:36px 0 60px; }
+    .hero { margin-bottom:28px; animation:riseUp .6s ease-out both; }
+    .hero .badge {
+      display:inline-block; padding:5px 14px; border-radius:50px; margin-bottom:12px;
+      background:rgba(0,212,255,.1); border:1px solid rgba(0,212,255,.4); color:var(--cyan);
+      font-size:.72rem; font-weight:800; letter-spacing:1px; text-transform:uppercase;
+    }
+    .hero h1 { font-family:'Orbitron',monospace; font-size:2rem; font-weight:900; letter-spacing:1px; }
+    .hero p { color:var(--gray); font-size:.9rem; margin-top:4px; }
+    @keyframes riseUp { from { transform:translateY(16px); opacity:0; } to { transform:translateY(0); opacity:1; } }
+
+    .card {
+      background:linear-gradient(160deg,rgba(13,13,18,.98),rgba(8,10,18,.96));
+      border:1px solid var(--border); border-radius:22px; padding:30px; margin-bottom:26px;
+      box-shadow:0 20px 50px rgba(0,0,0,.6); animation:riseUp .6s .1s ease-out both;
+    }
+    .card h2 { font-family:'Orbitron',monospace; font-size:1.15rem; margin-bottom:20px; color:var(--white); }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+    .grid.cols-3 { grid-template-columns:repeat(3,1fr); }
+    .field { display:flex; flex-direction:column; gap:8px; }
+    .field.full { grid-column:1 / -1; }
+    .field label { color:var(--white-soft); font-size:.78rem; font-weight:800; letter-spacing:.4px; }
+    .field input,.field select {
+      width:100%; padding:12px 14px; border-radius:11px;
+      background:rgba(0,0,0,.45); border:1px solid var(--border); color:var(--white);
+      font-family:inherit; font-size:.86rem; transition:.25s;
+    }
+    .field input:focus,.field select:focus { outline:none; border-color:var(--cyan); box-shadow:0 0 0 3px rgba(0,212,255,.12); }
+    .field select option { background:var(--card); color:var(--white); }
+    .swap-row { display:flex; align-items:center; gap:10px; }
+    .swap-row .field { flex:1; }
+    .swap-btn {
+      margin-top:22px; flex-shrink:0; width:40px; height:40px; border-radius:50%; cursor:pointer;
+      background:rgba(255,255,255,.04); border:1px solid var(--border); color:var(--cyan);
+      display:grid; place-items:center; transition:.25s;
+    }
+    .swap-btn:hover { background:rgba(0,102,255,.2); transform:rotate(180deg); }
+    .actions { display:flex; gap:12px; flex-wrap:wrap; margin-top:24px; }
+    .btn {
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      padding:13px 28px; border-radius:50px; cursor:pointer; border:1px solid transparent;
+      font-family:inherit; font-weight:800; font-size:.84rem; transition:.3s;
+    }
+    .btn-primary { background:linear-gradient(135deg,var(--blue),var(--blue-light)); color:#fff; box-shadow:0 10px 26px rgba(0,102,255,.4); }
+    .btn-primary:hover { transform:translateY(-3px); box-shadow:0 16px 34px rgba(0,102,255,.6); }
+    .btn-ghost { background:rgba(255,255,255,.04); border-color:var(--border); color:var(--white-soft); }
+    .btn-ghost:hover { border-color:var(--cyan); color:var(--cyan); }
+    .btn:disabled { opacity:.6; cursor:wait; transform:none; }
+
+    .plan-row {
+      display:grid; grid-template-columns:1.6fr 1fr auto; gap:14px; align-items:center;
+      padding:16px; border:1px solid var(--border); border-radius:14px; margin-bottom:10px;
+      background:rgba(0,0,0,.3); animation:riseUp .4s ease-out both;
+    }
+    .plan-route { font-family:'Orbitron',monospace; font-size:.86rem; color:var(--cyan); font-weight:700; }
+    .plan-meta { color:var(--gray); font-size:.74rem; margin-top:4px; }
+    .plan-user { font-size:.78rem; color:var(--white-soft); }
+    .plan-user small { display:block; color:var(--gray); font-size:.68rem; }
+    .chip { display:inline-block; padding:4px 10px; border-radius:50px; font-size:.68rem; font-weight:800; text-transform:uppercase; letter-spacing:.5px; border:1px solid currentColor; }
+    .chip.pending { color:var(--yellow); } .chip.approved { color:var(--green); }
+    .chip.active { color:var(--cyan); } .chip.finished { color:var(--gray); }
+    .chip.rejected,.chip.cancelled { color:var(--red); } .chip.draft { color:var(--white-soft); }
+    .squawk { display:inline-block; margin-top:5px; padding:3px 9px; border-radius:6px; background:rgba(0,212,255,.1); border:1px solid rgba(0,212,255,.4); color:var(--cyan); font-family:'Orbitron',monospace; font-size:.76rem; letter-spacing:1.4px; }
+    .row-actions { display:flex; gap:8px; flex-wrap:wrap; }
+    .mini-btn {
+      padding:8px 14px; border-radius:50px; cursor:pointer; font-family:inherit; font-weight:800; font-size:.72rem;
+      background:rgba(255,255,255,.04); border:1px solid var(--border); color:var(--white-soft); transition:.25s;
+    }
+    .mini-btn:hover { border-color:var(--cyan); color:var(--cyan); }
+    .mini-btn.danger:hover { border-color:var(--red); color:var(--red); }
+    .empty { color:var(--gray); font-size:.86rem; text-align:center; padding:24px; }
+    .alert { display:none; padding:12px 16px; border-radius:11px; margin-bottom:18px; font-size:.84rem; font-weight:700; }
+    .alert.show { display:block; animation:riseUp .3s ease-out; }
+    .alert.error { background:rgba(244,63,94,.12); border:1px solid rgba(244,63,94,.5); color:#fda4af; }
+    .alert.ok { background:rgba(34,197,94,.12); border:1px solid rgba(34,197,94,.5); color:#86efac; }
+    footer { border-top:1px solid var(--border); background:var(--black); padding:18px 0; text-align:center; color:var(--gray); font-size:.78rem; }
+    .version { font-family:'Orbitron',monospace; color:var(--blue); margin-right:10px; }
+    @media (max-width:768px) {
+      .grid,.grid.cols-3 { grid-template-columns:1fr; }
+      .plan-row { grid-template-columns:1fr; }
+      .hero h1 { font-size:1.5rem; }
+      .card { padding:22px 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-page"></div>
+
+  <nav>
+    <div class="container nav-inner">
+      <div class="brand">
+        <img src="https://i.imgur.com/V47UGra.png" alt="LAN logo">
+        <span>LATIN AVIATION NETWORK</span>
+      </div>
+      <a href="/dashboard" class="back-btn"><i class="ico ico-chev ico-left"></i> Volver al dashboard</a>
+    </div>
+  </nav>
+
+  <main class="container">
+    <header class="hero">
+      <span class="badge"><i class="ico ico-plane"></i> Flight Planning</span>
+      <h1>Planes de vuelo</h1>
+      <p>Planifica tu vuelo y sigue su estado en tiempo real.</p>
+    </header>
+
+    <div class="alert" id="alert"></div>
+
+    <section class="card" id="form-card">
+      <h2 id="form-title">New flight plan</h2>
+      <form id="plan-form" autocomplete="off">
+        <div class="grid">
+          <div class="field">
+            <label for="flight_rules">Flight rules</label>
+            <select id="flight_rules" name="flight_rules">
+              <option value="IFR" selected>IFR</option>
+              <option value="VFR">VFR</option>
+            </select>
+          </div>
+          <div class="field"></div>
+
+          <div class="field full">
+            <div class="swap-row">
+              <div class="field">
+                <label for="departure">Departure</label>
+                <select id="departure" name="departure"></select>
+              </div>
+              <button type="button" class="swap-btn" id="swap" title="Intercambiar salida y destino"><i class="ico ico-retry"></i></button>
+              <div class="field">
+                <label for="destination">Destination</label>
+                <select id="destination" name="destination"></select>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="airline">Airline</label>
+            <select id="airline" name="airline">
+              <option value="">No airline</option>
+              <option value="AVA">AVA — Avianca</option>
+              <option value="LAN">LAN — LATAM</option>
+              <option value="IBE">IBE — Iberia</option>
+              <option value="BAW">BAW — British Airways</option>
+              <option value="DAL">DAL — Delta</option>
+              <option value="AAL">AAL — American Airlines</option>
+              <option value="UAE">UAE — Emirates</option>
+              <option value="KLM">KLM — KLM</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="registration">Registration</label>
+            <input id="registration" name="registration" type="text" placeholder="N17AG" maxlength="20">
+          </div>
+          <div class="field">
+            <label for="flight_number">Flight number</label>
+            <input id="flight_number" name="flight_number" type="text" placeholder="1234" maxlength="20">
+          </div>
+
+          <div class="field">
+            <label for="aircraft">Aircraft</label>
+            <select id="aircraft" name="aircraft"></select>
+          </div>
+          <div class="field">
+            <label for="cruise_altitude">Cruise altitude (ft)</label>
+            <input id="cruise_altitude" name="cruise_altitude" type="text" placeholder="Automatic" maxlength="20">
+          </div>
+          <div class="field full">
+            <label for="alternate">Alternate</label>
+            <select id="alternate" name="alternate">
+              <option value="">Automatic</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="btn btn-primary" id="btn-submit"><i class="ico ico-send"></i> Enviar a revisión</button>
+          <button type="button" class="btn btn-ghost" id="btn-draft">Guardar borrador</button>
+          <button type="button" class="btn btn-ghost" id="btn-cancel-edit" hidden>Cancelar edición</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Mis planes de vuelo</h2>
+      <div id="my-plans"><p class="empty">Cargando tus planes…</p></div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <span class="version">0.0.0.0.1</span>
+      <span>© 2026 Latin Aviation Network. Todos los derechos reservados.</span>
+    </div>
+  </footer>
+
+  <script>
+    const AIRPORTS = [
+      ['EGFF','Cardiff Airport'], ['EGKK','London Gatwick Airport'], ['EGLC','London City Airport'],
+      ['LCLK','Larnaca International Airport'], ['LCPH','Paphos International Airport'],
+      ['LCRA','RAF Akrotiri'], ['LPMA','Madeira Airport'], ['MDAB','Arroyo Barril International Airport'],
+      ['MDCR','Cabo Rojo Airport'], ['MDPC','Punta Cana International Airport'],
+      ['MDST','Cibao International Airport'], ['MTCA','Cap-Haitien International Airport'],
+      ['PAFA','Fairbanks International Airport']
+    ];
+    const AIRCRAFT = [
+      ['BCS3','Airbus A220-300'], ['A318','Airbus A318-100'], ['A319','Airbus A319-100'],
+      ['A19N','Airbus A319neo'], ['A320','Airbus A320-200'], ['A20N','Airbus A320neo'],
+      ['A321','Airbus A321-200'], ['A21N','Airbus A321neo'], ['A332','Airbus A330-200'],
+      ['A333','Airbus A330-300'], ['A338','Airbus A330-800'], ['A339','Airbus A330-900'],
+      ['A337','Airbus Beluga XL'], ['A342','Airbus A340-200'], ['A343','Airbus A340-300'],
+      ['A359','Airbus A350-900'], ['B712','Boeing 717-200'], ['B722','Boeing 727-200'],
+      ['B738','Boeing 737-800'], ['B752','Boeing 757-200'], ['B77W','Boeing 777-300ER'],
+      ['B788','Boeing 787-8'], ['B789','Boeing 787-9'], ['B78X','Boeing 787-10'],
+      ['F100','Fokker 100'], ['MD11','McDonnell Douglas MD-11'], ['C559','Cessna Citation II'],
+      ['EUFI','Eurofighter Typhoon'], ['HAWK','BAE Systems Hawk T1'],
+      ['DH8D','Bombardier Dash 8 Q400'], ['SW4','Fairchild Metroliner III'],
+      ['DH6C','De Havilland Canada DHC-6 Twin Otter'], ['TBM9','Daher TBM 900'],
+      ['M350','Piper M350'], ['BE58','Beechcraft Baron G58'], ['C150','Cessna 150'],
+      ['C152','Cessna 152'], ['P28A','Piper PA-28-181 Archer III']
+    ];
+    const ESTADOS = {
+      draft:'Borrador', pending:'Pendiente', approved:'Aprobado', active:'Activo',
+      finished:'Finalizado', rejected:'Rechazado', cancelled:'Cancelado'
+    };
+
+    const form = document.getElementById('plan-form');
+    const alertBox = document.getElementById('alert');
+    let editId = null;
+
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+    function showAlert(msg, type) {
+      alertBox.className = 'alert ' + (type || 'error') + ' show';
+      alertBox.textContent = msg;
+      window.scrollTo({ top:0, behavior:'smooth' });
+    }
+
+    // Poblar selects
+    const dep = document.getElementById('departure');
+    const dst = document.getElementById('destination');
+    const alt = document.getElementById('alternate');
+    AIRPORTS.forEach(([code,name]) => {
+      dep.add(new Option(code + '  ' + name, code));
+      dst.add(new Option(code + '  ' + name, code));
+      alt.add(new Option(code + '  ' + name, code));
+    });
+    dep.value = 'EGKK'; dst.value = 'MDPC';
+    const ac = document.getElementById('aircraft');
+    AIRCRAFT.forEach(([code,name]) => ac.add(new Option(code + '  ' + name, code)));
+    ac.value = 'A320';
+
+    document.getElementById('swap').addEventListener('click', () => {
+      const a = dep.value; dep.value = dst.value; dst.value = a;
+    });
+
+    function leerForm() {
+      return {
+        flight_rules: document.getElementById('flight_rules').value,
+        departure: dep.value,
+        destination: dst.value,
+        airline: document.getElementById('airline').value,
+        registration: document.getElementById('registration').value.trim(),
+        flight_number: document.getElementById('flight_number').value.trim(),
+        aircraft: ac.value,
+        cruise_altitude: document.getElementById('cruise_altitude').value.trim(),
+        alternate: alt.value
+      };
+    }
+
+    async function guardar(enviar) {
+      const body = Object.assign(leerForm(), { enviar });
+      const btn = document.getElementById(enviar ? 'btn-submit' : 'btn-draft');
+      btn.disabled = true;
+      try {
+        const url = editId ? '/api/flight-plans/' + editId : '/api/flight-plans';
+        const res = await fetch(url, {
+          method: editId ? 'PUT' : 'POST',
+          headers: { 'Content-Type':'application/json' },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'No se pudo guardar el plan');
+        showAlert(enviar ? '✅ Plan enviado a revisión de ATC.' : '💾 Borrador guardado.', 'ok');
+        resetForm();
+        await cargarPlanes();
+      } catch (e) {
+        showAlert('❌ ' + e.message, 'error');
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    document.getElementById('btn-submit').addEventListener('click', () => guardar(true));
+    document.getElementById('btn-draft').addEventListener('click', () => guardar(false));
+    form.addEventListener('submit', e => { e.preventDefault(); guardar(true); });
+
+    function resetForm() {
+      editId = null;
+      form.reset();
+      dep.value = 'EGKK'; dst.value = 'MDPC'; ac.value = 'A320';
+      document.getElementById('form-title').textContent = 'New flight plan';
+      document.getElementById('btn-cancel-edit').hidden = true;
+      document.getElementById('btn-submit').innerHTML = '<i class="ico ico-send"></i> Enviar a revisión';
+    }
+    document.getElementById('btn-cancel-edit').addEventListener('click', resetForm);
+
+    async function cargarPlanes() {
+      const box = document.getElementById('my-plans');
+      try {
+        const res = await fetch('/api/flight-plans');
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'No se pudieron cargar los planes');
+        if (!data.plans.length) {
+          box.innerHTML = '<p class="empty">Aún no tienes planes de vuelo. ¡Crea el primero arriba!</p>';
+          return;
+        }
+        box.innerHTML = data.plans.map(p => `
+          <div class="plan-row">
+            <div>
+              <div class="plan-route">${esc(p.departure)} → ${esc(p.destination)}
+                <span class="chip ${esc(p.status)}">${esc(ESTADOS[p.status] || p.status)}</span>
+              </div>
+              <div class="plan-meta">${esc(p.flight_rules)} · ${esc(p.aircraft)} · ${esc(p.flight_number || '—')} · ${esc(p.airline || 'Sin aerolínea')} · Alt ${esc(p.cruise_altitude || '—')} · Alternate ${esc(p.alternate || '—')}</div>
+              ${p.rejection_reason ? '<div class="plan-meta">Motivo: ' + esc(p.rejection_reason) + '</div>' : ''}
+              ${p.squawk ? '<span class="squawk">SQK ' + esc(p.squawk) + '</span>' : ''}
+            </div>
+            <div class="plan-user">${esc(p.username)}<small>#${p.id} · ${new Date(p.created_at).toLocaleString('es')}</small></div>
+            <div class="row-actions">
+              ${['draft','rejected','cancelled'].includes(p.status) ? '<button class="mini-btn" data-edit="' + p.id + '">Editar</button>' : ''}
+              ${['draft','rejected','cancelled'].includes(p.status) ? '<button class="mini-btn" data-send="' + p.id + '">Enviar</button>' : ''}
+              ${p.status === 'pending' ? '<button class="mini-btn danger" data-cancel="' + p.id + '">Cancelar</button>' : ''}
+            </div>
+          </div>`).join('');
+
+        const planes = data.plans;
+        box.querySelectorAll('[data-cancel]').forEach(b => b.addEventListener('click', async () => {
+          if (!confirm('¿Cancelar este plan pendiente?')) return;
+          try {
+            const res = await fetch('/api/flight-plans/' + b.dataset.cancel + '/cancel', { method:'POST' });
+            const d = await res.json();
+            if (!res.ok) throw new Error(d.error || 'No se pudo cancelar');
+            showAlert('Plan cancelado.', 'ok');
+            await cargarPlanes();
+          } catch (e) { showAlert('❌ ' + e.message, 'error'); }
+        }));
+
+        box.querySelectorAll('[data-send]').forEach(b => b.addEventListener('click', async () => {
+          try {
+            const res = await fetch('/api/flight-plans/' + b.dataset.send + '/submit', { method:'POST' });
+            const d = await res.json();
+            if (!res.ok) throw new Error(d.error || 'No se pudo enviar');
+            showAlert('✅ Plan enviado a revisión.', 'ok');
+            await cargarPlanes();
+          } catch (e) { showAlert('❌ ' + e.message, 'error'); }
+        }));
+
+        box.querySelectorAll('[data-edit]').forEach(b => b.addEventListener('click', () => {
+          const p = planes.find(x => x.id == b.dataset.edit);
+          if (!p) return;
+          editId = p.id;
+          document.getElementById('form-title').textContent = 'Editar plan #' + p.id;
+          document.getElementById('flight_rules').value = p.flight_rules;
+          dep.value = p.departure; dst.value = p.destination;
+          document.getElementById('airline').value = p.airline || '';
+          document.getElementById('registration').value = p.registration || '';
+          document.getElementById('flight_number').value = p.flight_number || '';
+          ac.value = p.aircraft;
+          document.getElementById('cruise_altitude').value = p.cruise_altitude || '';
+          alt.value = p.alternate || '';
+          document.getElementById('btn-submit').innerHTML = '<i class="ico ico-send"></i> Guardar y enviar';
+          document.getElementById('btn-cancel-edit').hidden = false;
+          window.scrollTo({ top:0, behavior:'smooth' });
+        }));
+      } catch (e) {
+        box.innerHTML = '<p class="empty">Error: ' + esc(e.message) + '</p>';
+      }
+    }
+
+    cargarPlanes();
+  </script>
+</body>
+</html>

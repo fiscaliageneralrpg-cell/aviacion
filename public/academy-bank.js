@@ -100,6 +100,93 @@ window.LAN_ACADEMY_MODULOS = [
   }
 ];
 
+// =========================================================
+// EXAMEN ATC — Evaluación teórica — Control de Tránsito Aéreo
+// 15 preguntas: 10 cerradas ×1 + 5 abiertas ×2 = 20 puntos
+// =========================================================
+window.LAN_ACADEMY_ATC_MODULOS = [
+  {
+    titulo: 'Conocimientos generales ATC',
+    preguntas: [
+      { n:1, tipo:'mc', texto:'¿Cuál es la función principal de un controlador de tránsito aéreo?', opciones:[
+        'Pilotar aeronaves cuando sea necesario.',
+        'Organizar y mantener un flujo seguro y ordenado del tránsito aéreo.',
+        'Autorizar únicamente los despegues y aterrizajes.',
+        'Determinar el destino de cada aeronave.'
+      ]},
+      { n:2, tipo:'mc', texto:'Un piloto solicita autorización de salida (clearance) a Delivery. ¿Cuál dato es importante considerar para gestionar dicha autorización?', opciones:[
+        'Indicativo, destino, información ATIS y datos de salida correspondientes.',
+        'Nombre del piloto y modelo de computadora.',
+        'Velocidad de crucero y cantidad de pasajeros únicamente.',
+        'Altitud de estacionamiento y hora de conexión.'
+      ]},
+      { n:3, tipo:'mc', texto:'¿Qué significa la instrucción «Squawk 4521»?', opciones:[
+        'Que la aeronave debe mantener rumbo 452°.',
+        'Que debe establecer el código transpondedor 4521.',
+        'Que debe ascender a 4.521 pies.',
+        'Que debe cambiar a la frecuencia 452.1.'
+      ]},
+      { n:4, tipo:'mc', texto:'¿Qué dependencia ATC gestiona normalmente el movimiento de las aeronaves en tierra, como el rodaje?', opciones:[
+        'Departure.', 'Approach.', 'Ground.', 'Center.'
+      ]},
+      { n:5, tipo:'mc', texto:'Un controlador de Tower informa: «Despejado para despegar, pista 26L». ¿Qué está autorizando?', opciones:[
+        'Iniciar el rodaje hacia la pista.',
+        'Alinear la aeronave en la pista sin despegar.',
+        'Realizar el despegue por la pista indicada.',
+        'Iniciar el ascenso hacia la altitud de crucero.'
+      ]},
+      { n:6, tipo:'mc', texto:'¿Qué debe hacer un controlador cuando un piloto no comprende una instrucción?', opciones:[
+        'Continuar dando instrucciones sin esperar respuesta.',
+        'Repetir o reformular la instrucción de manera clara.',
+        'Ignorar al piloto y atender otra aeronave.',
+        'Cambiar inmediatamente su indicativo.'
+      ]},
+      { n:7, tipo:'mc', texto:'¿Cuál es la finalidad de proporcionar vectores a una aeronave?', opciones:[
+        'Modificar el modelo de aeronave.',
+        'Guiar su trayectoria mediante instrucciones de rumbo.',
+        'Asignar un nuevo indicativo.',
+        'Autorizar automáticamente el aterrizaje.'
+      ]}
+    ]
+  },
+  {
+    titulo: 'Situaciones operacionales',
+    preguntas: [
+      { n:8, tipo:'mc', texto:'Una aeronave solicita autorización para iniciar el rodaje, pero otra todavía ocupa parte de la ruta asignada. ¿Cuál es la actuación más adecuada?', opciones:[
+        'Autorizar el rodaje inmediatamente.',
+        'Ignorar la ocupación porque ambas aeronaves están en tierra.',
+        'Esperar a que la ruta esté disponible o asignar una ruta segura alternativa.',
+        'Autorizar a la aeronave a atravesar la otra.'
+      ]},
+      { n:9, tipo:'mc', texto:'Una aeronave en punto de espera solicita despegar, pero la pista está ocupada por una aeronave que acaba de aterrizar. ¿Qué debe hacer Tower?', opciones:[
+        'Autorizar el despegue para evitar demoras.',
+        'Mantener la aeronave en espera hasta que la pista esté libre y pueda autorizarse de forma segura.',
+        'Autorizar el despegue si el piloto confirma que ve la aeronave.',
+        'Transferir la comunicación a Ground.'
+      ]},
+      { n:10, tipo:'mc', texto:'ATC necesita transferir una aeronave a otra dependencia. ¿Cuál es la información esencial que debe proporcionar?', opciones:[
+        'La dependencia o frecuencia a la que debe contactar.',
+        'El nombre del controlador que está de turno.',
+        'El tiempo estimado de vuelo restante.',
+        'La cantidad de combustible de la aeronave.'
+      ]}
+    ]
+  },
+  {
+    titulo: 'Desarrollo y criterio operacional',
+    preguntas: [
+      { n:11, tipo:'open', texto:'Situación — autorización de salida: «Gatwick Delivery, AVA0225, stand 26B, Boeing 787-8, QNH 1016, información Delta, solicitando autorización para Punta Cana». Explica qué información debes verificar y qué elementos debería contener la autorización de salida.' },
+      { n:12, tipo:'open', texto:'Situación — rumbo y altitud: una aeronave vuela a 7.000 pies con rumbo 090° y le indicas «mantenga 7.000 pies, vire izquierda rumbo 360°». Explica qué debe hacer el piloto y qué debes verificar para asegurarte de que comprendió.' },
+      { n:13, tipo:'open', texto:'Situación — pérdida de comunicación: una aeronave deja de responder a tus llamados bajo tu control. ¿Qué acciones tomarías para recuperar la comunicación y mantener la seguridad del tránsito?' },
+      { n:14, tipo:'open', texto:'Situación — aproximación y aterrizaje: una aeronave solicita aterrizar pero otra todavía está en la pista. Explica cómo gestionarías la situación y qué comunicación usarías.' },
+      { n:15, tipo:'open', texto:'Criterio como controlador: AVA101 solicita despegar, AVA202 está en aproximación final y AVA303 pide instrucciones de rodaje. ¿Cómo organizarías la atención? Explica qué situación atenderías primero y por qué.' }
+    ]
+  }
+];
+window.LAN_ACADEMY_ATC_KEY = { 1:'B',2:'A',3:'B',4:'C',5:'C',6:'B',7:'B',8:'C',9:'B',10:'A' };
+window.LAN_ACADEMY_ATC_ABIERTAS = [11,12,13,14,15];
+window.LAN_ACADEMY_ATC_INFO = { total:20, minAprobar:16 };
+
 // Respuestas correctas (preguntas cerradas)
 window.LAN_ACADEMY_KEY = {
   1: 'B', 2: 'C', 3: 'Falso', 4: 'B',

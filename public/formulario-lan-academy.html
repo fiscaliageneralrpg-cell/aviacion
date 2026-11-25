@@ -379,11 +379,12 @@
     </div>
   </div>
 
+  <script src="/academy-bank.js"></script>
   <script>
     /* =========================================================
-       BANCO DE PREGUNTAS — LAN ACADEMY
+       BANCO DE PREGUNTAS — LAN ACADEMY (por ruta)
        ========================================================= */
-    const MODULOS = [
+    const MODULOS_PILOTO = [
       {
         titulo: 'Interpretación de instrucciones ATC',
         preguntas: [
@@ -481,6 +482,11 @@
       }
     ];
 
+    // El banco real se elige según la ruta del usuario (ATC o Piloto).
+    // Se determina en cargarEstado() con /api/academy/status → exam.key.
+    let MODULOS = MODULOS_PILOTO;
+    let examenKey = 'piloto';
+
     const LETRAS = ['A', 'B', 'C', 'D'];
     const form = document.getElementById('academy-form');
     const alertBox = document.getElementById('alert');
@@ -488,59 +494,63 @@
     const formArea = document.getElementById('form-area');
     const progressWrap = document.getElementById('progress-wrap');
 
-    /* ---------- Renderizar preguntas ---------- */
-    MODULOS.forEach((mod, mi) => {
-      const sec = document.createElement('section');
-      sec.className = 'module';
+    /* ---------- Renderizar preguntas (según ruta) ---------- */
+    let totalPreguntas = 0;
+    function renderModulos() {
+      form.innerHTML = '';
+      totalPreguntas = MODULOS.reduce((a, m) => a + m.preguntas.length, 0);
+      const romanos = ['I','II','III','IV','V'];
+      MODULOS.forEach((mod, mi) => {
+        const sec = document.createElement('section');
+        sec.className = 'module';
 
-      const title = document.createElement('h2');
-      title.className = 'module-title';
-      title.style.animationDelay = (0.1 * mi) + 's';
-      title.innerHTML = `<span class="m-num">${mi + 1}</span> Módulo ${['I','II','III','IV'][mi]} — ${mod.titulo}`;
-      sec.appendChild(title);
+        const title = document.createElement('h2');
+        title.className = 'module-title';
+        title.style.animationDelay = (0.1 * mi) + 's';
+        title.innerHTML = `<span class="m-num">${mi + 1}</span> Módulo ${romanos[mi] || (mi + 1)} — ${mod.titulo}`;
+        sec.appendChild(title);
 
-      mod.preguntas.forEach((p, pi) => {
-        const box = document.createElement('div');
-        box.className = 'question';
-        box.dataset.q = p.n;
-        box.style.animationDelay = (0.05 * pi) + 's';
+        mod.preguntas.forEach((p, pi) => {
+          const box = document.createElement('div');
+          box.className = 'question';
+          box.dataset.q = p.n;
+          box.style.animationDelay = (0.05 * pi) + 's';
 
-        const tipoLabel = p.tipo === 'mc' ? 'Selección múltiple'
-                        : p.tipo === 'tf' ? 'Verdadero o falso'
-                        : 'Pregunta abierta';
+          const tipoLabel = p.tipo === 'mc' ? 'Selección múltiple'
+                          : p.tipo === 'tf' ? 'Verdadero o falso'
+                          : 'Pregunta abierta';
 
-        let inner = `
-          <div class="q-head">
-            <span class="q-num">Pregunta ${p.n}</span>
-            <span class="q-type">${tipoLabel}</span>
-          </div>
-          <p class="q-text">${p.texto}</p>`;
+          let inner = `
+            <div class="q-head">
+              <span class="q-num">Pregunta ${p.n}</span>
+              <span class="q-type">${tipoLabel}</span>
+            </div>
+            <p class="q-text">${p.texto}</p>`;
 
-        if (p.tipo === 'mc' || p.tipo === 'tf') {
-          const opciones = p.tipo === 'tf' ? ['Verdadero', 'Falso'] : p.opciones;
-          inner += '<div class="options">' + opciones.map((op, i) => {
-            const val = p.tipo === 'tf' ? (i === 0 ? 'Verdadero' : 'Falso') : LETRAS[i];
-            const showLetter = p.tipo === 'tf';
-            return `
-              <label class="option">
-                <input type="radio" name="q${p.n}" value="${val}">
-                <span class="letter">${showLetter ? (i === 0 ? 'V' : 'F') : LETRAS[i]}</span>
-                <span>${p.tipo === 'tf' ? op : `<b>${LETRAS[i]}.</b> ${op}`}</span>
-              </label>`;
-          }).join('') + '</div>';
-        } else {
-          inner += `<textarea name="q${p.n}" placeholder="Escribe tu respuesta aquí..." maxlength="1500"></textarea>`;
-        }
+          if (p.tipo === 'mc' || p.tipo === 'tf') {
+            const opciones = p.tipo === 'tf' ? ['Verdadero', 'Falso'] : p.opciones;
+            inner += '<div class="options">' + opciones.map((op, i) => {
+              const val = p.tipo === 'tf' ? (i === 0 ? 'Verdadero' : 'Falso') : LETRAS[i];
+              const showLetter = p.tipo === 'tf';
+              return `
+                <label class="option">
+                  <input type="radio" name="q${p.n}" value="${val}">
+                  <span class="letter">${showLetter ? (i === 0 ? 'V' : 'F') : LETRAS[i]}</span>
+                  <span>${p.tipo === 'tf' ? op : `<b>${LETRAS[i]}.</b> ${op}`}</span>
+                </label>`;
+            }).join('') + '</div>';
+          } else {
+            inner += `<textarea name="q${p.n}" placeholder="Escribe tu respuesta aquí..." maxlength="2500"></textarea>`;
+          }
 
-        box.innerHTML = inner;
-        sec.appendChild(box);
+          box.innerHTML = inner;
+          sec.appendChild(box);
+        });
+
+        form.appendChild(sec);
       });
-
-      form.appendChild(sec);
-    });
-
-    /* ---------- Progreso ---------- */
-    const totalPreguntas = MODULOS.reduce((a, m) => a + m.preguntas.length, 0);
+      actualizarProgreso();
+    }
 
     function respuestasActuales() {
       const answers = {};
@@ -573,7 +583,6 @@
 
     form.addEventListener('change', actualizarProgreso);
     form.addEventListener('input', actualizarProgreso);
-    actualizarProgreso();
 
     /* =========================================================
        ESTADO DEL FORMULARIO
@@ -673,7 +682,7 @@
           <div class="status-card approved">
             <div class="sc-badge"><i class="ico ico-check"></i></div>
             <h2 class="sc-title">Formulario aprobado</h2>
-            <p class="sc-text">Un staff aprobó tu formulario. Ya tienes el rango Piloto En Práctica, no necesitas volver a hacerlo.</p>
+            <p class="sc-text">Un staff aprobó tu formulario. Ya puedes continuar con tu ruta en LAN Academy; no necesitas volver a hacerlo.</p>
             <div class="sc-meta">
               ${tieneScore ? `<span class="sc-chip"><i class="ico ico-check"></i> Puntaje: ${st.score}/${total}</span>` : ''}
             </div>
@@ -694,7 +703,7 @@
             </div>
             <div class="sc-steps">
               <div class="sc-step"><b>1</b> Acepta este aviso</div>
-              <div class="sc-step"><b>2</b> Responde de nuevo los 4 módulos y envía</div>
+              <div class="sc-step"><b>2</b> Responde de nuevo las ${totalPreguntas} preguntas y envía</div>
             </div>
             <div class="sc-actions">
               <button type="button" class="btn-main" id="btn-ack"><i class="ico ico-retry"></i> Aceptar y volver a hacer</button>
@@ -747,9 +756,27 @@
         const res = await fetch('/api/academy/status');
         if (res.status === 401) { window.location.href = '/iniciar-seccion.html'; return; }
         if (!res.ok) throw new Error('estado no disponible');
-        aplicarEstado(await res.json());
+        const st = await res.json();
+
+        // Elegir el banco según la ruta del usuario
+        examenKey = (st.exam && st.exam.key === 'atc') ? 'atc' : 'piloto';
+        MODULOS = examenKey === 'atc'
+          ? (window.LAN_ACADEMY_ATC_MODULOS || MODULOS_PILOTO)
+          : MODULOS_PILOTO;
+        renderModulos();
+
+        // Actualizar encabezado del examen
+        const heroSub = document.querySelector('.hero p');
+        if (heroSub) {
+          heroSub.textContent = examenKey === 'atc'
+            ? '3 secciones · 15 preguntas · 20 puntos · mínimo 16 para aprobar'
+            : '4 módulos · 20 preguntas · Lee con calma antes de responder';
+        }
+
+        aplicarEstado(st);
       } catch (e) {
         console.error(e);
+        renderModulos();
         mostrarFormulario(); /* el servidor igual bloquea envíos no permitidos */
       }
     }
