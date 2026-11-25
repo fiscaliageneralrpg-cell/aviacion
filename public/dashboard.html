@@ -1432,34 +1432,31 @@
     document.getElementById('academy-cta').addEventListener('click', abrirFormulario);
     document.getElementById('quick-staff').addEventListener('click', () => abrirPanelStaff());
 
-    /* ---------- Ruta: GET /api/track → muestra overlay si es null ---------- */
+    /* ---------- Ruta: GET /api/track → muestra overlay si la BD dice null ----------
+       La BD es la ÚNICA fuente de verdad: si no hay ruta guardada, aparece el
+       overlay en CADA login hasta que elija una (aunque el navegador recuerde
+       una elección vieja). El localStorage solo se usa si la BD falla. */
     async function cargarRuta() {
-      // ?reset=1 borra la ruta guardada y fuerza volver a ver el overlay
       try {
-        if (new URLSearchParams(window.location.search).get('reset') === '1') {
-          localStorage.removeItem(TRACK_LOCAL_KEY);
-        }
-      } catch (e) { /* ignore */ }
-      try {
-        const res = await fetch('/api/track');
-        let trackBD = null;
-        if (res.ok) {
-          const data = await res.json();
-          trackBD = data.track || null;
-        }
-        // Si la BD falla o no tiene ruta, usamos el respaldo del navegador
-        trackActual = trackBD || trackLocal();
-        renderCta();
+        const res = await fetch('/api/track', { cache: 'no-store' });
+        if (!res.ok) throw new Error('No se pudo consultar la ruta');
+        const data = await res.json();
+        trackActual = data.track || null;   // null → debe elegir
         if (!trackActual) {
-          abrirBienvenida();   // se muestra en CADA login hasta que elija
+          // Por si quedó una elección vieja en el navegador, la limpiamos
+          try { localStorage.removeItem(TRACK_LOCAL_KEY); } catch (e) { /* ignore */ }
+          abrirBienvenida();
         } else {
           document.getElementById('welcome-overlay').classList.remove('active');
         }
-        } catch (e) {
-        console.warn('No se pudo consultar la ruta en la BD; uso el respaldo local:', e.message);
-        trackActual = trackLocal();
         renderCta();
+        renderHint();
+      } catch (e) {
+        console.warn('BD no disponible, uso respaldo local:', e.message);
+        trackActual = trackLocal();
         if (!trackActual) abrirBienvenida();
+        else document.getElementById('welcome-overlay').classList.remove('active');
+        renderCta();
       }
     }
 
@@ -1958,7 +1955,14 @@
         const cambio = ultimaFirma !== '';
         ultimaFirma = firma;
         academyStatus = st;
-        if (tr.track) trackActual = tr.track;
+        if (tr.track) {
+          trackActual = tr.track;
+        } else if (trackActual) {
+          // La BD volvió a decir "sin ruta" (usuario nuevo/reseteado) → debe elegir
+          trackActual = null;
+          try { localStorage.removeItem(TRACK_LOCAL_KEY); } catch (e) { /* ignore */ }
+          abrirBienvenida();
+        }
         renderCta();
         renderHint();
         const staffBtn = document.getElementById('quick-staff');
