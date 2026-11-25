@@ -1584,14 +1584,38 @@ app.get('/auth/roblox/callback', requireAuth, async (req, res) => {
       );
     }
 
+    // Guardamos en sesión y en BD, pero NO marcamos fully_verified todavía:
+    // primero el usuario confirma que esa es su cuenta (paso de confirmación).
     req.session.discordUser.roblox_id = robloxUser.id;
     req.session.discordUser.roblox_username = robloxUser.name;
     req.session.discordUser.roblox_avatar = avatarUrl;
 
-    res.redirect('/verificacion.html?step=3&verified=roblox');
+    res.redirect('/verificacion.html?step=2&confirmar=1');
   } catch (err) {
     console.error('Error Roblox callback:', err.message);
     res.status(500).send('Error verificando Roblox: ' + err.message);
+  }
+});
+
+// --- Desvincular Roblox ("No, cambiar cuenta") ---
+app.post('/api/roblox/reset', requireAuth, async (req, res) => {
+  try {
+    const discordId = String(req.session.discordUser.id);
+    await pool.query(
+      `UPDATE verified_users
+       SET roblox_id = NULL, roblox_username = NULL, roblox_avatar = NULL,
+           roblox_verified_at = NULL, fully_verified = 0, updated_at = NOW()
+       WHERE discord_id = ?`,
+      [discordId]
+    );
+    req.session.discordUser.roblox_id = null;
+    req.session.discordUser.roblox_username = null;
+    req.session.discordUser.roblox_avatar = null;
+    console.log(`🔄 Roblox desvinculado por ${discordId}`);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error roblox/reset:', err.message);
+    res.status(500).json({ error: 'Error interno' });
   }
 });
 

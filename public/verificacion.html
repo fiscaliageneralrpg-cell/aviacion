@@ -195,6 +195,42 @@
 
     .hidden { display: none !important; }
 
+    /* Confirmación Roblox */
+    .confirm-card { text-align:center; border-color:rgba(0,212,255,.45) !important;
+      box-shadow:0 0 40px rgba(0,212,255,.14), inset 0 1px 0 rgba(255,255,255,.05);
+      position:relative; overflow:hidden; }
+    .confirm-card::before { content:""; position:absolute; top:0; left:0; right:0; height:3px;
+      background:linear-gradient(90deg,transparent,var(--cyan),#fff,var(--cyan),transparent);
+      background-size:200% 100%; animation:lightFlow 4s linear infinite; }
+    @keyframes lightFlow { from{background-position:200% 0} to{background-position:-200% 0} }
+    .avatar-roblox { border-radius:22% !important; border:3px solid var(--cyan) !important;
+      box-shadow:0 0 36px rgba(0,212,255,.5) !important;
+      animation:floaty 3s ease-in-out infinite; }
+    @keyframes floaty { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+    .ico-retry { border:.14em solid currentColor; border-top-color:transparent; border-radius:50%;
+      display:inline-block; width:1em; height:1em; animation:spin 2.4s linear infinite; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+    .success-overlay { position:fixed; inset:0; z-index:500; display:none; align-items:center; justify-content:center;
+      background:rgba(0,0,0,.82); backdrop-filter:blur(10px); padding:20px; }
+    .success-overlay.active { display:flex; animation:fadeIn .3s ease-out; }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+    .success-box { text-align:center; max-width:420px; padding:46px 40px; border-radius:28px;
+      background:linear-gradient(160deg,rgba(13,13,18,.99),rgba(8,10,18,.99));
+      border:1px solid rgba(0,255,136,.5); box-shadow:0 40px 90px rgba(0,0,0,.8),0 0 70px rgba(0,255,136,.2);
+      animation:popSuccess .5s cubic-bezier(.3,1.4,.5,1); }
+    @keyframes popSuccess { from{transform:scale(.7);opacity:0} to{transform:scale(1);opacity:1} }
+    .success-icon { width:82px; height:82px; margin:0 auto 20px; border-radius:50%; display:grid; place-items:center;
+      background:rgba(0,255,136,.14); border:3px solid var(--green); box-shadow:0 0 40px rgba(0,255,136,.5);
+      font-size:2.4rem; color:var(--green); animation:checkPulse 2s ease-in-out infinite; }
+    @keyframes checkPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+    .success-box h2 { font-family:'Orbitron',monospace; font-size:1.5rem; color:var(--green); margin-bottom:10px; }
+    .success-box p { color:var(--white-soft); font-size:.9rem; margin-bottom:22px; }
+    .progress-fill { position:relative; overflow:hidden; }
+    .progress-fill::after { content:""; position:absolute; top:0; left:-60%; width:50%; height:100%;
+      background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);
+      animation:progressShine 2.5s ease-in-out infinite; }
+    @keyframes progressShine { 0%{left:-60%} 60%,100%{left:130%} }
+
     footer {
       border-top: 1px solid var(--border);
       background: var(--black);
@@ -272,6 +308,25 @@
           </div>
         </div>
 
+        <!-- PASO 2B: CONFIRMAR CUENTA ROBLOX -->
+        <div id="step-confirmar" class="hidden">
+          <div class="step-header">
+            <span class="step-badge">Paso 2 de 3 · Confirmación</span>
+            <h2>¿Esta es tu cuenta de Roblox?</h2>
+            <p style="color:var(--gray); font-size:.9rem;">Verifica los datos antes de continuar.</p>
+          </div>
+          <div class="roblox-info confirm-card">
+            <img id="confirm-roblox-avatar" class="avatar-roblox" alt="Roblox" src="https://www.roblox.com/headshot-thumbnail/image?userId=0&width=420&height=420&format=png">
+            <div class="status-verified">✅ Cuenta conectada</div>
+            <div id="confirm-roblox-name" style="font-weight:800; font-size:1.2rem;">Cargando...</div>
+            <div id="confirm-roblox-id" style="color:var(--gray); font-size:.9rem;">ID: —</div>
+          </div>
+          <div class="row-actions" style="justify-content:center;">
+            <button id="btn-roblox-cambiar" class="btn btn-ghost"><i class="ico ico-retry"></i> No, cambiar cuenta</button>
+            <button id="btn-roblox-si" class="btn btn-success">Sí, continuar →</button>
+          </div>
+        </div>
+
         <!-- PASO 3: COMPLETADO -->
         <div id="step-3" class="hidden">
           <div class="step-header">
@@ -292,6 +347,16 @@
     </div>
   </main>
 
+  <!-- Overlay: verificado correctamente -->
+  <div class="success-overlay" id="success-overlay">
+    <div class="success-box">
+      <div class="success-icon">✓</div>
+      <h2>¡Verificado correctamente!</h2>
+      <p>Tu cuenta de Roblox quedó vinculada. Ya tienes acceso completo a LAN.</p>
+      <button id="btn-final-dashboard" class="btn btn-success" style="width:100%;">Ir al Dashboard →</button>
+    </div>
+  </div>
+
   <footer>
     <div class="container">
       <div class="footer-text">
@@ -305,6 +370,7 @@
     const BADGES = {
       1: 'Paso 1 de 3 · Discord',
       2: 'Paso 2 de 3 · Roblox',
+      confirmar: 'Paso 2 de 3 · Confirmar cuenta',
       3: 'Paso 3 de 3 · Completado'
     };
 
@@ -312,17 +378,15 @@
       document.querySelectorAll('[id^="step-"]').forEach(el => el.classList.add('hidden'));
       const target = document.getElementById('step-' + step);
       if (target) target.classList.remove('hidden');
-      document.getElementById('progress-fill').className = 'progress-fill step' + step;
+      document.getElementById('progress-fill').className =
+        'progress-fill ' + (step === 'confirmar' ? 'step2' : 'step' + step);
       document.getElementById('step-badge').textContent = BADGES[step] || BADGES[1];
     }
 
     async function loadDiscord() {
       try {
         const res = await fetch('/api/me');
-        if (res.status === 401) {
-          window.location.replace('/iniciar-seccion.html');
-          return;
-        }
+        if (res.status === 401) { window.location.replace('/iniciar-seccion.html'); return; }
         const user = await res.json();
         const name = user.global_name || user.username;
         document.getElementById('discord-username').textContent = name;
@@ -331,23 +395,42 @@
           document.getElementById('discord-avatar').src =
             `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`;
         }
-      } catch (e) {
-        console.error(e);
+      } catch (e) { console.error(e); }
+    }
+
+    function pintarDatosRoblox(estado) {
+      if (!estado) return;
+      document.getElementById('confirm-roblox-name').textContent =
+        estado.roblox_username || 'Usuario de Roblox';
+      document.getElementById('confirm-roblox-id').textContent = 'ID: ' + (estado.roblox_id || '—');
+      if (estado.roblox_avatar) {
+        document.getElementById('confirm-roblox-avatar').src = estado.roblox_avatar;
       }
     }
 
+    /* Completar verificación y mostrar overlay de éxito */
+    async function completarVerificacion() {
+      const res = await fetch('/api/verify-complete', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'No se pudo completar');
+      document.getElementById('success-overlay').classList.add('active');
+      return data;
+    }
+
     (async () => {
-      const stepParam = new URLSearchParams(window.location.search).get('step');
+      const params = new URLSearchParams(window.location.search);
+      const stepParam = params.get('step');
+      const confirmar = params.get('confirmar') === '1';
       let estado = null;
 
       try {
         const res = await fetch('/api/user-status');
         estado = await res.json();
-      } catch (e) {
-        console.error(e);
-      }
+      } catch (e) { console.error(e); }
 
-      // Si ya está verificado, NUNCA quedarse en verificación → ir al dashboard
+      // Si ya está verificado y no venimos del flujo de confirmación → dashboard
       if (estado && estado.fully_verified && !stepParam) {
         window.location.replace('/dashboard');
         return;
@@ -356,49 +439,75 @@
       await loadDiscord();
 
       let step = stepParam || '1';
+      if (step !== '1' && step !== '2' && step !== 'confirmar' && step !== '3') step = '1';
 
-      // 🔒 Roblox es obligatorio: sin Roblox NO existe el paso 3
-      // (también cubre el caso de que falle la consulta: estado === null)
-      if (step !== '1' && step !== '2') step = '1';
-      if (step === '3' && !(estado && estado.roblox_verified)) {
-        step = '2';
+      // Confirmación: solo si hay datos de Roblox vinculados
+      if (confirmar || step === 'confirmar') {
+        if (estado && estado.roblox_verified) {
+          pintarDatosRoblox(estado);
+          showStep('confirmar');
+        } else {
+          showStep('2');
+        }
+        return;
       }
-      // Si ya tiene Roblox pero llegó al paso 1, acelera al 3
-      if (step === '1' && estado && estado.roblox_verified) {
-        step = '3';
+
+      if (step === '3' && !(estado && estado.roblox_verified)) step = '2';
+      if (step === '1' && estado && estado.roblox_verified && !(estado.fully_verified)) {
+        step = 'confirmar';
+        pintarDatosRoblox(estado);
       }
-      // Sin estado cargado no se avanza de paso (se queda en 1)
-      if (!estado && step !== '1') {
-        step = '1';
-      }
+      if (!estado && step !== '1') step = '1';
 
       showStep(step);
     })();
 
-    // Botón Ir al Dashboard del paso 3
+    /* "Sí, continuar" → marcar verificación y mostrar overlay de éxito */
+    document.getElementById('btn-roblox-si').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-roblox-si');
+      btn.disabled = true;
+      btn.textContent = 'Verificando...';
+      try {
+        await completarVerificacion();
+      } catch (e) {
+        alert('❌ ' + e.message);
+        btn.disabled = false;
+        btn.textContent = 'Sí, continuar →';
+      }
+    });
+
+    /* "No, cambiar cuenta" → borrar Roblox y volver a step 2 */
+    document.getElementById('btn-roblox-cambiar').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-roblox-cambiar');
+      btn.disabled = true;
+      btn.textContent = 'Cambiando...';
+      try {
+        const res = await fetch('/api/roblox/reset', { method: 'POST' });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'No se pudo cambiar');
+        window.location.replace('/verificacion.html?step=2');
+      } catch (e) {
+        alert('❌ ' + e.message);
+        btn.disabled = false;
+        btn.textContent = 'No, cambiar cuenta';
+      }
+    });
+
+    /* Botón del overlay final → dashboard */
+    document.getElementById('btn-final-dashboard').addEventListener('click', () => {
+      window.location.replace('/dashboard');
+    });
+
+    /* Botón Ir al Dashboard del paso 3 (por si se usa) */
     document.getElementById('btn-ir-dashboard').addEventListener('click', async () => {
       const btn = document.getElementById('btn-ir-dashboard');
       btn.textContent = 'Procesando...';
       btn.disabled = true;
-
       try {
-        const res = await fetch('/api/verify-complete', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
-        });
-        const data = await res.json();
-
-        if (data.success) {
-          btn.textContent = '✅ Redirigiendo…';
-          window.location.replace(data.redirect || '/dashboard');
-        } else {
-          alert('Error al completar verificación: ' + (data.error || 'desconocido'));
-          btn.textContent = 'Ir al Dashboard →';
-          btn.disabled = false;
-        }
+        await completarVerificacion();
       } catch (err) {
         console.error(err);
-        alert('Error de conexión');
+        alert('Error al completar verificación: ' + err.message);
         btn.textContent = 'Ir al Dashboard →';
         btn.disabled = false;
       }
