@@ -1057,21 +1057,6 @@
     </div>
   </section>
 
-  <!-- ===== PANEL ATC: PLANES DE VUELO (rol 1555512718046404609) ===== -->
-  <section class="academy-section" id="fp-atc-section" hidden>
-    <div class="academy-card" id="fp-atc-card">
-      <div class="fp-atc-head">
-        <span class="fp-atc-badge"><i class="ico ico-plane"></i></span>
-        <div class="fp-atc-titles">
-          <div class="fp-atc-title">Planes de vuelo</div>
-          <div class="fp-atc-sub">Todos los planes enviados · asigna estado y squawk</div>
-        </div>
-        <button class="fp-refresh" id="fp-refresh" type="button"><i class="ico ico-retry"></i> Actualizar</button>
-      </div>
-      <div id="fp-atc-list"><p class="fp-empty">Cargando planes…</p></div>
-    </div>
-  </section>
-
   <footer>
     <div class="container">
       <div class="footer-text">
@@ -1370,7 +1355,6 @@
       trackActual = t;
       renderCta();
       renderHint();
-      maybeMostrarPanelAtc();
     };
 
     /* ---------- Cargar estado del formulario ---------- */
@@ -1388,8 +1372,7 @@
 
         renderCta();
         renderHint();
-        maybeMostrarPanelAtc();
-      } catch (e) {
+        } catch (e) {
         console.error('Error academy status:', e);
       }
     }
@@ -1462,8 +1445,7 @@
         } else {
           document.getElementById('welcome-overlay').classList.remove('active');
         }
-        maybeMostrarPanelAtc();
-      } catch (e) {
+        } catch (e) {
         console.warn('No se pudo consultar la ruta en la BD; uso el respaldo local:', e.message);
         trackActual = trackLocal();
         renderCta();
@@ -1471,77 +1453,9 @@
       }
     }
 
-    /* ---------- Panel ATC: planes de vuelo (rol 1555512718046404609) ---------- */
-    function maybeMostrarPanelAtc() {
-      const sec = document.getElementById('fp-atc-section');
-      if (!academyStatus) { sec.hidden = true; return; }
-      sec.hidden = !(academyStatus.is_atc === true && academyStatus.status === 'approved');
-      if (!sec.hidden) cargarPlanesAtc();
-    }
-
     function escapeHtml(s) {
       return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
     }
-
-    async function cargarPlanesAtc() {
-      const list = document.getElementById('fp-atc-list');
-      try {
-        const res = await fetch('/api/flight-plans/staff');
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'No se pudieron cargar los planes');
-        if (!data.plans.length) {
-          list.innerHTML = '<p class="fp-empty">No hay planes de vuelo enviados todavía.</p>';
-          return;
-        }
-        list.innerHTML = data.plans.map(p => `
-          <div class="fp-row" id="fp-${p.id}">
-            <div class="fp-row-main">
-              <div class="fp-row-route">${escapeHtml(p.departure)} → ${escapeHtml(p.destination)} <span class="fp-chip ${escapeHtml(p.status)}">${escapeHtml(ESTADOS_PLAN[p.status] || p.status)}</span></div>
-              <div class="fp-row-meta">${escapeHtml(p.flight_rules)} · ${escapeHtml(p.aircraft)} · ${escapeHtml(p.flight_number || '—')} · ${escapeHtml(p.airline || 'Sin aerolínea')} · Alt ${escapeHtml(p.cruise_altitude || '—')} · Altna ${escapeHtml(p.alternate || '—')}</div>
-              ${p.rejection_reason ? '<div class="fp-row-meta">Motivo: ' + escapeHtml(p.rejection_reason) + '</div>' : ''}
-            </div>
-            <div class="fp-row-user">${escapeHtml(p.username)}<small>${escapeHtml(p.discord_id)}</small></div>
-            <div>
-              ${p.squawk ? '<span class="fp-squawk">SQK ' + escapeHtml(p.squawk) + '</span>' : '<span class="fp-row-meta">Sin squawk</span>'}
-            </div>
-            <select class="fp-status-select" data-id="${p.id}">
-              ${['draft','pending','approved','active','finished','rejected','cancelled'].map(s => '<option value="' + s + '"' + (s === p.status ? ' selected' : '') + '>' + ESTADOS_PLAN[s] + '</option>').join('')}
-            </select>
-          </div>`).join('');
-
-        list.querySelectorAll('.fp-status-select').forEach(sel => {
-          sel.addEventListener('change', async () => {
-            const id = sel.dataset.id;
-            const status = sel.value;
-            let reason = null;
-            if (status === 'rejected') {
-              reason = prompt('Motivo del rechazo:');
-              if (!reason) { sel.value = 'pending'; return; }
-            }
-            sel.disabled = true;
-            try {
-              const res = await fetch('/api/flight-plans/' + id + '/status', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status, reason })
-              });
-              const d = await res.json();
-              if (!res.ok) throw new Error(d.error || 'No se pudo actualizar');
-              await cargarPlanesAtc();
-            } catch (e) {
-              console.error('Error actualizando plan:', e);
-              alert('❌ ' + e.message);
-              sel.disabled = false;
-            }
-          });
-        });
-      } catch (e) {
-        console.error('Error cargar planes ATC:', e);
-        list.innerHTML = '<p class="fp-empty">Error: ' + escapeHtml(e.message) + '</p>';
-      }
-    }
-
-    document.getElementById('fp-refresh').addEventListener('click', cargarPlanesAtc);
 
     /* =========================================================
        PANEL STAFF
@@ -1594,7 +1508,11 @@
               if (!r.ok) throw new Error(d.error || 'No se pudo actualizar');
               await cargarStaffPlanes();
             } catch (e) {
-              console.error(e); alert('❌ ' + e.message); sel.disabled = false;
+              console.error(e);
+              alert(e.message && e.message.includes('Error interno')
+                ? '❌ No se pudo conectar con la base de datos (Access denied). Intenta más tarde.'
+                : '❌ ' + e.message);
+              sel.disabled = false;
             }
           });
         });

@@ -909,6 +909,25 @@ function planPublico(r) {
   };
 }
 
+// --- Planes ACTIVOS/APROBADOS: visibles para cualquier usuario aprobado ---
+app.get('/api/flight-plans/active', requireAuth, async (req, res) => {
+  try {
+    const discordId = await requiereAprobacion(req, res);
+    if (!discordId) return;
+    const [rows] = await pool.query(
+      `SELECT s.*, u.discord_username, u.discord_global_name
+       FROM flight_plans s
+       LEFT JOIN verified_users u ON u.discord_id = s.discord_id
+       WHERE s.status IN ('approved','active','pending')
+       ORDER BY FIELD(s.status,'active','approved','pending'), s.id DESC`
+    );
+    res.json({ plans: rows.map(planPublico) });
+  } catch (err) {
+    console.error('Error flight-plans/active:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
 // --- Mis planes de vuelo (piloto) ---
 app.get('/api/flight-plans', requireAuth, async (req, res) => {
   try {
