@@ -216,5 +216,23 @@
       </div>
     </div>
   </footer>
+
+  <script>
+    /* Si el usuario ya inició sesión, llevarlo directo al dashboard */
+    (async function redirigirSiYaLogueado() {
+      try {
+        const res = await fetch('/api/me', { credentials: 'same-origin' });
+        if (res.ok) {
+          const me = await res.json();
+          if (me && me.id) {
+            window.location.replace('/dashboard');
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('No se pudo verificar la sesión:', e);
+      }
+    })();
+  </script>
 </body>
 </html>
