@@ -367,6 +367,7 @@
         <button class="chip" data-f="active">Activos</button>
         <button class="chip" data-f="approved">Aprobados</button>
         <button class="chip" data-f="pending">Pendientes</button>
+        <button class="chip" data-f="mios">Mis vuelos</button>
       </div>
       <label class="search"><i class="ico ico-search"></i>
         <input type="search" id="buscar" placeholder="Buscar ruta, vuelo o usuario…" autocomplete="off">
@@ -484,6 +485,19 @@
     </div>
   </div>
 
+  <!-- Overlay: detalle de vuelo -->
+  <div class="modal-overlay" id="detalle-modal">
+    <div class="modal-card" style="max-width:560px">
+      <button class="modal-close" id="detalle-close" type="button" aria-label="Cerrar"><i class="ico ico-x"></i></button>
+      <div class="modal-head">
+        <span class="badge"><i class="ico ico-plane"></i> Detalle del vuelo</span>
+        <h2 id="detalle-titulo">Plan de vuelo</h2>
+        <p id="detalle-sub">Información completa y estado actual.</p>
+      </div>
+      <div id="detalle-contenido"></div>
+    </div>
+  </div>
+
   <footer>
     <div class="container">
       <span class="version">0.0.0.0.1</span>
@@ -524,18 +538,25 @@
     const form = document.getElementById('plan-form');
     const alertBox = document.getElementById('alert');
     const modal = document.getElementById('plan-modal');
-    let editId = null, todosPlanes = [], curFiltro = 'all', curBusqueda = '';
+    const detalleModal = document.getElementById('detalle-modal');
+    let editId = null, todosPlanes = [], misPlanes = [], curFiltro = 'all', curBusqueda = '';
     const POR_PAGINA = 5;
     let paginaActual = 1;
     let esAtc = false;   // se detecta con /api/academy/status
+    let yoId = null;
+    let firmaDatos = ''; // solo recargamos si los datos cambiaron realmente
 
     /* Detectar rol: ATC ve TODAS las solicitudes + controles; piloto ve las suyas */
     async function detectarRol() {
       try {
-        const res = await fetch('/api/academy/status', { cache: 'no-store' });
+        const [res, resMe] = await Promise.all([
+          fetch('/api/academy/status', { cache: 'no-store' }),
+          fetch('/api/me', { cache: 'no-store' })
+        ]);
+        if (resMe.ok) { const me = await resMe.json(); yoId = String(me.id); }
         if (!res.ok) return;
         const st = await res.json();
-        localTrack = null;
+        let localTrack = null;
         try { localTrack = localStorage.getItem('lan_track_elegido'); } catch (e) { /* ignore */ }
         esAtc = st.is_atc === true || localTrack === 'atc';
         if (esAtc) {
@@ -543,12 +564,13 @@
           document.getElementById('btn-open-modal').hidden = true;
           document.querySelector('.hero .badge').innerHTML = '<i class="ico ico-shield"></i> ATC · Control de Tránsito';
           document.querySelector('.hero h1').textContent = 'Solicitudes de planes de vuelo';
-          document.querySelector('.hero p').textContent = 'Revisa y asigna estado y squawk a los planes enviados por los pilotos.';
-          document.querySelector('.card-head h2').innerHTML = '<i class="ico ico-shield"></i> Solicitudes pendientes y todos los planes';
+          document.querySelector('.hero p').textContent = 'Aprueba o deniega los planes enviados por los pilotos.';
+          document.querySelector('.card-head h2').innerHTML = '<i class="ico ico-shield"></i> Solicitudes de planes';
+          const chipMios = document.querySelector('#filtros [data-f="mios"]');
+          if (chipMios) chipMios.hidden = true;
         }
       } catch (e) { console.warn('No se pudo detectar rol:', e); }
     }
-    let localTrack = null;
 
     /* Acordeón: abrir/cerrar secciones del formulario */
     document.querySelectorAll('.section-title').forEach(title => {
@@ -655,8 +677,9 @@
 
     function aplicarFiltros(reiniciar) {
       if (reiniciar !== false) paginaActual = 1;
-      const visible = todosPlanes.filter(p =>
-        (curFiltro === 'all' || p.status === curFiltro) &&
+      const source = curFiltro === 'mios' ? misPlanes : todosPlanes;
+      const visible = source.filter(p =>
+        (curFiltro === 'all' || curFiltro === 'mios' || p.status === curFiltro) &&
         (!curBusqueda || [p.departure,p.destination,p.aircraft,p.flight_number,p.username,p.airline]
           .join(' ').toLowerCase().includes(curBusqueda))
       );
@@ -699,16 +722,23 @@
           </div>
           <div class="row-actions">
             ${esAtc ? `
-              <select class="mini-btn atc-sel" data-id="${p.id}" style="padding:8px 10px">
-                ${['draft','pending','approved','active','finished','rejected','cancelled'].map(s => '<option value="' + s + '"' + (s === p.status ? ' selected' : '') + '>' + ESTADOS[s] + '</option>').join('')}
-              </select>
-              ${p.status === 'pending' ? '<button class="mini-btn atc-approve" data-id="' + p.id + '">✓ Aprobar</button>' : ''}
+              ${p.status === 'pending' ? '<button class="mini-btn atc-approve" data-id="' + p.id + '">✓ Aprobar</button><button class="mini-btn danger atc-deny" data-id="' + p.id + '">✕ Denegar</button>' : ''}
+              ${p.status === 'approved' ? '<button class="mini-btn atc-estatus" data-id="' + p.id + '">⚙ Estatus</button><button class="mini-btn danger atc-cancel" data-id="' + p.id + '">Cancelar</button>' : ''}
+              ${p.status === 'active' ? '<button class="mini-btn atc-finish" data-id="' + p.id + '">Finalizar</button>' : ''}
             ` : `
               ${['draft','rejected','cancelled'].includes(p.status) ? '<button class="mini-btn" data-edit="' + p.id + '">Editar</button><button class="mini-btn" data-send="' + p.id + '">Enviar</button>' : ''}
               ${p.status === 'pending' ? '<button class="mini-btn danger" data-cancel="' + p.id + '">Cancelar</button>' : ''}
             `}
+            <button class="mini-btn ver-detalle" data-id="${p.id}">Ver detalle</button>
           </div>
         </div>`).join('');
+
+      /* clic en tarjeta o "Ver detalle" → overlay de detalle */
+      box.querySelectorAll('.plan-row').forEach(row => row.addEventListener('click', e => {
+        if (e.target.closest('button')) return;
+        abrirDetalle(row.dataset.id);
+      }));
+      box.querySelectorAll('.ver-detalle').forEach(b => b.addEventListener('click', () => abrirDetalle(b.dataset.id)));
 
       box.querySelectorAll('[data-cancel]').forEach(b => b.addEventListener('click', async () => {
         if (!confirm('¿Cancelar este plan pendiente?')) return;
@@ -747,42 +777,21 @@
         modal.classList.add('active');
       }));
 
-      /* Controles ATC: cambiar estado y aprobar (asigna squawk) */
-      box.querySelectorAll('.atc-sel').forEach(sel => sel.addEventListener('change', async () => {
-        const status = sel.value;
-        let reason = null;
-        if (status === 'rejected') {
-          reason = prompt('Motivo del rechazo:');
-          if (!reason) { sel.value = p_status(sel); return; }
-        }
-        sel.disabled = true;
-        try {
-          const res = await fetch('/api/flight-plans/' + sel.dataset.id + '/status', {
-            method:'POST', headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({ status, reason })
-          });
-          const d = await res.json();
-          if (!res.ok) throw new Error(d.error || 'No se pudo actualizar');
-          showAlert('✅ Estado actualizado.', 'ok');
-          await cargarPlanes();
-        } catch (e) { showAlert(errorAmigable(e.message), 'error'); sel.disabled = false; }
+      /* Controles ATC: aprobar / denegar / estatus / cancelar / finalizar */
+      box.querySelectorAll('.atc-approve').forEach(b => b.addEventListener('click', () => cambiarEstado(b.dataset.id, 'approved')));
+      box.querySelectorAll('.atc-deny').forEach(b => b.addEventListener('click', () => {
+        const reason = prompt('Motivo del rechazo:');
+        if (!reason) return;
+        cambiarEstado(b.dataset.id, 'rejected', reason);
       }));
-      function p_status(sel) {
-        const p = todosPlanes.find(x => x.id == sel.dataset.id);
-        return p ? p.status : 'pending';
-      }
-      box.querySelectorAll('.atc-approve').forEach(b => b.addEventListener('click', async () => {
-        b.disabled = true; b.textContent = 'Asignando…';
-        try {
-          const res = await fetch('/api/flight-plans/' + b.dataset.id + '/status', {
-            method:'POST', headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({ status:'approved' })
-          });
-          const d = await res.json();
-          if (!res.ok) throw new Error(d.error || 'No se pudo aprobar');
-          showAlert('✅ Plan aprobado · Squawk ' + d.squawk, 'ok');
-          await cargarPlanes();
-        } catch (e) { showAlert(errorAmigable(e.message), 'error'); b.disabled = false; b.textContent = '✓ Aprobar'; }
+      box.querySelectorAll('.atc-estatus').forEach(b => b.addEventListener('click', () => {
+        const p = todosPlanes.find(x => x.id == b.dataset.id);
+        cambiarEstado(b.dataset.id, p && p.status === 'approved' ? 'active' : 'finished');
+      }));
+      box.querySelectorAll('.atc-finish').forEach(b => b.addEventListener('click', () => cambiarEstado(b.dataset.id, 'finished')));
+      box.querySelectorAll('.atc-cancel').forEach(b => b.addEventListener('click', () => {
+        if (!confirm('¿Cancelar este plan?')) return;
+        cambiarEstado(b.dataset.id, 'cancelled');
       }));
 
       /* Render de paginación (5 planes por página) */
@@ -805,15 +814,100 @@
       }));
     }
 
-    async function cargarPlanes() {
+    /* ATC: aprobar/denegar/cambiar estatus → actualiza al instante */
+    async function cambiarEstado(id, status, reason) {
+      try {
+        const res = await fetch('/api/flight-plans/' + id + '/status', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ status, reason })
+        });
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.error || 'No se pudo actualizar');
+        detalleModal.classList.remove('active');
+        showAlert(status === 'approved' ? '✅ Aprobado · Squawk ' + d.squawk : '✅ Estado: ' + ESTADOS[status], 'ok');
+        await cargarPlanes(true);
+      } catch (e) { showAlert(errorAmigable(e.message), 'error'); }
+    }
+
+    /* Overlay de detalle: TODA la info del vuelo + botones según estado */
+    function abrirDetalle(id) {
+      const p = todosPlanes.concat(misPlanes).find(x => x.id == id);
+      if (!p) return;
+      document.getElementById('detalle-titulo').textContent = p.departure + ' ➜ ' + p.destination;
+      document.getElementById('detalle-sub').textContent = 'Plan #' + p.id + ' · ' + (ESTADOS[p.status] || p.status);
+      document.getElementById('detalle-contenido').innerHTML = `
+        <div class="roblox-info" style="text-align:left;margin-top:0">
+          <div class="plan-meta" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <span><b>Reglas:</b> ${esc(p.flight_rules)}</span>
+            <span><b>Estado:</b> <span class="chip ${esc(p.status)}">${esc(ESTADOS[p.status] || p.status)}</span></span>
+            <span><b>Aerolínea:</b> ${esc(p.airline || 'Sin aerolínea')}</span>
+            <span><b>Vuelo:</b> ${esc(p.flight_number || '—')}</span>
+            <span><b>Matrícula:</b> ${esc(p.registration || '—')}</span>
+            <span><b>Aeronave:</b> ${esc(p.aircraft)}</span>
+            <span><b>Altitud:</b> ${esc(p.cruise_altitude || 'Automática')}</span>
+            <span><b>Alternate:</b> ${esc(p.alternate || 'Automático')}</span>
+            <span><b>Piloto:</b> ${esc(p.username)} (${esc(p.discord_id)})</span>
+            <span><b>Creado:</b> ${new Date(p.created_at).toLocaleString('es')}</span>
+            ${p.squawk ? '<span><b>Squawk:</b> <span class="squawk">SQK ' + esc(p.squawk) + '</span></span>' : ''}
+            ${p.rejection_reason ? '<span style="grid-column:1/-1;color:var(--red)"><b>Motivo:</b> ' + esc(p.rejection_reason) + '</span>' : ''}
+          </div>
+        </div>
+        <div class="actions" id="detalle-acciones"></div>`;
+      const acc = document.getElementById('detalle-acciones');
+      if (esAtc) {
+        if (p.status === 'pending') {
+          acc.innerHTML = '<button class="btn btn-success" id="d-aprobar">✓ Aprobar</button><button class="btn btn-ghost" id="d-denegar">✕ Denegar</button>';
+          document.getElementById('d-aprobar').onclick = () => cambiarEstado(p.id, 'approved');
+          document.getElementById('d-denegar').onclick = () => {
+            const reason = prompt('Motivo del rechazo:'); if (!reason) return;
+            cambiarEstado(p.id, 'rejected', reason);
+          };
+        } else if (p.status === 'approved') {
+          acc.innerHTML = '<button class="btn btn-primary" id="d-estatus">⚙ Cambiar estatus</button><button class="btn btn-ghost" id="d-cancelar">Cancelar plan</button>';
+          document.getElementById('d-estatus').onclick = () => cambiarEstado(p.id, 'active');
+          document.getElementById('d-cancelar').onclick = () => { if (confirm('¿Cancelar?')) cambiarEstado(p.id, 'cancelled'); };
+        } else if (p.status === 'active') {
+          acc.innerHTML = '<button class="btn btn-primary" id="d-finalizar">Finalizar vuelo</button>';
+          document.getElementById('d-finalizar').onclick = () => cambiarEstado(p.id, 'finished');
+        }
+      } else if (['draft','rejected','cancelled'].includes(p.status)) {
+        acc.innerHTML = '<button class="btn btn-primary" id="d-reenviar">Enviar a revisión</button>';
+        document.getElementById('d-reenviar').onclick = async () => {
+          const res = await fetch('/api/flight-plans/' + p.id + '/submit', { method:'POST' });
+          const d = await res.json();
+          if (!res.ok) { showAlert(errorAmigable(d.error), 'error'); return; }
+          detalleModal.classList.remove('active'); showAlert('✅ Plan enviado.', 'ok'); await cargarPlanes(true);
+        };
+      }
+      detalleModal.classList.add('active');
+    }
+    document.getElementById('detalle-close').addEventListener('click', () => detalleModal.classList.remove('active'));
+    detalleModal.addEventListener('click', e => { if (e.target === detalleModal) detalleModal.classList.remove('active'); });
+
+    /* Firma: solo redibujar cuando los datos cambiaron de verdad */
+    function calcularFirma(lista) {
+      return lista.map(p => [p.id, p.status, p.squawk, p.rejection_reason].join(':')).join('|');
+    }
+
+    async function cargarPlanes(forzar) {
       const box = document.getElementById('my-plans');
       try {
-        const endpoint = esAtc ? '/api/flight-plans/staff' : '/api/flight-plans/active';
-        const res = await fetch(endpoint, { cache: 'no-store' });
+        const endpoints = esAtc
+          ? ['/api/flight-plans/staff', '/api/flight-plans']
+          : ['/api/flight-plans/active', '/api/flight-plans'];
+        const [res, resMis] = await Promise.all([
+          fetch(endpoints[0], { cache:'no-store' }),
+          fetch(endpoints[1], { cache:'no-store' })
+        ]);
         if (res.status === 401) { window.location.href = '/iniciar-seccion.html'; return; }
         const data = await res.json();
+        const dataMis = resMis.ok ? await resMis.json() : { plans: [] };
         if (!res.ok) throw new Error(data.error === 'Error interno' ? 'No se pudo conectar con la base de datos. Intenta más tarde.' : (data.error || 'No se pudieron cargar los planes'));
         todosPlanes = data.plans || [];
+        misPlanes = (dataMis.plans || []).filter(p => !yoId || String(p.discord_id) === yoId);
+        const firma = calcularFirma(todosPlanes) + '#' + calcularFirma(misPlanes);
+        if (!forzar && firma === firmaDatos) return;   // sin cambios reales → no redibuja
+        firmaDatos = firma;
         document.getElementById('st-active').textContent = todosPlanes.filter(p => p.status === 'active').length;
         document.getElementById('st-approved').textContent = todosPlanes.filter(p => p.status === 'approved').length;
         document.getElementById('st-pending').textContent = todosPlanes.filter(p => p.status === 'pending').length;
@@ -830,13 +924,17 @@
     }));
     document.getElementById('buscar').addEventListener('input', e => { curBusqueda = e.target.value.trim().toLowerCase(); aplicarFiltros(); });
 
-    /* 🔄 Auto-actualización: el ATC cambia estados/squawk y se ve al instante */
-    setInterval(() => {
-      if (document.hidden || modal.classList.contains('active')) return;
-      cargarPlanes();
-    }, 6000);
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { modal.classList.remove('active'); detalleModal.classList.remove('active'); }
+    });
 
-    (async () => { await detectarRol(); await cargarPlanes(); })();
+    /* 🔄 Consulta cada 5 s, pero SOLO redibuja si la firma cambió (cambio real en BD) */
+    setInterval(() => {
+      if (document.hidden || modal.classList.contains('active') || detalleModal.classList.contains('active')) return;
+      cargarPlanes(false);
+    }, 5000);
+
+    (async () => { await detectarRol(); await cargarPlanes(true); })();
   </script>
 </body>
 </html>
