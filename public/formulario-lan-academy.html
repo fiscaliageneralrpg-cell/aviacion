@@ -340,8 +340,8 @@
 
     <header class="hero">
       <span class="badge"><i class="ico ico-plane"></i> Evaluación oficial</span>
-      <h1>Formulario LAN Academy</h1>
-      <p>4 módulos · 20 preguntas · Lee con calma antes de responder</p>
+      <h1 id="form-title">Formulario LAN Academy</h1>
+      <p id="form-subtitle">4 módulos · 20 preguntas · Lee con calma antes de responder</p>
       <div class="progress-wrap" id="progress-wrap" hidden>
         <div class="progress-track"><div class="progress-bar" id="progress-bar"></div></div>
         <span class="progress-text" id="progress-text">0 / 20 respondidas</span>
@@ -758,15 +758,28 @@
         if (!res.ok) throw new Error('estado no disponible');
         const st = await res.json();
 
-        // Elegir el banco según la ruta del usuario
-        examenKey = (st.exam && st.exam.key === 'atc') ? 'atc' : 'piloto';
+        // Ruta: primero el parámetro ?track= (viene del overlay), luego la BD, luego local
+        const params = new URLSearchParams(window.location.search);
+        const trackParam = params.get('track');
+        let localTrack = null;
+        try { localTrack = localStorage.getItem('lan_track_elegido'); } catch (e) { /* ignore */ }
+        const rutaElegida = trackParam || localTrack;
+
+        examenKey = (trackParam === 'atc' || trackParam === 'piloto')
+          ? trackParam
+          : ((st.exam && st.exam.key === 'atc') ? 'atc' : 'piloto');
+        if (rutaElegida && !trackParam) {
+          examenKey = rutaElegida === 'atc' ? 'atc' : 'piloto';
+        }
         MODULOS = examenKey === 'atc'
           ? (window.LAN_ACADEMY_ATC_MODULOS || MODULOS_PILOTO)
           : MODULOS_PILOTO;
         renderModulos();
 
         // Actualizar encabezado del examen
-        const heroSub = document.querySelector('.hero p');
+        document.getElementById('form-title').textContent =
+          'Formulario ' + (examenKey === 'atc' ? 'ATC' : 'Piloto') + ' LAN Academy';
+        const heroSub = document.getElementById('form-subtitle');
         if (heroSub) {
           heroSub.textContent = examenKey === 'atc'
             ? '3 secciones · 15 preguntas · 20 puntos · mínimo 16 para aprobar'

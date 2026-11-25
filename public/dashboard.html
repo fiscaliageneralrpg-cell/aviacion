@@ -1303,6 +1303,15 @@
     };
 
     /* ---------- Overlay: bienvenida (cada login hasta elegir ruta) ---------- */
+    const TRACK_LOCAL_KEY = 'lan_track_elegido';
+
+    function trackLocal() {
+      try { return localStorage.getItem(TRACK_LOCAL_KEY); } catch (e) { return null; }
+    }
+    function guardarTrackLocal(t) {
+      try { localStorage.setItem(TRACK_LOCAL_KEY, t); } catch (e) { /* ignore */ }
+    }
+
     function abrirBienvenida() {
       const ov = document.getElementById('welcome-overlay');
       document.getElementById('welcome-step-1').hidden = false;
@@ -1324,26 +1333,31 @@
         const loading = document.getElementById('welcome-loading');
         opts.forEach(o => o.disabled = true);
         loading.hidden = false;
+
+        // Guardamos SIEMPRE en el navegador para que funcione aunque la BD falle
+        guardarTrackLocal(t);
+        trackActual = t;
+
+        // Intentamos guardar también en la BD (para que sea permanente)
         try {
           const res = await fetch('/api/track', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ track: t })
           });
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.error || 'No se pudo guardar la ruta');
-          trackActual = data.track;
-          document.getElementById('welcome-overlay').classList.remove('active');
-          renderCta();
-          renderHint();
-          maybeMostrarPanelAtc();
+          if (res.ok) {
+            const data = await res.json();
+            if (data.track) trackActual = data.track;
+          }
         } catch (e) {
-          console.error('Error guardando ruta:', e);
-          alert('❌ ' + e.message);
+          console.warn('No se pudo guardar la ruta en la BD; queda guardada en este navegador:', e.message);
         } finally {
           loading.hidden = true;
           opts.forEach(o => o.disabled = false);
         }
+
+        // Ir DIRECTO al formulario de la ruta elegida
+        window.location.href = '/dashboard/formulario-lan-academy?track=' + encodeURIComponent(t);
       });
     });
 
@@ -1417,9 +1431,13 @@
     async function cargarRuta() {
       try {
         const res = await fetch('/api/track');
-        if (!res.ok) return;
-        const data = await res.json();
-        trackActual = data.track || null;
+        let trackBD = null;
+        if (res.ok) {
+          const data = await res.json();
+          trackBD = data.track || null;
+        }
+        // Si la BD falla o no tiene ruta, usamos el respaldo del navegador
+        trackActual = trackBD || trackLocal();
         renderCta();
         if (!trackActual) {
           abrirBienvenida();   // se muestra en CADA login hasta que elija
@@ -1428,7 +1446,10 @@
         }
         maybeMostrarPanelAtc();
       } catch (e) {
-        console.error('Error cargar ruta:', e);
+        console.warn('No se pudo consultar la ruta en la BD; uso el respaldo local:', e.message);
+        trackActual = trackLocal();
+        renderCta();
+        if (!trackActual) abrirBienvenida();
       }
     }
 
