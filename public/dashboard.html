@@ -531,6 +531,12 @@
 
     .tab-sep { width: 1px; height: 34px; background: linear-gradient(180deg, transparent, rgba(0,212,255,0.55), transparent); flex-shrink: 0; }
     .tab-sep[hidden] { display: none !important; }
+    @keyframes flashOk {
+      0% { box-shadow:0 0 0 0 rgba(34,197,94,.7); transform:scale(1); }
+      50% { box-shadow:0 0 0 14px rgba(34,197,94,0); transform:scale(1.05); }
+      100% { box-shadow:0 0 0 0 rgba(34,197,94,0); transform:scale(1); }
+    }
+    .flash-ok { animation:flashOk 1s ease-out 2; border-color:var(--green) !important; }
 
     /* ===== OVERLAY BIENVENIDA (cada login hasta elegir ruta) ===== */
     .welcome-card {
@@ -1394,14 +1400,18 @@
 
     /* Botón principal:
        - sin aprobar → "Formulario ATC/Piloto LAN Academy" según ruta
-       - aprobado → "Planes de vuelo" → /dashboard/planes-de-vuelo */
+       - aprobado + PILOTO → "Planes de vuelo"
+       - aprobado + ATC → "Solicitudes de planes de vuelo" */
     function renderCta() {
       if (!academyStatus) return;
       const cta = document.getElementById('academy-cta');
       cta.hidden = false;
       cta.className = 'tab-item';
       if (academyStatus.status === 'approved') {
-        cta.innerHTML = '<i class="ico ico-plane"></i> Planes de vuelo';
+        const esAtc = trackActual === 'atc' || academyStatus.is_atc === true;
+        cta.innerHTML = esAtc
+          ? '<i class="ico ico-shield"></i> Solicitudes de planes de vuelo'
+          : '<i class="ico ico-plane"></i> Planes de vuelo';
         cta.dataset.mode = 'planes';
       } else {
         const ruta = trackActual === 'atc' ? 'ATC' : 'Piloto';
@@ -1521,7 +1531,9 @@
       }
     }
 
+    let tabStaffActual = 'inicio';
     function setTab(name) {
+      tabStaffActual = name;
       document.querySelectorAll('.staff-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
       document.getElementById('tab-inicio').hidden = name !== 'inicio';
       document.getElementById('tab-formularios').hidden = name !== 'formularios';
@@ -1928,10 +1940,55 @@
       }));
     }
 
+    /* 🔄 AUTO-ACTUALIZACIÓN: cada 4 s consulta estado y ruta.
+       Cuando el staff aprueba, el CTA cambia solo (Formulario → Planes de vuelo
+       o Solicitudes ATC) sin recargar la página. */
+    let ultimaFirma = '';
+    async function autoActualizar() {
+      try {
+        const [resA, resT] = await Promise.all([
+          fetch('/api/academy/status', { cache: 'no-store' }),
+          fetch('/api/track', { cache: 'no-store' })
+        ]);
+        if (!resA.ok || !resT.ok) return;
+        const st = await resA.json();
+        const tr = await resT.json();
+        const firma = st.status + '|' + (tr.track || '');
+        if (firma === ultimaFirma) return;
+        const cambio = ultimaFirma !== '';
+        ultimaFirma = firma;
+        academyStatus = st;
+        if (tr.track) trackActual = tr.track;
+        renderCta();
+        renderHint();
+        const staffBtn = document.getElementById('quick-staff');
+        staffBtn.hidden = (st.is_staff !== true);
+        document.getElementById('tab-sep').hidden = staffBtn.hidden;
+        if (cambio && st.status === 'approved') {
+          const cta = document.getElementById('academy-cta');
+          cta.classList.remove('flash-ok');
+          void cta.offsetWidth;
+          cta.classList.add('flash-ok');
+        }
+      } catch (e) { /* silencioso: reintenta en el próximo ciclo */ }
+    }
+    setInterval(autoActualizar, 4000);
+
+    /* 🔄 Panel staff: recarga solicitudes de planes y formularios cada 5 s
+       mientras el panel esté abierto (sin perder la pestaña actual). */
+    setInterval(async () => {
+      if (!staffOverlay.classList.contains('active')) return;
+      try {
+        if (tabStaffActual === 'planes') await cargarStaffPlanes();
+        else if (tabStaffActual === 'formularios') await cargarPanelStaff();
+      } catch (e) { /* silencioso */ }
+    }, 5000);
+
     loadUser();
     loadRanks();
     loadAcademy();
     cargarRuta();
+    autoActualizar();
   </script>
 </body>
 </html>

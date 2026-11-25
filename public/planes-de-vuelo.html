@@ -759,6 +759,12 @@
     }));
     document.getElementById('buscar').addEventListener('input', e => { curBusqueda = e.target.value.trim().toLowerCase(); aplicarFiltros(); });
 
+    /* 🔄 Auto-actualización: el ATC cambia estados/squawk y se ve al instante */
+    setInterval(() => {
+      if (document.hidden || modal.classList.contains('active')) return;
+      cargarPlanes();
+    }, 6000);
+
     cargarPlanes();
   </script>
 </body>
