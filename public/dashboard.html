@@ -531,6 +531,17 @@
 
     .tab-sep { width: 1px; height: 34px; background: linear-gradient(180deg, transparent, rgba(0,212,255,0.55), transparent); flex-shrink: 0; }
     .tab-sep[hidden] { display: none !important; }
+    .staff-refresh {
+      float:right; display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:50px; cursor:pointer;
+      background:rgba(255,255,255,.05); border:1px solid var(--border); color:var(--white-soft);
+      font-family:inherit; font-weight:800; font-size:.7rem; transition:.25s;
+    }
+    .staff-refresh:hover { border-color:var(--cyan); color:var(--cyan); transform:translateY(-2px); }
+    .staff-refresh.hay-nuevos {
+      border-color:var(--green); color:var(--green); background:rgba(34,197,94,.12);
+      animation:pulseNuevo 1.6s ease-in-out infinite;
+    }
+    @keyframes pulseNuevo { 0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.5)} 50%{box-shadow:0 0 0 10px rgba(34,197,94,0)} }
     @keyframes flashOk {
       0% { box-shadow:0 0 0 0 rgba(34,197,94,.7); transform:scale(1); }
       50% { box-shadow:0 0 0 14px rgba(34,197,94,0); transform:scale(1.05); }
@@ -1172,7 +1183,9 @@
           </div>
         </div>
         <div id="tab-formularios" hidden>
-          <div class="staff-subtitle"><i class="ico ico-cal"></i> Formularios por día</div>
+          <div class="staff-subtitle"><i class="ico ico-cal"></i> Formularios por día
+            <button class="staff-refresh" id="staff-refresh" type="button" title="Actualizar lista"><i class="ico ico-retry"></i> Actualizar</button>
+          </div>
           <div class="toolbar">
             <div class="chips" id="chips">
               <button class="chip active" data-f="all">Todos <b id="cc-all">0</b></button>
@@ -1547,6 +1560,13 @@
     }
 
     document.getElementById('staff-close').addEventListener('click', () => staffOverlay.classList.remove('active'));
+    document.getElementById('staff-refresh').addEventListener('click', async (e) => {
+      const b = e.currentTarget;
+      b.disabled = true;
+      b.innerHTML = '<i class="ico ico-retry"></i> Actualizando…';
+      try { await cargarPanelStaff(); ultimoTotalStaff = -1; } catch (err) { console.error(err); }
+      finally { b.classList.remove('hay-nuevos'); b.disabled = false; b.innerHTML = '<i class="ico ico-retry"></i> Actualizar'; }
+    });
     staffOverlay.addEventListener('click', (e) => {
       if (e.target === staffOverlay) staffOverlay.classList.remove('active');
     });
@@ -1978,15 +1998,30 @@
     }
     setInterval(autoActualizar, 4000);
 
-    /* 🔄 Panel staff: recarga solicitudes de planes y formularios cada 5 s
-       mientras el panel esté abierto (sin perder la pestaña actual). */
+    /* ⚠️ SIN polling del panel staff: recargar cada pocos segundos cerraba
+       el formulario que el staff estaba calificando. La lista se actualiza
+       al abrir el panel y tras cada acción (calificar/aprobar/denegar). */
+    /* 🔄 Aviso de nuevos formularios (SIN recargar la lista mientras calificas):
+       solo compara el total; si cambió, muestra un botón para actualizar. */
+    let ultimoTotalStaff = -1;
     setInterval(async () => {
       if (!staffOverlay.classList.contains('active')) return;
       try {
-        if (tabStaffActual === 'planes') await cargarStaffPlanes();
-        else if (tabStaffActual === 'formularios') await cargarPanelStaff();
+        const res = await fetch('/api/academy/panel', { cache:'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        const total = (data.groups || []).reduce((a, g) => a + g.items.length, 0);
+        if (ultimoTotalStaff === -1) { ultimoTotalStaff = total; return; }
+        const btn = document.getElementById('staff-refresh');
+        if (total !== ultimoTotalStaff) {
+          ultimoTotalStaff = total;
+          btn.classList.add('hay-nuevos');
+          btn.innerHTML = '<i class="ico ico-retry"></i> ' + Math.abs(total - ultimoTotalStaff) + ' nuevo(s) · Actualizar';
+        }
       } catch (e) { /* silencioso */ }
-    }, 5000);
+    }, 6000);
+
+    let panelOcupado = false;   // true mientras el staff está calificando
 
     loadUser();
     loadRanks();
