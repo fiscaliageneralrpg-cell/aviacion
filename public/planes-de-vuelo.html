@@ -224,16 +224,35 @@
     }
     .modal-head h2 { font-family:'Orbitron',monospace; font-size:1.25rem; }
     .modal-head p { color:var(--gray); font-size:.8rem; margin-top:4px; }
-    .form-section { margin-bottom:22px; }
+    .form-section {
+      border:1px solid var(--border); border-radius:16px; margin-bottom:14px; overflow:hidden;
+      background:rgba(0,0,0,.22); transition:border-color .3s, box-shadow .3s;
+      animation:riseUp .5s ease-out both;
+    }
+    .form-section:nth-of-type(2) { animation-delay:.1s; }
+    .form-section:nth-of-type(3) { animation-delay:.2s; }
+    .form-section.open { border-color:rgba(0,212,255,.45); box-shadow:0 8px 26px rgba(0,0,0,.4); }
     .section-title {
-      display:flex; align-items:center; gap:9px; margin-bottom:14px; padding-bottom:9px;
-      border-bottom:1px solid var(--border); color:var(--cyan); font-size:.74rem; font-weight:900;
-      text-transform:uppercase; letter-spacing:1.4px;
+      display:flex; align-items:center; gap:10px; width:100%; padding:14px 18px; cursor:pointer;
+      color:var(--cyan); font-size:.76rem; font-weight:900; text-transform:uppercase; letter-spacing:1.3px;
+      background:rgba(255,255,255,.02); border:none; font-family:inherit; text-align:left;
+      transition:background .25s;
     }
+    .section-title:hover { background:rgba(0,102,255,.1); }
     .section-title .num {
-      width:24px; height:24px; border-radius:7px; display:grid; place-items:center;
+      width:26px; height:26px; border-radius:8px; display:grid; place-items:center;
       background:rgba(0,102,255,.2); border:1px solid rgba(0,102,255,.5); font-family:'Orbitron',monospace; font-size:.7rem;
+      transition:transform .3s, background .3s;
     }
+    .form-section.open .section-title .num { transform:rotate(360deg); background:rgba(0,212,255,.25); }
+    .section-title .chev { margin-left:auto; transition:transform .35s cubic-bezier(.3,1.3,.5,1); color:var(--gray); }
+    .form-section.open .section-title .chev { transform:rotate(90deg); color:var(--cyan); }
+    .section-body {
+      max-height:0; overflow:hidden; padding:0 18px;
+      transition:max-height .45s cubic-bezier(.4,0,.2,1), padding .35s ease, opacity .35s ease;
+      opacity:0;
+    }
+    .form-section.open .section-body { max-height:900px; padding:18px; opacity:1; }
     .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
     .grid.cols-3 { grid-template-columns:repeat(3,1fr); }
     .field { display:flex; flex-direction:column; gap:7px; }
@@ -263,6 +282,38 @@
     .btn-ghost { background:rgba(255,255,255,.04); border-color:var(--border); color:var(--white-soft); }
     .btn-ghost:hover { border-color:var(--cyan); color:var(--cyan); }
     .btn:disabled { opacity:.6; cursor:wait; transform:none; }
+
+    /* Paginación */
+    .pagination {
+      display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap;
+      margin-top:22px; padding-top:20px; border-top:1px solid var(--border);
+      animation:fadeIn .5s ease-out both;
+    }
+    .page-btn {
+      min-width:38px; height:38px; padding:0 12px; border-radius:11px; cursor:pointer;
+      background:rgba(255,255,255,.04); border:1px solid var(--border); color:var(--white-soft);
+      font-family:'Orbitron',monospace; font-weight:800; font-size:.78rem; transition:.28s;
+      display:grid; place-items:center;
+    }
+    .page-btn:hover:not(:disabled) { border-color:var(--cyan); color:var(--cyan); transform:translateY(-3px); box-shadow:0 8px 20px rgba(0,212,255,.2); }
+    .page-btn.active { background:linear-gradient(135deg,var(--blue),var(--cyan)); color:#fff; border-color:transparent; box-shadow:0 8px 22px rgba(0,102,255,.45); }
+    .page-btn:disabled { opacity:.35; cursor:not-allowed; }
+    .page-info { color:var(--gray); font-size:.76rem; margin:0 6px; font-weight:700; }
+
+    /* Animaciones extra */
+    @keyframes fadeSlide { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+    .stat:hover { transform:translateY(-5px); border-color:rgba(0,212,255,.5); box-shadow:0 14px 34px rgba(0,0,0,.55); transition:transform .3s, box-shadow .3s, border-color .3s; }
+    .stat-num { animation:countPop .6s cubic-bezier(.3,1.4,.5,1) both; }
+    @keyframes countPop { from{transform:scale(.5);opacity:0} to{transform:scale(1);opacity:1} }
+    .chip { transition:transform .25s, box-shadow .25s, background .25s; }
+    .chip:hover { transform:translateY(-2px); box-shadow:0 6px 18px rgba(0,102,255,.25); }
+    .main-btn { position:relative; overflow:hidden; }
+    .main-btn::after { content:""; position:absolute; top:0; left:-80%; width:45%; height:100%; background:linear-gradient(100deg,transparent,rgba(255,255,255,.22),transparent); transform:skewX(-20deg); transition:left .55s ease; }
+    .main-btn:hover::after { left:130%; }
+    .plan-row { transition:transform .3s, border-color .3s, box-shadow .3s; }
+    .plan-route .arrow { text-shadow:0 0 12px var(--cyan); }
+    .btn-add::after { content:""; position:absolute; inset:-4px; border-radius:50%; border:2px solid rgba(0,212,255,.5); animation:addPulse 2.4s ease-out infinite; }
+    @keyframes addPulse { 0%{transform:scale(1);opacity:.7} 100%{transform:scale(1.35);opacity:0} }
 
     footer { border-top:1px solid var(--border); background:var(--black); padding:18px 0; text-align:center; color:var(--gray); font-size:.78rem; }
     .version { font-family:'Orbitron',monospace; color:var(--blue); margin-right:10px; }
@@ -325,6 +376,7 @@
         <span class="count" id="lista-count">Cargando…</span>
       </div>
       <div id="my-plans"><p class="empty"><i class="ico ico-plane"></i>Cargando planes…</p></div>
+      <div class="pagination" id="pagination" hidden></div>
     </section>
   </main>
 
@@ -339,27 +391,29 @@
         <p>Completa los datos de tu vuelo y envíalo a revisión de ATC.</p>
       </div>
       <form id="plan-form" autocomplete="off">
-        <div class="form-section">
-          <div class="section-title"><span class="num">1</span> Reglas y ruta</div>
-          <div class="grid">
-            <div class="field">
-              <label for="flight_rules">Flight rules</label>
-              <select id="flight_rules" name="flight_rules">
-                <option value="IFR" selected>IFR — Instrumental</option>
-                <option value="VFR">VFR — Visual</option>
-              </select>
-            </div>
-            <div class="field"></div>
-            <div class="field full">
-              <div class="swap-row">
-                <div class="field">
-                  <label for="departure">Departure</label>
-                  <select id="departure" name="departure"></select>
-                </div>
-                <button type="button" class="swap-btn" id="swap" title="Intercambiar salida y destino"><i class="ico ico-retry"></i></button>
-                <div class="field">
-                  <label for="destination">Destination</label>
-                  <select id="destination" name="destination"></select>
+        <div class="form-section open">
+          <button type="button" class="section-title"><span class="num">1</span> Reglas y ruta <i class="ico ico-chev chev"></i></button>
+          <div class="section-body">
+            <div class="grid">
+              <div class="field">
+                <label for="flight_rules">Flight rules</label>
+                <select id="flight_rules" name="flight_rules">
+                  <option value="IFR" selected>IFR — Instrumental</option>
+                  <option value="VFR">VFR — Visual</option>
+                </select>
+              </div>
+              <div class="field"></div>
+              <div class="field full">
+                <div class="swap-row">
+                  <div class="field">
+                    <label for="departure">Departure</label>
+                    <select id="departure" name="departure"></select>
+                  </div>
+                  <button type="button" class="swap-btn" id="swap" title="Intercambiar salida y destino"><i class="ico ico-retry"></i></button>
+                  <div class="field">
+                    <label for="destination">Destination</label>
+                    <select id="destination" name="destination"></select>
+                  </div>
                 </div>
               </div>
             </div>
@@ -367,57 +421,61 @@
         </div>
 
         <div class="form-section">
-          <div class="section-title"><span class="num">2</span> Aeronave y compañía</div>
-          <div class="grid cols-3">
-            <div class="field">
-              <label for="airline">Airline</label>
-              <select id="airline" name="airline">
-                <option value="">No airline</option>
-                <option value="AVA">AVA — Avianca</option>
-                <option value="LAN">LAN — LATAM</option>
-                <option value="IBE">IBE — Iberia</option>
-                <option value="BAW">BAW — British Airways</option>
-                <option value="DAL">DAL — Delta</option>
-                <option value="AAL">AAL — American Airlines</option>
-                <option value="UAE">UAE — Emirates</option>
-                <option value="KLM">KLM — KLM</option>
-              </select>
+          <button type="button" class="section-title"><span class="num">2</span> Aeronave y compañía <i class="ico ico-chev chev"></i></button>
+          <div class="section-body">
+            <div class="grid cols-3">
+              <div class="field">
+                <label for="airline">Airline</label>
+                <select id="airline" name="airline">
+                  <option value="">No airline</option>
+                  <option value="AVA">AVA — Avianca</option>
+                  <option value="LAN">LAN — LATAM</option>
+                  <option value="IBE">IBE — Iberia</option>
+                  <option value="BAW">BAW — British Airways</option>
+                  <option value="DAL">DAL — Delta</option>
+                  <option value="AAL">AAL — American Airlines</option>
+                  <option value="UAE">UAE — Emirates</option>
+                  <option value="KLM">KLM — KLM</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="registration">Registration</label>
+                <input id="registration" name="registration" type="text" placeholder="N17AG" maxlength="20">
+              </div>
+              <div class="field">
+                <label for="flight_number">Flight number</label>
+                <input id="flight_number" name="flight_number" type="text" placeholder="1234" maxlength="20">
+              </div>
             </div>
-            <div class="field">
-              <label for="registration">Registration</label>
-              <input id="registration" name="registration" type="text" placeholder="N17AG" maxlength="20">
-            </div>
-            <div class="field">
-              <label for="flight_number">Flight number</label>
-              <input id="flight_number" name="flight_number" type="text" placeholder="1234" maxlength="20">
-            </div>
-          </div>
-          <div class="grid" style="margin-top:16px">
-            <div class="field">
-              <label for="aircraft">Aircraft</label>
-              <select id="aircraft" name="aircraft"></select>
-            </div>
-            <div class="field">
-              <label for="cruise_altitude">Cruise altitude (ft)</label>
-              <input id="cruise_altitude" name="cruise_altitude" type="text" placeholder="Automático" maxlength="20">
+            <div class="grid" style="margin-top:16px">
+              <div class="field">
+                <label for="aircraft">Aircraft</label>
+                <select id="aircraft" name="aircraft"></select>
+              </div>
+              <div class="field">
+                <label for="cruise_altitude">Cruise altitude (ft)</label>
+                <input id="cruise_altitude" name="cruise_altitude" type="text" placeholder="Automático" maxlength="20">
+              </div>
             </div>
           </div>
         </div>
 
         <div class="form-section">
-          <div class="section-title"><span class="num">3</span> Alternativa</div>
-          <div class="grid">
-            <div class="field full">
-              <label for="alternate">Alternate</label>
-              <select id="alternate" name="alternate"><option value="">Automático</option></select>
+          <button type="button" class="section-title"><span class="num">3</span> Alternativa <i class="ico ico-chev chev"></i></button>
+          <div class="section-body">
+            <div class="grid">
+              <div class="field full">
+                <label for="alternate">Alternate</label>
+                <select id="alternate" name="alternate"><option value="">Automático</option></select>
+              </div>
             </div>
           </div>
         </div>
 
         <div class="actions">
-          <button type="submit" class="btn btn-primary" id="btn-submit"><i class="ico ico-send"></i> Enviar a revisión</button>
-          <button type="button" class="btn btn-ghost" id="btn-draft">Guardar borrador</button>
-          <button type="button" class="btn btn-ghost" id="btn-cancel-edit" hidden>Cancelar edición</button>
+          <button type="submit" class="btn btn-primary main-btn" id="btn-submit"><i class="ico ico-send"></i> Enviar a revisión</button>
+          <button type="button" class="btn btn-ghost main-btn" id="btn-draft">Guardar borrador</button>
+          <button type="button" class="btn btn-ghost main-btn" id="btn-cancel-edit" hidden>Cancelar edición</button>
         </div>
       </form>
     </div>
@@ -464,8 +522,25 @@
     const alertBox = document.getElementById('alert');
     const modal = document.getElementById('plan-modal');
     let editId = null, todosPlanes = [], curFiltro = 'all', curBusqueda = '';
+    const POR_PAGINA = 5;
+    let paginaActual = 1;
 
-    document.getElementById('btn-open-modal').addEventListener('click', () => { resetForm(); modal.classList.add('active'); });
+    /* Acordeón: abrir/cerrar secciones del formulario */
+    document.querySelectorAll('.section-title').forEach(title => {
+      title.addEventListener('click', () => {
+        const sec = title.parentElement;
+        const wasOpen = sec.classList.contains('open');
+        document.querySelectorAll('.form-section').forEach(s => s.classList.remove('open'));
+        if (!wasOpen) sec.classList.add('open');
+      });
+    });
+
+    document.getElementById('btn-open-modal').addEventListener('click', () => {
+      resetForm();
+      // Abrir solo la primera sección al abrir
+      document.querySelectorAll('.form-section').forEach((s, i) => s.classList.toggle('open', i === 0));
+      modal.classList.add('active');
+    });
     document.getElementById('btn-close-modal').addEventListener('click', () => modal.classList.remove('active'));
     modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('active'); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape') modal.classList.remove('active'); });
@@ -553,21 +628,28 @@
     }
     document.getElementById('btn-cancel-edit').addEventListener('click', resetForm);
 
-    function aplicarFiltros() {
+    function aplicarFiltros(reiniciar) {
+      if (reiniciar !== false) paginaActual = 1;
       const visible = todosPlanes.filter(p =>
         (curFiltro === 'all' || p.status === curFiltro) &&
         (!curBusqueda || [p.departure,p.destination,p.aircraft,p.flight_number,p.username,p.airline]
           .join(' ').toLowerCase().includes(curBusqueda))
       );
       const box = document.getElementById('my-plans');
-      document.getElementById('lista-count').textContent = visible.length + ' plan' + (visible.length === 1 ? '' : 'es');
+      const pagEl = document.getElementById('pagination');
+      const totalPag = Math.max(1, Math.ceil(visible.length / POR_PAGINA));
+      if (paginaActual > totalPag) paginaActual = totalPag;
+      document.getElementById('lista-count').textContent = visible.length + ' plan' + (visible.length === 1 ? '' : 'es') + ' · página ' + paginaActual + ' de ' + totalPag;
       if (!visible.length) {
         box.innerHTML = '<p class="empty"><i class="ico ico-search"></i>' +
           (todosPlanes.length ? 'No hay planes que coincidan con el filtro.' : 'Todavía no hay planes activos. ¡Crea el primero con el botón +!') + '</p>';
+        pagEl.hidden = true;
         return;
       }
-      box.innerHTML = visible.map(p => `
-        <div class="plan-row">
+      const inicio = (paginaActual - 1) * POR_PAGINA;
+      const pagina = visible.slice(inicio, inicio + POR_PAGINA);
+      box.innerHTML = pagina.map((p, idx) => `
+        <div class="plan-row" style="animation-delay:${idx * 0.06}s">
           <div>
             <div class="plan-top">
               <div class="plan-route">${esc(p.departure)} <span class="arrow">➜</span> ${esc(p.destination)}</div>
@@ -628,7 +710,28 @@
         alt.value = p.alternate || '';
         document.getElementById('btn-submit').innerHTML = '<i class="ico ico-send"></i> Guardar y enviar';
         document.getElementById('btn-cancel-edit').hidden = false;
+        // Desplegar la primera sección al editar
+        document.querySelectorAll('.form-section').forEach((s, i) => s.classList.toggle('open', i === 0));
         modal.classList.add('active');
+      }));
+
+      /* Render de paginación (5 planes por página) */
+      pagEl.hidden = totalPag <= 1;
+      let botones = `<button class="page-btn" data-p="ant" ${paginaActual === 1 ? 'disabled' : ''}><i class="ico ico-chev ico-left"></i></button>`;
+      for (let i = 1; i <= totalPag; i++) {
+        botones += `<button class="page-btn ${i === paginaActual ? 'active' : ''}" data-p="${i}">${i}</button>`;
+      }
+      botones += `<button class="page-btn" data-p="sig" ${paginaActual === totalPag ? 'disabled' : ''}><i class="ico ico-chev"></i></button>`;
+      botones += `<span class="page-info">${inicio + 1}–${Math.min(inicio + POR_PAGINA, visible.length)} de ${visible.length}</span>`;
+      pagEl.innerHTML = botones;
+      pagEl.querySelectorAll('.page-btn').forEach(b => b.addEventListener('click', () => {
+        const p = b.dataset.p;
+        if (p === 'ant' && paginaActual > 1) paginaActual--;
+        else if (p === 'sig' && paginaActual < totalPag) paginaActual++;
+        else if (!isNaN(Number(p))) paginaActual = Number(p);
+        else return;
+        aplicarFiltros(false);
+        document.querySelector('.card').scrollIntoView({ behavior:'smooth', block:'start' });
       }));
     }
 
