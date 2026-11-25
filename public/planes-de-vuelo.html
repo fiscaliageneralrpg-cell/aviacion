@@ -172,6 +172,9 @@
     }
     .mini-btn:hover { border-color:var(--cyan); color:var(--cyan); background:rgba(0,212,255,.08); }
     .mini-btn.danger:hover { border-color:var(--red); color:var(--red); background:rgba(244,63,94,.08); }
+    .atc-sel { appearance:none; background:rgba(0,102,255,.14) !important; border-color:rgba(0,102,255,.5) !important; color:var(--white) !important; cursor:pointer; }
+    .atc-approve { border-color:rgba(34,197,94,.5) !important; color:var(--green) !important; font-weight:900 !important; }
+    .atc-approve:hover { background:rgba(34,197,94,.15) !important; }
     .empty { color:var(--gray); font-size:.86rem; text-align:center; padding:40px 20px; }
     .empty .ico { font-size:2rem; color:rgba(0,212,255,.35); display:block; margin-bottom:12px; }
 
@@ -524,6 +527,28 @@
     let editId = null, todosPlanes = [], curFiltro = 'all', curBusqueda = '';
     const POR_PAGINA = 5;
     let paginaActual = 1;
+    let esAtc = false;   // se detecta con /api/academy/status
+
+    /* Detectar rol: ATC ve TODAS las solicitudes + controles; piloto ve las suyas */
+    async function detectarRol() {
+      try {
+        const res = await fetch('/api/academy/status', { cache: 'no-store' });
+        if (!res.ok) return;
+        const st = await res.json();
+        localTrack = null;
+        try { localTrack = localStorage.getItem('lan_track_elegido'); } catch (e) { /* ignore */ }
+        esAtc = st.is_atc === true || localTrack === 'atc';
+        if (esAtc) {
+          // Vista ATC: ocultar botón + y cambiar textos
+          document.getElementById('btn-open-modal').hidden = true;
+          document.querySelector('.hero .badge').innerHTML = '<i class="ico ico-shield"></i> ATC · Control de Tránsito';
+          document.querySelector('.hero h1').textContent = 'Solicitudes de planes de vuelo';
+          document.querySelector('.hero p').textContent = 'Revisa y asigna estado y squawk a los planes enviados por los pilotos.';
+          document.querySelector('.card-head h2').innerHTML = '<i class="ico ico-shield"></i> Solicitudes pendientes y todos los planes';
+        }
+      } catch (e) { console.warn('No se pudo detectar rol:', e); }
+    }
+    let localTrack = null;
 
     /* Acordeón: abrir/cerrar secciones del formulario */
     document.querySelectorAll('.section-title').forEach(title => {
@@ -673,8 +698,15 @@
             </div>
           </div>
           <div class="row-actions">
-            ${['draft','rejected','cancelled'].includes(p.status) ? '<button class="mini-btn" data-edit="' + p.id + '">Editar</button><button class="mini-btn" data-send="' + p.id + '">Enviar</button>' : ''}
-            ${p.status === 'pending' ? '<button class="mini-btn danger" data-cancel="' + p.id + '">Cancelar</button>' : ''}
+            ${esAtc ? `
+              <select class="mini-btn atc-sel" data-id="${p.id}" style="padding:8px 10px">
+                ${['draft','pending','approved','active','finished','rejected','cancelled'].map(s => '<option value="' + s + '"' + (s === p.status ? ' selected' : '') + '>' + ESTADOS[s] + '</option>').join('')}
+              </select>
+              ${p.status === 'pending' ? '<button class="mini-btn atc-approve" data-id="' + p.id + '">✓ Aprobar</button>' : ''}
+            ` : `
+              ${['draft','rejected','cancelled'].includes(p.status) ? '<button class="mini-btn" data-edit="' + p.id + '">Editar</button><button class="mini-btn" data-send="' + p.id + '">Enviar</button>' : ''}
+              ${p.status === 'pending' ? '<button class="mini-btn danger" data-cancel="' + p.id + '">Cancelar</button>' : ''}
+            `}
           </div>
         </div>`).join('');
 
@@ -715,6 +747,44 @@
         modal.classList.add('active');
       }));
 
+      /* Controles ATC: cambiar estado y aprobar (asigna squawk) */
+      box.querySelectorAll('.atc-sel').forEach(sel => sel.addEventListener('change', async () => {
+        const status = sel.value;
+        let reason = null;
+        if (status === 'rejected') {
+          reason = prompt('Motivo del rechazo:');
+          if (!reason) { sel.value = p_status(sel); return; }
+        }
+        sel.disabled = true;
+        try {
+          const res = await fetch('/api/flight-plans/' + sel.dataset.id + '/status', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ status, reason })
+          });
+          const d = await res.json();
+          if (!res.ok) throw new Error(d.error || 'No se pudo actualizar');
+          showAlert('✅ Estado actualizado.', 'ok');
+          await cargarPlanes();
+        } catch (e) { showAlert(errorAmigable(e.message), 'error'); sel.disabled = false; }
+      }));
+      function p_status(sel) {
+        const p = todosPlanes.find(x => x.id == sel.dataset.id);
+        return p ? p.status : 'pending';
+      }
+      box.querySelectorAll('.atc-approve').forEach(b => b.addEventListener('click', async () => {
+        b.disabled = true; b.textContent = 'Asignando…';
+        try {
+          const res = await fetch('/api/flight-plans/' + b.dataset.id + '/status', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ status:'approved' })
+          });
+          const d = await res.json();
+          if (!res.ok) throw new Error(d.error || 'No se pudo aprobar');
+          showAlert('✅ Plan aprobado · Squawk ' + d.squawk, 'ok');
+          await cargarPlanes();
+        } catch (e) { showAlert(errorAmigable(e.message), 'error'); b.disabled = false; b.textContent = '✓ Aprobar'; }
+      }));
+
       /* Render de paginación (5 planes por página) */
       pagEl.hidden = totalPag <= 1;
       let botones = `<button class="page-btn" data-p="ant" ${paginaActual === 1 ? 'disabled' : ''}><i class="ico ico-chev ico-left"></i></button>`;
@@ -738,7 +808,8 @@
     async function cargarPlanes() {
       const box = document.getElementById('my-plans');
       try {
-        const res = await fetch('/api/flight-plans/active');
+        const endpoint = esAtc ? '/api/flight-plans/staff' : '/api/flight-plans/active';
+        const res = await fetch(endpoint, { cache: 'no-store' });
         if (res.status === 401) { window.location.href = '/iniciar-seccion.html'; return; }
         const data = await res.json();
         if (!res.ok) throw new Error(data.error === 'Error interno' ? 'No se pudo conectar con la base de datos. Intenta más tarde.' : (data.error || 'No se pudieron cargar los planes'));
@@ -765,7 +836,7 @@
       cargarPlanes();
     }, 6000);
 
-    cargarPlanes();
+    (async () => { await detectarRol(); await cargarPlanes(); })();
   </script>
 </body>
 </html>
