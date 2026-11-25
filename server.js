@@ -13,7 +13,7 @@ const PORT = Number(process.env.PORT || 3000);
 app.set('trust proxy', 1);
 
 console.log('🔧 Iniciando servidor...');
-console.log('📋 DISCORD_CLIENT_ID:', process.env.DISCORD_CLIENT_ID ? '✅' : '❌ FALTANTE');
+console.log('📋 DISCORD_CLIENT_ID:', process.env.DISCORD_CLIENT_ID ? `✅ (${process.env.DISCORD_CLIENT_ID})` : '❌ FALTANTE');
 console.log('📋 DISCORD_CLIENT_SECRET:', process.env.DISCORD_CLIENT_SECRET ? '✅' : '❌ FALTANTE');
 console.log('📋 DISCORD_BOT_TOKEN:', process.env.DISCORD_BOT_TOKEN ? '✅ (DM directo activo)' : '⚠️ no configurado (los DM quedan en cola para el bot)');
 console.log('📋 ROBLOX_CLIENT_ID:', process.env.ROBLOX_CLIENT_ID ? '✅' : '❌ FALTANTE (app en revisión)');
@@ -976,7 +976,11 @@ app.get('/auth/discord/callback', async (req, res) => {
       })
     });
 
-    if (!tokenResponse.ok) throw new Error('Error obteniendo token de Discord');
+    if (!tokenResponse.ok) {
+      const errBody = await tokenResponse.text().catch(() => '');
+      console.error('❌ Discord token exchange falló:', tokenResponse.status, errBody);
+      throw new Error(`Error obteniendo token de Discord [${tokenResponse.status}]: ${errBody || 'sin detalle'}`);
+    }
 
     const tokenData = await tokenResponse.json();
 
@@ -984,7 +988,11 @@ app.get('/auth/discord/callback', async (req, res) => {
       headers: { Authorization: `${tokenData.token_type} ${tokenData.access_token}` }
     });
 
-    if (!userResponse.ok) throw new Error('Error obteniendo usuario de Discord');
+    if (!userResponse.ok) {
+      const errBody = await userResponse.text().catch(() => '');
+      console.error('❌ Discord @me falló:', userResponse.status, errBody);
+      throw new Error(`Error obteniendo usuario de Discord [${userResponse.status}]: ${errBody || 'sin detalle'}`);
+    }
 
     const user = await userResponse.json();
 
