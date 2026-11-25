@@ -747,6 +747,7 @@
     /* --- Barra de filtros --- */
     .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
     .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+    #chips-ruta { width: 100%; margin-bottom: 4px; }
     .chip {
       display: inline-flex; align-items: center; gap: 8px; padding: 8px 15px; border-radius: 50px; cursor: pointer;
       background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--white-soft);
@@ -810,6 +811,13 @@
     }
     .sub-user { font-weight: 800; font-size: 0.92rem; color: var(--white); min-width: 0; overflow-wrap: anywhere; }
     .sub-user small { display: block; font-weight: 600; font-size: 0.72rem; color: var(--gray); }
+    .ruta-tag {
+      display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 50px;
+      font-size: 0.68rem; font-weight: 900; letter-spacing: 0.8px; text-transform: uppercase;
+      border: 1px solid var(--border); color: var(--white-soft); background: rgba(255,255,255,0.04);
+    }
+    .ruta-tag.atc { color: var(--cyan); border-color: rgba(0,212,255,0.45); background: rgba(0,212,255,0.1); }
+    .ruta-tag.piloto { color: var(--blue-light); border-color: rgba(51,153,255,0.45); background: rgba(51,153,255,0.1); }
     .tag {
       display: inline-flex; align-items: center; gap: 6px; font-size: 0.68rem; font-weight: 900; padding: 5px 13px; border-radius: 50px;
       letter-spacing: 0.8px; text-transform: uppercase; border: 1px solid transparent;
@@ -1088,7 +1096,21 @@
     /* Función GLOBAL independiente: funciona aunque el resto del JS falle */
     function elegirRutaLAN(t) {
       try { localStorage.setItem('lan_track_elegido', t); } catch (e) { /* ignore */ }
-      window.location.href = '/dashboard/formulario-lan-academy?track=' + encodeURIComponent(t);
+      // No navegar: cerrar overlay y actualizar el dashboard en el sitio
+      const ov = document.getElementById('welcome-overlay');
+      if (ov) ov.classList.remove('active');
+      const loading = document.getElementById('welcome-loading');
+      if (loading) loading.hidden = true;
+      if (typeof window.onRutaElegida === 'function') window.onRutaElegida(t);
+      // Intentar guardar en BD en segundo plano (sin bloquear)
+      try {
+        fetch('/api/track', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ track: t }),
+          keepalive: true
+        }).catch(() => {});
+      } catch (e) { /* ignore */ }
     }
     function pasarPasoLAN() {
       document.getElementById('welcome-step-1').hidden = true;
@@ -1140,6 +1162,7 @@
         <div class="staff-tabs">
           <button class="staff-tab active" data-tab="inicio"><i class="ico ico-home"></i> Inicio</button>
           <button class="staff-tab" data-tab="formularios"><i class="ico ico-doc"></i> Formularios</button>
+          <button class="staff-tab" data-tab="planes"><i class="ico ico-plane"></i> Planes de vuelo</button>
         </div>
         <button class="staff-close" id="staff-close" aria-label="Cerrar panel"><i class="ico ico-x"></i></button>
       </div>
@@ -1167,6 +1190,11 @@
               <button class="chip" data-f="approved">Aprobados <b id="cc-approved">0</b></button>
               <button class="chip" data-f="denied">Denegados <b id="cc-denied">0</b></button>
             </div>
+            <div class="chips" id="chips-ruta">
+              <button class="chip rchip active" data-r="all">Todas las rutas</button>
+              <button class="chip rchip" data-r="piloto"><i class="ico ico-plane"></i> Piloto</button>
+              <button class="chip rchip" data-r="atc"><i class="ico ico-tower"></i> ATC</button>
+            </div>
             <label class="search">
               <i class="ico ico-search"></i>
               <input type="search" id="search" placeholder="Buscar usuario o ID" autocomplete="off">
@@ -1174,6 +1202,10 @@
           </div>
           <div id="date-list"><p style="color:var(--gray);font-size:.87rem">Cargando…</p></div>
           <div class="empty-state" id="no-results" hidden><i class="ico ico-search"></i>No hay formularios que coincidan con el filtro.</div>
+        </div>
+        <div id="tab-planes" hidden>
+          <div class="staff-subtitle"><i class="ico ico-plane"></i> Todos los planes de vuelo enviados</div>
+          <div id="staff-planes-list"><p style="color:var(--gray);font-size:.87rem">Cargando…</p></div>
         </div>
       </div>
     </div>
@@ -1334,6 +1366,12 @@
 
     /* El clic de los botones se maneja con onclick interno (elegirRutaLAN)
        para que funcione aunque el resto del JS falle por la BD */
+    window.onRutaElegida = function (t) {
+      trackActual = t;
+      renderCta();
+      renderHint();
+      maybeMostrarPanelAtc();
+    };
 
     /* ---------- Cargar estado del formulario ---------- */
     async function loadAcademy() {
@@ -1512,11 +1550,65 @@
     let staffGroups = [];
     let curFilter = 'all';
     let curQuery = '';
+    let curRuta = 'all';
+
+    /* Planes de vuelo en el panel staff (solo lectura + estado/squawk) */
+    async function cargarStaffPlanes() {
+      const box = document.getElementById('staff-planes-list');
+      try {
+        const res = await fetch('/api/flight-plans/staff');
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'No se pudieron cargar los planes');
+        if (!data.plans.length) {
+          box.innerHTML = '<div class="empty-state"><i class="ico ico-plane"></i>Aún no hay planes de vuelo enviados.</div>';
+          return;
+        }
+        box.innerHTML = data.plans.map(p => `
+          <div class="sub-embed" style="margin-bottom:10px">
+            <div class="sub-head">
+              <span class="sub-avatar"><i class="ico ico-plane"></i></span>
+              <span class="sub-user">${escapeHtml(p.departure)} → ${escapeHtml(p.destination)}<small>${escapeHtml(p.username)} · ${escapeHtml(p.aircraft)} · ${escapeHtml(p.flight_number || '—')}</small></span>
+              <span class="fp-chip ${escapeHtml(p.status)}">${escapeHtml(ESTADOS_PLAN[p.status] || p.status)}</span>
+              ${p.squawk ? '<span class="fp-squawk">SQK ' + escapeHtml(p.squawk) + '</span>' : ''}
+              <select class="fp-status-select staff-fp-sel" data-id="${p.id}">
+                ${Object.keys(ESTADOS_PLAN).map(s => '<option value="' + s + '"' + (s === p.status ? ' selected' : '') + '>' + ESTADOS_PLAN[s] + '</option>').join('')}
+              </select>
+            </div>
+            ${p.rejection_reason ? '<div class="plan-meta">Motivo: ' + escapeHtml(p.rejection_reason) + '</div>' : ''}
+          </div>`).join('');
+        box.querySelectorAll('.staff-fp-sel').forEach(sel => {
+          sel.addEventListener('change', async () => {
+            const status = sel.value;
+            let reason = null;
+            if (status === 'rejected') {
+              reason = prompt('Motivo del rechazo:');
+              if (!reason) { sel.value = 'pending'; return; }
+            }
+            sel.disabled = true;
+            try {
+              const r = await fetch('/api/flight-plans/' + sel.dataset.id + '/status', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status, reason })
+              });
+              const d = await r.json();
+              if (!r.ok) throw new Error(d.error || 'No se pudo actualizar');
+              await cargarStaffPlanes();
+            } catch (e) {
+              console.error(e); alert('❌ ' + e.message); sel.disabled = false;
+            }
+          });
+        });
+      } catch (e) {
+        box.innerHTML = '<div class="empty-state">Error: ' + escapeHtml(e.message) + '</div>';
+      }
+    }
 
     function setTab(name) {
       document.querySelectorAll('.staff-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
       document.getElementById('tab-inicio').hidden = name !== 'inicio';
       document.getElementById('tab-formularios').hidden = name !== 'formularios';
+      document.getElementById('tab-planes').hidden = name !== 'planes';
+      if (name === 'planes') cargarStaffPlanes();
     }
 
     async function abrirPanelStaff() {
@@ -1540,6 +1632,14 @@
         document.querySelectorAll('#chips .chip').forEach(c => c.classList.remove('active'));
         chip.classList.add('active');
         curFilter = chip.dataset.f;
+        applyFilter();
+      });
+    });
+    document.querySelectorAll('#chips-ruta .rchip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('#chips-ruta .rchip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        curRuta = chip.dataset.r;
         applyFilter();
       });
     });
@@ -1659,6 +1759,7 @@
                 <div class="sub-head">
                   <span class="sub-avatar">${escapeHtml(String(it.username || '?').charAt(0).toUpperCase())}</span>
                   <span class="sub-user">${escapeHtml(it.username)}<small>ID: ${escapeHtml(it.discord_id)}</small></span>
+                  <span class="ruta-tag ${it.track === 'atc' ? 'atc' : 'piloto'}"><i class="ico ${it.track === 'atc' ? 'ico-tower' : 'ico-plane'}"></i> ${it.track === 'atc' ? 'ATC' : 'Piloto'}</span>
                   <span class="tag-slot">${tagFor(it.status, it.score, it.total)}</span>
                   <button class="btn-grade" data-id="${it.id}">${it.status === 'submitted' ? 'Calificar' : 'Ver resultado'}</button>
                 </div>
@@ -1692,10 +1793,11 @@
           const el = document.getElementById('sub-' + it.id);
           if (!el) return;
           const okS = curFilter === 'all' || it.status === curFilter;
+          const okR = curRuta === 'all' || (it.track || 'piloto') === curRuta;
           const okQ = !curQuery ||
             String(it.username).toLowerCase().includes(curQuery) ||
             String(it.discord_id).includes(curQuery);
-          el.hidden = !(okS && okQ);
+          el.hidden = !(okS && okR && okQ);
           if (!el.hidden) vis++;
         });
         visibleTotal += vis;
