@@ -1084,6 +1084,17 @@
   </div>
 
   <!-- ===== OVERLAY BIENVENIDA: se muestra EN CADA LOGIN hasta elegir ruta ===== -->
+  <script>
+    /* Función GLOBAL independiente: funciona aunque el resto del JS falle */
+    function elegirRutaLAN(t) {
+      try { localStorage.setItem('lan_track_elegido', t); } catch (e) { /* ignore */ }
+      window.location.href = '/dashboard/formulario-lan-academy?track=' + encodeURIComponent(t);
+    }
+    function pasarPasoLAN() {
+      document.getElementById('welcome-step-1').hidden = true;
+      document.getElementById('welcome-step-2').hidden = false;
+    }
+  </script>
   <div class="modal-overlay" id="welcome-overlay">
     <div class="welcome-card">
       <!-- Paso 1: bienvenida -->
@@ -1091,7 +1102,7 @@
         <div class="welcome-logo"><i class="ico ico-plane"></i></div>
         <h3>¡Bienvenido, <b id="welcome-user-name">usuario</b>!</h3>
         <p class="welcome-sub">Gracias por unirte a Latin Aviation Network.<br>Estamos felices de tenerte a bordo.</p>
-        <button class="welcome-next" id="welcome-next" type="button"><i class="ico ico-chev ico-right"></i> Siguiente</button>
+        <button class="welcome-next" id="welcome-next" type="button" onclick="pasarPasoLAN()"><i class="ico ico-chev ico-right"></i> Siguiente</button>
       </div>
       <!-- Paso 2: elegir carrera -->
       <div class="welcome-step" id="welcome-step-2" hidden>
@@ -1099,12 +1110,12 @@
         <h3>¿Qué carrera deseas elegir?</h3>
         <p class="welcome-sub">Esta decisión es permanente. Elige la ruta que seguirás en LAN.</p>
         <div class="track-options">
-          <button class="track-opt" data-track="piloto" type="button">
+          <button class="track-opt" data-track="piloto" type="button" onclick="elegirRutaLAN('piloto')">
             <i class="ico ico-plane"></i>
             <b>Piloto</b>
             <small>Formación de vuelo, navegación y operaciones</small>
           </button>
-          <button class="track-opt" data-track="atc" type="button">
+          <button class="track-opt" data-track="atc" type="button" onclick="elegirRutaLAN('atc')">
             <i class="ico ico-tower"></i>
             <b>ATC</b>
             <small>Control de tráfico aéreo y procedimientos</small>
@@ -1321,45 +1332,8 @@
       ov.classList.add('active');
     }
 
-    document.getElementById('welcome-next').addEventListener('click', () => {
-      document.getElementById('welcome-step-1').hidden = true;
-      document.getElementById('welcome-step-2').hidden = false;
-    });
-
-    document.querySelectorAll('.welcome-step-2 .track-opt').forEach(opt => {
-      opt.addEventListener('click', async () => {
-        const t = opt.dataset.track;
-        const opts = document.querySelectorAll('.welcome-step-2 .track-opt');
-        const loading = document.getElementById('welcome-loading');
-        opts.forEach(o => o.disabled = true);
-        loading.hidden = false;
-
-        // Guardamos SIEMPRE en el navegador para que funcione aunque la BD falle
-        guardarTrackLocal(t);
-        trackActual = t;
-
-        // Intentamos guardar también en la BD (para que sea permanente)
-        try {
-          const res = await fetch('/api/track', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ track: t })
-          });
-          if (res.ok) {
-            const data = await res.json();
-            if (data.track) trackActual = data.track;
-          }
-        } catch (e) {
-          console.warn('No se pudo guardar la ruta en la BD; queda guardada en este navegador:', e.message);
-        } finally {
-          loading.hidden = true;
-          opts.forEach(o => o.disabled = false);
-        }
-
-        // Ir DIRECTO al formulario de la ruta elegida
-        window.location.href = '/dashboard/formulario-lan-academy?track=' + encodeURIComponent(t);
-      });
-    });
+    /* El clic de los botones se maneja con onclick interno (elegirRutaLAN)
+       para que funcione aunque el resto del JS falle por la BD */
 
     /* ---------- Cargar estado del formulario ---------- */
     async function loadAcademy() {
@@ -1429,6 +1403,12 @@
 
     /* ---------- Ruta: GET /api/track → muestra overlay si es null ---------- */
     async function cargarRuta() {
+      // ?reset=1 borra la ruta guardada y fuerza volver a ver el overlay
+      try {
+        if (new URLSearchParams(window.location.search).get('reset') === '1') {
+          localStorage.removeItem(TRACK_LOCAL_KEY);
+        }
+      } catch (e) { /* ignore */ }
       try {
         const res = await fetch('/api/track');
         let trackBD = null;
