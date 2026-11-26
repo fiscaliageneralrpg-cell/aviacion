@@ -364,6 +364,8 @@
       .digit { width:48px; height:58px; font-size:1.3rem; }
       .modal-head h2 { font-size:1rem; }
     }
+    .ico-arrow-left::before { left:30%; top:44%; width:50%; height:.16em; background:currentColor; }
+    .ico-arrow-left::after { left:24%; top:38%; width:.45em; height:.45em; border-left:.16em solid currentColor; border-bottom:.16em solid currentColor; transform:rotate(45deg); }
   </style>
 </head>
 <body>
@@ -376,7 +378,7 @@
         <img src="https://i.imgur.com/V47UGra.png" alt="LAN logo">
         <span>LATIN AVIATION NETWORK</span>
       </div>
-      <a href="/dashboard" class="back-btn"><i class="ico ico-chev ico-left"></i> Volver al dashboard</a>
+      <a href="/dashboard" class="back-btn"><i class="ico ico-arrow-left"></i> Volver al dashboard</a>
     </div>
   </nav>
 
@@ -906,7 +908,7 @@
 
       /* Render de paginación (5 planes por página) */
       pagEl.hidden = totalPag <= 1;
-      let botones = `<button class="page-btn" data-p="ant" ${paginaActual === 1 ? 'disabled' : ''}><i class="ico ico-chev ico-left"></i></button>`;
+      let botones = `<button class="page-btn" data-p="ant" ${paginaActual === 1 ? 'disabled' : ''}><i class="ico ico-arrow-left"></i></button>`;
       for (let i = 1; i <= totalPag; i++) {
         botones += `<button class="page-btn ${i === paginaActual ? 'active' : ''}" data-p="${i}">${i}</button>`;
       }
@@ -941,7 +943,8 @@
 
     /* Overlay de detalle: TODA la info del vuelo + botones según estado */
     function abrirDetalle(id) {
-      const p = todosPlanes.concat(misPlanes).find(x => x.id == id);
+      const p = todosPlanes.find(x => String(x.id) === String(id)) || misPlanes.find(x => String(x.id) === String(id));
+      console.log('🔍 Abrir detalle', id, p ? 'encontrado' : 'NO encontrado', 'todos:', todosPlanes.length, 'mios:', misPlanes.length);
       if (!p) return;
       document.getElementById('detalle-titulo').textContent = p.departure + ' ➜ ' + p.destination;
       document.getElementById('detalle-sub').textContent = 'Plan #' + p.id + ' · ' + (ESTADOS[p.status] || p.status);
@@ -1024,7 +1027,7 @@
 
     /* Firma: solo redibujar cuando los datos cambiaron de verdad */
     function calcularFirma(lista) {
-      return lista.map(p => [p.id, p.status, p.squawk, p.rejection_reason].join(':')).join('|');
+      return lista.map(p => [p.id,p.status,p.squawk,p.rejection_reason,p.atc_stage,p.runway,p.squawk_validated].join(':')).join('|');
     }
 
     async function cargarPlanes(forzar) {

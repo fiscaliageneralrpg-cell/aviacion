@@ -1427,7 +1427,9 @@
         }
 
         const top = ranks[0];
-        rankName.textContent = top.name;
+        // Mostrar TODOS los rangos en la etiqueta principal
+        rankName.textContent = ranks.map(r => r.name).join(' · ');
+        rankName.style.whiteSpace = 'normal';
         rankDot.style.background = top.color;
         rankDot.style.color = top.color;
         rankMain.style.color = top.color;

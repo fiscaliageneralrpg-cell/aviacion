@@ -35,6 +35,8 @@
     .ico-sun { border:.12em solid currentColor; border-radius:50%; }
     .ico-wind { border-top:.12em solid currentColor; }
     .ico-chev { border:solid currentColor; border-width:0 .16em .16em 0; padding:4px; transform:rotate(45deg); }
+    .ico-arrow-left::before { left:30%; top:44%; width:50%; height:.16em; background:currentColor; }
+    .ico-arrow-left::after { left:24%; top:38%; width:.45em; height:.45em; border-left:.16em solid currentColor; border-bottom:.16em solid currentColor; transform:rotate(45deg); }
     .ico-user::before { left:28%; top:0; width:44%; height:44%; border-radius:50%; background:currentColor; }
     .ico-clock { border:.12em solid currentColor; border-radius:50%; }
     .ico-radio { border:.12em solid currentColor; border-radius:50%; }
@@ -196,7 +198,7 @@
   <div class="bg"></div>
   <nav><div class="container nav-inner">
     <div class="brand"><img src="https://i.imgur.com/V47UGra.png" alt="LAN"><span>LATIN AVIATION<br>NETWORK</span></div>
-    <a href="/dashboard" class="btn-back" style="margin-left:auto"><i class="ico ico-chev ico-left"></i> Volver al dashboard</a>
+    <a href="/dashboard" class="btn-back" style="margin-left:auto"><i class="ico ico-arrow-left"></i> Volver al dashboard</a>
     <div class="nav-user"><span class="nav-avatar" id="nav-avatar">AT</span>
       <div><b id="nav-name">Controlador</b><small id="nav-pos">ATC</small></div></div>
   </div></nav>
@@ -307,7 +309,7 @@
         }
         aeropuerto=code;
         $('nav-pos').textContent='ATC · '+code+' · '+d.position;
-        await recargar();
+        await recargar(true);
       }catch(e){console.error(e);}
     }
     function pintarClima(){
@@ -319,13 +321,22 @@
 
     $('airport-sel').addEventListener('change',e=>entrar(e.target.value, false));
 
-    async function recargar(){
+    let firmaAtc = '';
+    function calcFirma(){
+      return strips.map(s=>[s.id,s.atc_stage,s.status,s.squawk,s.squawk_validated,s.runway,s.flight_number].join(':')).join('|')
+        + '#' + positions.map(p=>[p.id,p.controller_id].join(':')).join('|')
+        + '@' + aeropuerto + '/' + tabActual;
+    }
+    async function recargar(forzar){
       try{
         const [rS,rP]=await Promise.all([
-          fetch('/api/atc/strips',{cache:'no-store'}),
+          fetch('/api/atc/strips?airport='+aeropuerto+'&tipo='+(tabActual==='llegadas'?'ARR':'DEP'),{cache:'no-store'}),
           fetch('/api/atc/positions?airport='+aeropuerto,{cache:'no-store'})
         ]);
         strips=(await rS.json()).strips||[]; positions=(await rP.json()).positions||[];
+        const firma=calcFirma();
+        if(!forzar && firma===firmaAtc) return;   // sin cambios → NO repintar
+        firmaAtc=firma;
         pintar();
       }catch(e){console.error(e);}
     }
@@ -334,7 +345,7 @@
       document.querySelectorAll('.tab-main').forEach(x=>x.classList.remove('active'));
       t.classList.add('active'); tabActual=t.dataset.tab;
       ['salidas','llegadas','rechazados'].forEach(x=>$('tab-'+x).hidden=x!==tabActual);
-      pintar();
+      recargar(true);   // recargar datos del otro tipo
     }));
 
     function destino(s){
@@ -421,7 +432,7 @@
       try{
         const r=await fetch('/api/atc/strips/'+id+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
         const d=await r.json(); if(!r.ok)return alert('❌ '+(d.error||'Error'));
-        $('strip-modal').classList.remove('active');recargar();
+        $('strip-modal').classList.remove('active');recargar(true);
       }catch(e){alert('Error de conexión');}
     }
     $('strip-close').onclick=()=>$('strip-modal').classList.remove('active');

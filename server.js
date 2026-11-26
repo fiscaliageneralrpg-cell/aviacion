@@ -1090,7 +1090,9 @@ function leerCuerpoPlan(body) {
     registration: limpio(b.registration),
     flight_number: limpio(b.flight_number),
     aircraft: limpio(b.aircraft),
-    cruise_altitude: (b.cruise_altitude == null ? '' : String(b.cruise_altitude).trim()),
+    cruise_altitude: (b.cruise_altitude == null || !String(b.cruise_altitude).trim())
+      ? 'FL' + (200 + Math.floor(Math.random() * 211))   // FL200–FL410 aleatorio
+      : String(b.cruise_altitude).trim(),
     alternate: limpio(b.alternate)
   };
   const errores = [];
@@ -2024,13 +2026,21 @@ app.get('/api/atc/strips', requireAuth, async (req, res) => {
       return res.status(403).json({ error: 'Sin permisos ATC' });
     }
     const airport = String(req.query.airport || '').slice(0, 8).toUpperCase();
-    const [rows] = await pool.query(
-      `SELECT s.*, u.discord_username, u.discord_global_name
+    // Filtrar por aeropuerto: salidas por departure, llegadas por destination
+    let sql = `SELECT s.*, u.discord_username, u.discord_global_name
        FROM flight_plans s
        LEFT JOIN verified_users u ON u.discord_id = s.discord_id
-       WHERE s.status NOT IN ('draft','rejected','cancelled')
-       ORDER BY FIELD(COALESCE(s.atc_stage,'DEL'),'DEL','GND','TWR','FINISHED'), s.id DESC`
-    );
+       WHERE s.status NOT IN ('draft','rejected','cancelled')`;
+    const params = [];
+    const tipo = String(req.query.tipo || '').toUpperCase();
+    if (airport) {
+      // En Salidas el vuelo SALE de aquí; en Llegadas LLEGA aquí
+      if (tipo === 'ARR') { sql += ' AND s.destination = ?'; params.push(airport); }
+      else if (tipo === 'DEP') { sql += ' AND s.departure = ?'; params.push(airport); }
+      else { sql += ' AND (s.departure = ? OR s.destination = ?)'; params.push(airport, airport); }
+    }
+    sql += ' ORDER BY FIELD(COALESCE(s.atc_stage,\'DEL\'),\'DEL\',\'VERIFIED\',\'LINEUP\',\'TWR\',\'AIR\',\'ARRIVED\',\'PARKING\',\'FINISHED\'), s.id DESC';
+    const [rows] = await pool.query(sql, params);
     // Los planes viejos sin atc_stage se muestran en Delivery
     const strips = rows.map(r => {
       if (!r.atc_stage && r.status === 'pending') r.atc_stage = 'DEL';

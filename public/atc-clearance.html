@@ -165,6 +165,8 @@
       .status-chip { display:block; width:100%; margin:12px 0 0; text-align:center; }
     }
     @media (max-width:380px) { .digit { width:40px; height:50px; font-size:1.1rem; } }
+    .ico-arrow-left::before { left:30%; top:44%; width:50%; height:.16em; background:currentColor; }
+    .ico-arrow-left::after { left:24%; top:38%; width:.45em; height:.45em; border-left:.16em solid currentColor; border-bottom:.16em solid currentColor; transform:rotate(45deg); }
   </style>
 </head>
 <body>
@@ -175,7 +177,7 @@
         <img src="https://i.imgur.com/V47UGra.png" alt="LAN">
         <span>LATIN AVIATION<br>NETWORK</span>
       </div>
-      <a href="/dashboard" class="btn-back" style="margin-left:auto"><i class="ico ico-chev ico-left"></i> Volver al dashboard</a>
+      <a href="/dashboard" class="btn-back" style="margin-left:auto"><i class="ico ico-arrow-left"></i> Volver al dashboard</a>
     </div>
   </nav>
 
