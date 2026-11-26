@@ -143,6 +143,10 @@
       border-top: .3em solid currentColor; transform: rotate(-35deg);
     }
     .ico-plane { background: currentColor; clip-path: polygon(50% 0, 62% 38%, 100% 62%, 100% 74%, 60% 62%, 56% 86%, 70% 94%, 70% 100%, 50% 95%, 30% 100%, 30% 94%, 44% 86%, 40% 62%, 0 74%, 0 62%, 38% 38%); }
+    .ico-bell { border:.12em solid currentColor; border-radius:50% 50% 20% 20%; }
+    .ico-bell::before { left:32%; top:-22%; width:36%; height:34%; border:.11em solid currentColor; border-bottom:none; border-radius:50% 50% 0 0; }
+    .ico-radio { border:.12em solid currentColor; border-radius:50%; }
+    .ico-radio::before { left:42%; top:-28%; width:16%; height:90%; background:currentColor; }
 
     /* Torre de control (ATC) */
     .ico-tower { border-bottom: .13em solid currentColor; }
@@ -389,6 +393,81 @@
     }
     .tab-item.soon::after { opacity: 0.55; animation-duration: 5s; }
     .tab-item.soon .ico { color: var(--cyan); animation: radar 2.2s ease-in-out infinite; }
+
+    /* ===== ACCESOS POR ROL (dashboard organizado) ===== */
+    .access-head { text-align:center; margin-bottom:22px; animation:riseUp .55s ease-out both; }
+    .access-badge {
+      display:inline-flex; align-items:center; gap:7px; padding:5px 14px; border-radius:50px; margin-bottom:10px;
+      background:rgba(0,102,255,.14); border:1px solid rgba(0,102,255,.45); color:var(--blue-light);
+      font-size:.66rem; font-weight:900; letter-spacing:1.4px; text-transform:uppercase;
+    }
+    .access-head h2 { font-family:'Orbitron',monospace; font-size:1.35rem; font-weight:900; }
+    .access-head p { color:var(--gray); font-size:.8rem; margin-top:4px; }
+    .access-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:16px; }
+    .access-group {
+      border:1px solid var(--border); border-radius:18px; padding:16px;
+      background:linear-gradient(160deg,rgba(0,0,0,.35),rgba(0,102,255,.04));
+      animation:riseUp .5s ease-out both;
+    }
+    .access-group:nth-child(2){animation-delay:.08s} .access-group:nth-child(3){animation-delay:.16s}
+    .group-title {
+      display:flex; align-items:center; gap:8px; margin-bottom:12px; padding-bottom:10px;
+      border-bottom:1px solid var(--border); font-family:'Orbitron',monospace;
+      font-size:.72rem; font-weight:900; letter-spacing:1.4px;
+    }
+    .access-group[data-group="piloto"] .group-title { color:var(--blue-light); }
+    .access-group[data-group="atc"] .group-title { color:var(--cyan); }
+    .access-group[data-group="staff"] .group-title { color:var(--gold); }
+    .access-btn {
+      display:flex; align-items:center; gap:12px; width:100%; text-align:left;
+      padding:13px 15px; border-radius:13px; margin-bottom:9px; cursor:pointer;
+      background:rgba(255,255,255,.04); border:1px solid var(--border); color:var(--white);
+      font-family:inherit; transition:.28s;
+    }
+    .access-btn:last-child { margin-bottom:0; }
+    .access-btn > .ico {
+      width:42px; height:42px; flex-shrink:0; border-radius:12px; display:grid; place-items:center;
+      background:rgba(0,102,255,.16); border:1px solid rgba(0,212,255,.35); color:var(--cyan); font-size:1.1rem;
+    }
+    .access-btn b { display:block; font-size:.86rem; font-weight:800; }
+    .access-btn small { display:block; color:var(--gray); font-size:.7rem; margin-top:2px; }
+    .access-btn:hover {
+      transform:translateY(-3px); border-color:var(--cyan);
+      background:rgba(0,102,255,.14); box-shadow:0 12px 28px rgba(0,102,255,.3);
+    }
+    .access-btn:hover > .ico { background:rgba(0,212,255,.22); transform:scale(1.08); }
+    .access-btn:active { transform:scale(.98); }
+    .access-btn[hidden] { display:none !important; }
+    .access-group[hidden] { display:none !important; }
+
+    /* ===== NOTIFICACIONES EN DASHBOARD ===== */
+    .notif-card { padding:20px 24px; }
+    .notif-head { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:14px; }
+    .notif-head h3 { display:flex; align-items:center; gap:8px; font-family:'Orbitron',monospace; font-size:.88rem; }
+    .notif-head h3 .ico { color:var(--cyan); }
+    .notif-count {
+      display:inline-grid; place-items:center; min-width:22px; height:22px; padding:0 6px; border-radius:50px;
+      background:var(--blue); color:#fff; font-family:'Orbitron',monospace; font-size:.68rem;
+    }
+    .notif-clear {
+      padding:7px 14px; border-radius:50px; cursor:pointer; font-family:inherit; font-weight:800; font-size:.7rem;
+      background:rgba(255,255,255,.04); border:1px solid var(--border); color:var(--white-soft); transition:.25s;
+    }
+    .notif-clear:hover { border-color:var(--cyan); color:var(--cyan); }
+    .notif-item {
+      display:flex; align-items:flex-start; gap:12px; padding:12px 14px; border-radius:12px; margin-bottom:8px;
+      background:rgba(0,0,0,.3); border:1px solid var(--border); border-left:3px solid var(--cyan);
+      animation:fadeSlide .4s ease-out both;
+    }
+    .notif-item.unread { background:rgba(0,102,255,.08); border-color:rgba(0,212,255,.35); border-left-color:var(--green); }
+    .notif-ico {
+      width:34px; height:34px; flex-shrink:0; border-radius:10px; display:grid; place-items:center;
+      background:rgba(0,212,255,.12); color:var(--cyan);
+    }
+    .notif-item b { display:block; font-size:.82rem; }
+    .notif-item p { color:var(--white-soft); font-size:.76rem; margin-top:2px; }
+    .notif-item time { display:block; color:var(--gray); font-size:.66rem; margin-top:4px; }
+    @keyframes fadeSlide { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
 
     /* ===== RUTA: Piloto / ATC ===== */
     .track-row {
@@ -1073,16 +1152,46 @@
     </div>
   </nav>
 
-  <!-- ===== ACCESOS: Formulario / Planes de vuelo + Panel Staff ===== -->
+  <!-- ===== NOTIFICACIONES (se muestran al inicio del dashboard) ===== -->
+  <section class="academy-section" id="notif-section" hidden>
+    <div class="academy-card notif-card">
+      <div class="notif-head">
+        <h3><i class="ico ico-bell"></i> Notificaciones <span class="notif-count" id="notif-count">0</span></h3>
+        <button class="notif-clear" id="notif-clear" type="button"><i class="ico ico-check"></i> Marcar todas como leídas</button>
+      </div>
+      <div id="notif-list"></div>
+    </div>
+  </section>
+
+  <!-- ===== ACCESOS POR ROL (organizados) ===== -->
   <section class="academy-section" id="academy-section">
     <div class="academy-card" id="academy-card">
-      <div class="tabs-row" role="tablist">
-        <button class="tab-item soon" id="academy-cta" data-mode="soon"><i class="ico ico-clock"></i> Cargando…</button>
-        <button class="tab-item atc" id="quick-atc" hidden><i class="ico ico-tower"></i> ATC Operations</button>
-        <button class="tab-item clearance" id="quick-clearance" hidden><i class="ico ico-plane"></i> ATC Clearance</button>
-        <button class="tab-item charts" id="quick-charts" hidden><i class="ico ico-doc"></i> Cartas de Vuelo</button>
-        <span class="tab-sep" id="tab-sep" hidden></span>
-        <button class="tab-item staff" id="quick-staff" hidden><i class="ico ico-shield"></i> Panel Staff</button>
+      <div class="access-head">
+        <span class="access-badge"><i class="ico ico-plane"></i> LAN ACADEMY</span>
+        <h2>Tu espacio en LAN</h2>
+        <p id="access-sub">Accesos según tu ruta y permisos.</p>
+      </div>
+      <div class="access-grid" id="access-grid">
+
+        <!-- PILOTO -->
+        <div class="access-group" data-group="piloto" hidden>
+          <div class="group-title"><i class="ico ico-plane"></i> PILOTO</div>
+          <button class="access-btn" id="academy-cta"><i class="ico ico-cap"></i><span><b>Formulario Piloto</b><small>Examen de admisión LAN Academy</small></span></button>
+          <button class="access-btn" id="quick-clearance" hidden><i class="ico ico-radio"></i><span><b>ATC Clearance</b><small>Valida tu Squawk con Delivery</small></span></button>
+          <button class="access-btn" id="quick-charts" hidden><i class="ico ico-doc"></i><span><b>Cartas de Vuelo</b><small>Tus vuelos autorizados</small></span></button>
+        </div>
+
+        <!-- ATC -->
+        <div class="access-group" data-group="atc" hidden>
+          <div class="group-title"><i class="ico ico-tower"></i> CONTROLADOR AÉREO</div>
+          <button class="access-btn" id="quick-atc"><i class="ico ico-tower"></i><span><b>ATC Operations</b><small>Posiciones y Flight Strips</small></span></button>
+        </div>
+
+        <!-- STAFF -->
+        <div class="access-group" data-group="staff" hidden>
+          <div class="group-title"><i class="ico ico-shield"></i> STAFF / INSTRUCTOR</div>
+          <button class="access-btn" id="quick-staff"><i class="ico ico-shield"></i><span><b>Panel Staff</b><small>Formularios, calificaciones y planes</small></span></button>
+        </div>
       </div>
       <span class="academy-hint" id="academy-hint"><i class="ico ico-clock"></i>Comprobando tu estado…</span>
     </div>
@@ -1397,15 +1506,10 @@
         if (!res.ok) return;
         const st = await res.json();
         academyStatus = st;
-
-        const staffBtn = document.getElementById('quick-staff');
-        staffBtn.hidden = (st.is_staff !== true);
-        document.getElementById('tab-sep').hidden = staffBtn.hidden;
         document.getElementById('academy-section').hidden = false;
-
         renderCta();
         renderHint();
-        } catch (e) {
+      } catch (e) {
         console.error('Error academy status:', e);
       }
     }
@@ -1416,7 +1520,7 @@
       const st = academyStatus;
       if (st.status === 'approved') {
         hint.hidden = false;
-        hint.innerHTML = '<i class="ico ico-check"></i>Formulario aprobado · Ya puedes gestionar tus planes de vuelo.';
+        hint.innerHTML = '<i class="ico ico-check"></i>Formulario aprobado · Ya puedes acceder a tus herramientas.';
       } else if (st.status && st.status !== 'none') {
         hint.hidden = true;
       } else {
@@ -1425,33 +1529,46 @@
       }
     }
 
-    /* Botón principal:
-       - sin aprobar → "Formulario ATC/Piloto LAN Academy" según ruta
-       - aprobado + PILOTO → "Planes de vuelo"
-       - aprobado + ATC → "Solicitudes de planes de vuelo" */
+    /* ---------- Accesos organizados por ROL ----------
+       Piloto (2): Formulario/Planes + ATC Clearance + Cartas (según estado)
+       ATC (1): ATC Operations
+       Staff/Instructor (1): Panel Staff
+       El botón "Solicitudes de planes de vuelo" se QUITÓ: ATC usa ATC Operations. */
     function renderCta() {
       if (!academyStatus) return;
+      const st = academyStatus;
+      const aprobado = st.status === 'approved';
+      const esAtc = trackActual === 'atc';
+      const esInstructor = Array.isArray(st.instructor_roles) && st.instructor_roles.length > 0;
+
+      // Grupos visibles
+      document.querySelector('[data-group="piloto"]').hidden = esAtc;
+      document.querySelector('[data-group="atc"]').hidden = !esAtc;
+      document.querySelector('[data-group="staff"]').hidden = !(st.is_staff === true || esInstructor);
+
+      document.getElementById('access-sub').textContent = esAtc
+        ? 'Herramientas de control de tránsito aéreo.'
+        : 'Herramientas de piloto y academia.';
+
+      // Botón principal PILOTO
       const cta = document.getElementById('academy-cta');
       cta.hidden = false;
-      cta.className = 'tab-item';
-      // Botón ATC Operations solo para ATC aprobado
-      document.getElementById('quick-atc').hidden = !(
-        trackActual === 'atc' && academyStatus.status === 'approved'
-      );
-      document.getElementById('quick-clearance').hidden = academyStatus.status !== 'approved';
-      document.getElementById('quick-charts').hidden = academyStatus.status !== 'approved';
-      if (academyStatus.status === 'approved') {
-        // La ruta ELEGIDA manda: Piloto → "Planes de vuelo", ATC → "Solicitudes..."
-        const esAtc = trackActual === 'atc';
-        cta.innerHTML = esAtc
-          ? '<i class="ico ico-shield"></i> Solicitudes de planes de vuelo'
-          : '<i class="ico ico-plane"></i> Planes de vuelo';
+      if (aprobado) {
+        cta.innerHTML = '<i class="ico ico-plane"></i><span><b>Planes de Vuelo</b><small>Crea y gestiona tus planes</small></span>';
         cta.dataset.mode = 'planes';
       } else {
-        const ruta = trackActual === 'atc' ? 'ATC' : 'Piloto';
-        cta.innerHTML = '<i class="ico ico-cap"></i> Formulario ' + ruta + ' LAN Academy';
+        cta.innerHTML = '<i class="ico ico-cap"></i><span><b>Formulario ' + (esAtc ? 'ATC' : 'Piloto') + '</b><small>Examen de admisión LAN Academy</small></span>';
         cta.dataset.mode = 'start';
+        cta.dataset.form = esAtc ? 'atc' : 'piloto';
       }
+
+      // Accesos de piloto aprobado
+      document.getElementById('quick-clearance').hidden = !(aprobado && !esAtc);
+      document.getElementById('quick-charts').hidden = !(aprobado && !esAtc);
+      // ATC Operations (único botón ATC)
+      document.getElementById('quick-atc').hidden = !(aprobado && esAtc);
+      // Panel Staff / Instructor
+      document.getElementById('quick-staff').hidden = !(st.is_staff === true || esInstructor);
     }
 
     function abrirFormulario() {
@@ -1460,7 +1577,7 @@
       if (cta.dataset.mode === 'planes') {
         window.location.href = '/dashboard/planes-de-vuelo';
       } else {
-        window.location.href = '/dashboard/formulario-lan-academy';
+        window.location.href = '/dashboard/formulario-lan-academy?track=' + encodeURIComponent(cta.dataset.form || 'piloto');
       }
     }
     document.getElementById('academy-cta').addEventListener('click', abrirFormulario);
@@ -2017,9 +2134,6 @@
         }
         renderCta();
         renderHint();
-        const staffBtn = document.getElementById('quick-staff');
-        staffBtn.hidden = (st.is_staff !== true);
-        document.getElementById('tab-sep').hidden = staffBtn.hidden;
         if (cambio && st.status === 'approved') {
           const cta = document.getElementById('academy-cta');
           cta.classList.remove('flash-ok');
@@ -2055,11 +2169,50 @@
 
     let panelOcupado = false;   // true mientras el staff está calificando
 
+    /* ===== NOTIFICACIONES (al inicio del dashboard) ===== */
+    let firmaNotif = '';
+    async function cargarNotificaciones() {
+      try {
+        const res = await fetch('/api/notifications', { cache:'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        const items = data.notifications || [];
+        const firma = items.map(n => n.id + ':' + (n.read_at || '')).join('|');
+        if (firma === firmaNotif) return;
+        firmaNotif = firma;
+        const sec = document.getElementById('notif-section');
+        const sinLeer = items.filter(n => !n.read_at).length;
+        sec.hidden = items.length === 0;
+        document.getElementById('notif-count').textContent = sinLeer;
+        document.getElementById('notif-list').innerHTML = items.slice(0, 6).map(n => `
+          <div class="notif-item${n.read_at ? '' : ' unread'}" data-id="${n.id}">
+            <span class="notif-ico"><i class="ico ico-${n.icon === 'check' ? 'check' : 'plane'}"></i></span>
+            <div><b>${escapeHtml(n.title)}</b><p>${escapeHtml(n.message)}</p>
+              <time>${new Date(n.created_at).toLocaleString('es')}</time></div>
+          </div>`).join('');
+        document.getElementById('notif-list').querySelectorAll('.notif-item').forEach(el => {
+          el.addEventListener('click', async () => {
+            await fetch('/api/notifications/' + el.dataset.id + '/read', { method:'POST' });
+            firmaNotif = ''; cargarNotificaciones();
+          });
+        });
+      } catch (e) { console.warn('Error notificaciones:', e); }
+    }
+    document.getElementById('notif-clear').addEventListener('click', async () => {
+      const items = document.querySelectorAll('.notif-item.unread');
+      for (const el of items) {
+        await fetch('/api/notifications/' + el.dataset.id + '/read', { method:'POST' });
+      }
+      firmaNotif = ''; cargarNotificaciones();
+    });
+    setInterval(cargarNotificaciones, 8000);
+
     loadUser();
     loadRanks();
     loadAcademy();
     cargarRuta();
     autoActualizar();
+    cargarNotificaciones();
   </script>
 </body>
 </html>

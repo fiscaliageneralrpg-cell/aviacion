@@ -1,11 +1,15 @@
 -- ============================================================
---  LATIN AVIATION NETWORK — Tablas para la base de datos NUEVA
+--  LATIN AVIATION NETWORK — Base de datos COMPLETA
 --  Cómo usarlo en HeidiSQL:
---   1) Conéctate a tu base de datos nueva
---   2) Pega TODO este contenido en una pestaña de consulta (Query)
---   3) Presiona el botón ▶ (Ejecutar)
---   4) Verás las 4 tablas en el panel izquierdo (F5 para refrescar)
+--   1) Conéctate al servidor (176.100.37.77:3306)
+--   2) Pega TODO en una pestaña Query y presiona ▶ Ejecutar
+--   3) F5 en el panel izquierdo para ver la BD y sus tablas
 -- ============================================================
+
+CREATE DATABASE IF NOT EXISTS `s61797_aviacion`
+  DEFAULT CHARACTER SET utf8mb4
+  DEFAULT COLLATE utf8mb4_unicode_ci;
+USE `s61797_aviacion`;
 
 -- ------------------------------------------------------------
 -- 1) USUARIOS VERIFICADOS (Discord + Roblox + ruta Piloto/ATC)

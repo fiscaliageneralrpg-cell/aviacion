@@ -685,12 +685,18 @@ app.get('/formulario-lan-academy.html', requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'formulario-lan-academy.html'));
 });
 
-// --- Página de PLANES DE VUELO (solo con formulario aprobado) ---
+// --- Página de PLANES DE VUELO (SOLO PILOTOS con formulario aprobado) ---
 app.get('/dashboard/planes-de-vuelo', requireVerificado, async (req, res) => {
   try {
     const discordId = String(req.session.discordUser.id);
     if (!(await academyAprobado(discordId))) {
       return res.redirect('/dashboard');   // sin aprobación no entra
+    }
+    // ATC usa ATC Operations → los vuelos de otros no son "sus planes"
+    const ids = await obtenerRangosIds(discordId);
+    const track = await obtenerTrack(discordId);
+    if (ids.includes('1555512718046404609') || track === 'atc') {
+      return res.redirect('/dashboard/atc-operations');
     }
     res.sendFile(path.join(__dirname, 'public', 'planes-de-vuelo.html'));
   } catch (err) {
@@ -757,6 +763,7 @@ app.get('/api/academy/status', requireAuth, async (req, res) => {
       has_form_role: ids.includes(ACADEMY_FORM_ROLE),
       is_staff: STAFF_ROLES.some(r => ids.includes(r)),
       is_atc: await esAtc(discordId),                   // Controlador Aéreo (rol 1555512718046404609)
+      instructor_roles: ids.filter(r => r === '1555512949391495218' || r === '1556059095277109348'),
       track,                                          // 'piloto' | 'atc' | null (aún no eligió)
       exam: {                                         // examen que le corresponde según su ruta
         key: track === 'atc' ? 'atc' : 'piloto',
