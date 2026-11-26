@@ -547,23 +547,27 @@
     let editId = null, todosPlanes = [], misPlanes = [], curFiltro = 'all', curBusqueda = '';
     const POR_PAGINA = 5;
     let paginaActual = 1;
-    let esAtc = false;   // se detecta con /api/academy/status
+    let esAtc = false;   // se detecta con /api/track (ruta elegida)
+    let trackActual = null;
     let yoId = null;
     let firmaDatos = ''; // solo recargamos si los datos cambiaron realmente
 
     /* Detectar rol: ATC ve TODAS las solicitudes + controles; piloto ve las suyas */
     async function detectarRol() {
       try {
-        const [res, resMe] = await Promise.all([
+        const [res, resMe, resTrack] = await Promise.all([
           fetch('/api/academy/status', { cache: 'no-store' }),
-          fetch('/api/me', { cache: 'no-store' })
+          fetch('/api/me', { cache: 'no-store' }),
+          fetch('/api/track', { cache: 'no-store' })
         ]);
         if (resMe.ok) { const me = await resMe.json(); yoId = String(me.id); }
+        if (resTrack.ok) { const tr = await resTrack.json(); trackActual = tr.track || null; }
         if (!res.ok) return;
         const st = await res.json();
         let localTrack = null;
         try { localTrack = localStorage.getItem('lan_track_elegido'); } catch (e) { /* ignore */ }
-        esAtc = st.is_atc === true || localTrack === 'atc';
+        // Solo la ruta elegida (BD) decide la vista; el rol de Discord no la cambia
+        esAtc = trackActual === 'atc' || localTrack === 'atc';
         if (esAtc) {
           // Vista ATC: ocultar botón + y cambiar textos
           document.getElementById('btn-open-modal').hidden = true;

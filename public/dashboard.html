@@ -1426,7 +1426,8 @@
       cta.hidden = false;
       cta.className = 'tab-item';
       if (academyStatus.status === 'approved') {
-        const esAtc = trackActual === 'atc' || academyStatus.is_atc === true;
+        // La ruta ELEGIDA manda: Piloto → "Planes de vuelo", ATC → "Solicitudes..."
+        const esAtc = trackActual === 'atc';
         cta.innerHTML = esAtc
           ? '<i class="ico ico-shield"></i> Solicitudes de planes de vuelo'
           : '<i class="ico ico-plane"></i> Planes de vuelo';
