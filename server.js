@@ -696,12 +696,8 @@ app.get('/dashboard/planes-de-vuelo', requireVerificado, async (req, res) => {
     if (!(await academyAprobado(discordId))) {
       return res.redirect('/dashboard');   // sin aprobación no entra
     }
-    // ATC usa ATC Operations → los vuelos de otros no son "sus planes"
-    const ids = await obtenerRangosIds(discordId);
-    const track = await obtenerTrack(discordId);
-    if (ids.includes('1555512718046404609') || track === 'atc') {
-      return res.redirect('/dashboard/atc-operations');
-    }
+    // ⚠️ Ya NO redirigimos a ATC aunque tenga el rol: si el usuario eligió
+    // "Planes de Vuelo", debe ver SU página de piloto (puede tener ambos roles).
     res.sendFile(path.join(__dirname, 'public', 'planes-de-vuelo.html'));
   } catch (err) {
     console.error('Error planes-de-vuelo:', err.message);
@@ -2074,17 +2070,42 @@ app.post('/api/atc/strips/:id/tower', requireAuth, async (req, res) => {
       await notificar(fp.discord_id, 'Tu vuelo ha aterrizado', `${callsign}: transferido a Ground para rodaje a plataforma.`, 'plane');
       return res.json({ success: true, atc_stage: 'GND' });
     }
-    // Salida: despegue → finalizado
+    // Salida: despegue → EN EL AIRE
+    await pool.query(
+      `UPDATE flight_plans SET atc_stage = 'AIR', status = 'active',
+       atc_controller_id = ?, updated_at = NOW() WHERE id = ?`,
+      [discordId, fp.id]
+    );
+    await registrarOperacion(fp.departure, callsign, 'TWR', 'Despegue completado. Vuelo en el aire.', discordId, nombre);
+    await notificar(fp.discord_id, 'Tu vuelo está en el aire', `${callsign}: despegue autorizado. Vuelo en el aire.`, 'plane');
+    res.json({ success: true, atc_stage: 'AIR' });
+  } catch (err) {
+    console.error('Error atc/tower:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// En el aire → Finalizado (el ATC da el vuelo por terminado)
+app.post('/api/atc/strips/:id/finish', requireAuth, async (req, res) => {
+  try {
+    const discordId = String(req.session.discordUser.id);
+    if (!(await esControlador(discordId))) return res.status(403).json({ error: 'Sin permisos ATC' });
+    const [rows] = await pool.query('SELECT * FROM flight_plans WHERE id = ?', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'Vuelo no encontrado' });
+    const fp = rows[0];
+    if (fp.atc_stage !== 'AIR') return res.status(409).json({ error: 'El vuelo no está en el aire' });
+    const nombre = await nombreControlador(discordId);
+    const callsign = (fp.airline || '') + (fp.flight_number || '');
     await pool.query(
       `UPDATE flight_plans SET atc_stage = 'FINISHED', status = 'finished', finished_at = NOW(),
        atc_controller_id = ?, updated_at = NOW() WHERE id = ?`,
       [discordId, fp.id]
     );
-    await registrarOperacion(fp.departure, callsign, 'TWR', 'Despegue completado. Vuelo finalizado.', discordId, nombre);
-    await notificar(fp.discord_id, 'Tu vuelo ha finalizado', `${callsign}: despegue completado. Operación finalizada.`, 'check');
+    await registrarOperacion(fp.destination, callsign, 'AIR', 'Vuelo finalizado.', discordId, nombre);
+    await notificar(fp.discord_id, 'Tu vuelo ha finalizado', `${callsign}: operación finalizada.`, 'check');
     res.json({ success: true, atc_stage: 'FINISHED' });
   } catch (err) {
-    console.error('Error atc/tower:', err.message);
+    console.error('Error atc/finish:', err.message);
     res.status(500).json({ error: 'Error interno' });
   }
 });
@@ -2212,6 +2233,7 @@ app.get('/api/notifications', requireAuth, async (req, res) => {
     res.status(500).json({ error: 'Error interno' });
   }
 });
+// Marcar una como leída
 app.post('/api/notifications/:id/read', requireAuth, async (req, res) => {
   try {
     await pool.query(
@@ -2221,6 +2243,29 @@ app.post('/api/notifications/:id/read', requireAuth, async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error('Error notifications/read:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// Borrar UNA notificación
+app.post('/api/notifications/:id/delete', requireAuth, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM lan_notifications WHERE id = ? AND discord_id = ?',
+      [req.params.id, String(req.session.discordUser.id)]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error notifications/delete:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// Borrar TODAS las notificaciones del usuario
+app.post('/api/notifications/delete-all', requireAuth, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM lan_notifications WHERE discord_id = ?', [String(req.session.discordUser.id)]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error notifications/delete-all:', err.message);
     res.status(500).json({ error: 'Error interno' });
   }
 });

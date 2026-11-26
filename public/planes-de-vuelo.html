@@ -374,28 +374,31 @@
 
     <div class="alert" id="alert"></div>
 
-    <!-- ===== PANEL SQUAWK INTEGRADO (aparece al enviar un plan) ===== -->
-    <section class="card squawk-panel" id="squawk-panel" hidden>
-      <div class="squawk-panel-head">
-        <span class="squawk-icon">📻</span>
-        <div>
-          <h2>Ahora haga el Squawk</h2>
-          <p>Delivery le dará un código de 4 dígitos. Introdúzcalo aquí para conectar su transponder.</p>
+    <!-- ===== OVERLAY SQUAWK (se abre desde el botón de cada plan) ===== -->
+    <div class="modal-overlay" id="squawk-modal">
+      <div class="modal-card squawk-panel" style="max-width:480px">
+        <button class="modal-close" id="sq-close" type="button" aria-label="Cerrar"><i class="ico ico-x"></i></button>
+        <div class="squawk-panel-head">
+          <span class="squawk-icon">📻</span>
+          <div>
+            <h2>Ahora haga el Squawk</h2>
+            <p>Delivery le dará un código de 4 dígitos. Introdúzcalo para conectar su transponder.</p>
+          </div>
+        </div>
+        <div class="squawk-body">
+          <div class="squawk-flight">Tu vuelo: <b id="sq-flight">—</b></div>
+          <div class="digits">
+            <input class="digit" id="sq0" maxlength="1" inputmode="numeric" placeholder="_">
+            <input class="digit" id="sq1" maxlength="1" inputmode="numeric" placeholder="_">
+            <input class="digit" id="sq2" maxlength="1" inputmode="numeric" placeholder="_">
+            <input class="digit" id="sq3" maxlength="1" inputmode="numeric" placeholder="_">
+          </div>
+          <button class="btn btn-primary" id="sq-connect"><i class="ico ico-check"></i> Conectar Squawk</button>
+          <div id="sq-status" class="sq-status">🔴 SQUAWK PENDIENTE</div>
+          <div id="sq-error" class="sq-error" hidden></div>
         </div>
       </div>
-      <div class="squawk-body">
-        <div class="squawk-flight">Tu vuelo: <b id="sq-flight">—</b></div>
-        <div class="digits">
-          <input class="digit" id="sq0" maxlength="1" inputmode="numeric" placeholder="_">
-          <input class="digit" id="sq1" maxlength="1" inputmode="numeric" placeholder="_">
-          <input class="digit" id="sq2" maxlength="1" inputmode="numeric" placeholder="_">
-          <input class="digit" id="sq3" maxlength="1" inputmode="numeric" placeholder="_">
-        </div>
-        <button class="btn btn-primary" id="sq-connect"><i class="ico ico-check"></i> Conectar Squawk</button>
-        <div id="sq-status" class="sq-status">🔴 SQUAWK PENDIENTE</div>
-        <div id="sq-error" class="sq-error" hidden></div>
-      </div>
-    </section>
+    </div>
 
     <div class="stats">
       <div class="stat" style="--c:var(--cyan)"><div class="stat-label">En operación</div><div class="stat-num" id="st-active">0</div></div>
@@ -585,38 +588,18 @@
     let editId = null, todosPlanes = [], misPlanes = [], curFiltro = 'all', curBusqueda = '';
     const POR_PAGINA = 5;
     let paginaActual = 1;
-    let esAtc = false;   // se detecta con /api/track (ruta elegida)
+    let esAtc = false;   // SIEMPRE false: esta página es solo de PILOTO
     let trackActual = null;
     let yoId = null;
     let firmaDatos = ''; // solo recargamos si los datos cambiaron realmente
 
-    /* Detectar rol: ATC ve TODAS las solicitudes + controles; piloto ve las suyas */
+    /* Esta página es SIEMPRE la dashboard del piloto (crear/ver/cancelar planes + Squawk).
+       El panel ATC está en /dashboard/atc-operations. */
     async function detectarRol() {
       try {
-        const [res, resMe, resTrack] = await Promise.all([
-          fetch('/api/academy/status', { cache: 'no-store' }),
-          fetch('/api/me', { cache: 'no-store' }),
-          fetch('/api/track', { cache: 'no-store' })
-        ]);
+        const resMe = await fetch('/api/me', { cache:'no-store' });
         if (resMe.ok) { const me = await resMe.json(); yoId = String(me.id); }
-        if (resTrack.ok) { const tr = await resTrack.json(); trackActual = tr.track || null; }
-        if (!res.ok) return;
-        const st = await res.json();
-        let localTrack = null;
-        try { localTrack = localStorage.getItem('lan_track_elegido'); } catch (e) { /* ignore */ }
-        // Solo la ruta elegida (BD) decide la vista; el rol de Discord no la cambia
-        esAtc = trackActual === 'atc' || localTrack === 'atc';
-        if (esAtc) {
-          // Vista ATC: ocultar botón + y cambiar textos
-          document.getElementById('btn-open-modal').hidden = true;
-          document.querySelector('.hero .badge').innerHTML = '<i class="ico ico-shield"></i> ATC · Control de Tránsito';
-          document.querySelector('.hero h1').textContent = 'Solicitudes de planes de vuelo';
-          document.querySelector('.hero p').textContent = 'Aprueba o deniega los planes enviados por los pilotos.';
-          document.querySelector('.card-head h2').innerHTML = '<i class="ico ico-shield"></i> Solicitudes de planes';
-          const chipMios = document.querySelector('#filtros [data-f="mios"]');
-          if (chipMios) chipMios.hidden = true;
-        }
-      } catch (e) { console.warn('No se pudo detectar rol:', e); }
+      } catch (e) { console.warn('No se pudo detectar usuario:', e); }
     }
 
     /* Acordeón: abrir/cerrar secciones del formulario */
@@ -701,12 +684,8 @@
         if (!res.ok) throw new Error(data.error || 'No se pudo guardar el plan');
         modal.classList.remove('active');
         if (enviar) {
-          showAlert('✅ Plan enviado. Ahora haga el Squawk con el código que le dé Delivery.', 'ok');
-          // Mostrar panel Squawk con el plan recién creado
-          const idNuevo = data.id || editId;
+          showAlert('✅ Plan enviado. Cuando Delivery le dé el Squawk, use el botón "Validar Squawk" en su plan.', 'ok');
           await cargarPlanes(true);
-          const planNuevo = todosPlanes.find(p => p.id == idNuevo) || misPlanes.find(p => p.id == idNuevo);
-          if (planNuevo) mostrarSquawk(planNuevo);
         } else {
           showAlert('💾 Borrador guardado.', 'ok');
           await cargarPlanes();
@@ -731,18 +710,22 @@
     }
     document.getElementById('btn-cancel-edit').addEventListener('click', resetForm);
 
-    /* ===== SQUAWK INTEGRADO ===== */
+    /* ===== OVERLAY SQUAWK ===== */
     let planSquawk = null;
     function mostrarSquawk(p) {
       planSquawk = p;
       document.getElementById('sq-flight').textContent = (p.airline || '') + (p.flight_number || '') || ('#' + p.id);
-      document.getElementById('squawk-panel').hidden = false;
+      document.getElementById('squawk-modal').classList.add('active');
       const st = document.getElementById('sq-status');
       if (p.squawk_validated) { st.className = 'sq-status green'; st.textContent = '🟢 CONNECTED'; }
       else { st.className = 'sq-status red'; st.textContent = '🔴 SQUAWK PENDIENTE'; }
       document.getElementById('sq-error').hidden = true;
-      document.getElementById('squawk-panel').scrollIntoView({ behavior:'smooth', block:'center' });
+      [0,1,2,3].forEach(i => document.getElementById('sq'+i).value = '');
     }
+    document.getElementById('sq-close').addEventListener('click', () => document.getElementById('squawk-modal').classList.remove('active'));
+    document.getElementById('squawk-modal').addEventListener('click', e => {
+      if (e.target === document.getElementById('squawk-modal')) document.getElementById('squawk-modal').classList.remove('active');
+    });
     // Auto-avance dígitos
     [0,1,2,3].forEach(i => {
       const inp = document.getElementById('sq'+i);
@@ -954,9 +937,12 @@
             <span><b>Aeronave:</b> ${esc(p.aircraft)}</span>
             <span><b>Altitud:</b> ${esc(p.cruise_altitude || 'Automática')}</span>
             <span><b>Alternate:</b> ${esc(p.alternate || 'Automático')}</span>
+            <span><b>Pista asignada:</b> <b style="color:var(--cyan)">${esc(p.runway || 'Por asignar')}</b></span>
+            <span><b>SID:</b> ${esc(p.sid || '—')}</span>
             <span><b>Piloto:</b> ${esc(p.username)} (${esc(p.discord_id)})</span>
             <span><b>Creado:</b> ${new Date(p.created_at).toLocaleString('es')}</span>
-            ${p.squawk ? '<span><b>Squawk:</b> <span class="squawk">SQK ' + esc(p.squawk) + '</span></span>' : ''}
+            <span><b>Squawk:</b> ${p.squawk ? '<span class="squawk">SQK ' + esc(p.squawk) + '</span>' : '—'}</span>
+            <span><b>Squawk validado:</b> ${p.squawk_validated ? '<span style="color:var(--green);font-weight:900">✅ SÍ — listo para autorización</span>' : '<span style="color:var(--red);font-weight:900">🔴 PENDIENTE</span>'}</span>
             ${p.rejection_reason ? '<span style="grid-column:1/-1;color:var(--red)"><b>Motivo:</b> ' + esc(p.rejection_reason) + '</span>' : ''}
           </div>
         </div>
@@ -1025,10 +1011,7 @@
         document.getElementById('st-pending').textContent = todosPlanes.filter(p => p.status === 'pending').length;
         document.getElementById('st-total').textContent = todosPlanes.length;
         aplicarFiltros();
-        // Si hay un plan esperando Squawk, mostrar el panel automáticamente
-        const pendienteSquawk = misPlanes.find(p => p.has_squawk && !p.squawk_validated);
-        if (pendienteSquawk && !planSquawk) mostrarSquawk(pendienteSquawk);
-        if (!pendienteSquawk) document.getElementById('squawk-panel').hidden = true;
+        // NO abrir automáticamente: el piloto abre el Squawk con el botón del plan
       } catch (e) {
         box.innerHTML = '<p class="empty"><i class="ico ico-plane"></i>' + esc(errorAmigable(e.message)) + '</p>';
       }
