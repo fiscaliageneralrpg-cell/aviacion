@@ -8,9 +8,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --black:#030305; --white:#fff; --white-soft:#cbd5e1; --gray:#64748b;
-      --blue:#0066ff; --blue-light:#3399ff; --cyan:#00d4ff; --border:#1e3a5f;
-      --green:#22c55e; --red:#f43f5e; --yellow:#facc15;
+      --black:#030305; --card:#08131f; --white:#fff; --white-soft:#cbd5e1;
+      --gray:#64748b; --blue:#0066ff; --blue-light:#3399ff; --cyan:#00d4ff;
+      --border:#1e3a5f; --green:#22c55e; --red:#f43f5e; --yellow:#facc15;
     }
     * { margin:0; padding:0; box-sizing:border-box; }
     [hidden] { display:none !important; }
@@ -19,10 +19,10 @@
     a { text-decoration:none; color:inherit; }
     .container { max-width:1360px; margin:0 auto; padding:0 22px; width:100%; }
     .bg { position:fixed; inset:0; z-index:-2; background-size:cover; background-position:center;
-      background-image:linear-gradient(rgba(3,8,18,.84),rgba(3,8,18,.94)),url("https://i.imgur.com/rjEhr3O.jpeg"); }
+      background-image:linear-gradient(rgba(3,8,18,.72),rgba(3,8,18,.88)),url("https://i.imgur.com/rjEhr3O.jpeg"); }
     .bg::after { content:""; position:absolute; inset:0;
-      background:radial-gradient(circle at 20% 10%,rgba(0,102,255,.18),transparent 45%),
-                 radial-gradient(circle at 85% 80%,rgba(0,212,255,.12),transparent 45%); }
+      background:radial-gradient(circle at 20% 10%,rgba(0,102,255,.16),transparent 45%),
+                 radial-gradient(circle at 85% 80%,rgba(0,212,255,.1),transparent 45%); }
 
     .ico { display:inline-block; position:relative; flex-shrink:0; width:1.1em; height:1.1em; vertical-align:-.16em; }
     .ico::before,.ico::after { content:""; position:absolute; display:block; }
@@ -31,22 +31,32 @@
     .ico-tower::before { left:10%; top:0; width:80%; height:70%; border:.12em solid currentColor; border-bottom:none; }
     .ico-clip { border:.12em solid currentColor; border-radius:.2em; }
     .ico-clip::before { left:0; top:0; width:100%; height:32%; background:currentColor; }
-    .ico-chev::before { left:24%; top:18%; width:42%; height:42%; border:solid currentColor; border-width:0 .17em .17em 0; transform:rotate(45deg); }
-    .ico-left { transform:rotate(90deg); }
-    .ico-check::before { left:30%; top:6%; width:30%; height:60%; border:solid currentColor; border-width:0 .17em .17em 0; transform:rotate(45deg); }
-    .ico-x::before,.ico-x::after { left:8%; top:43%; width:84%; height:.17em; background:currentColor; border-radius:3px; }
-    .ico-x::before { transform:rotate(45deg); } .ico-x::after { transform:rotate(-45deg); }
+    .ico-cloud { border:.12em solid currentColor; border-radius:50%; }
+    .ico-sun { border:.12em solid currentColor; border-radius:50%; }
+    .ico-wind { border-top:.12em solid currentColor; }
+    .ico-chev { border:solid currentColor; border-width:0 .16em .16em 0; padding:4px; transform:rotate(45deg); }
+    .ico-user::before { left:28%; top:0; width:44%; height:44%; border-radius:50%; background:currentColor; }
+    .ico-clock { border:.12em solid currentColor; border-radius:50%; }
+    .ico-radio { border:.12em solid currentColor; border-radius:50%; }
 
+    /* NAV estilo screenshot */
     nav { position:sticky; top:0; z-index:60; padding:11px 0; background:rgba(3,8,18,.92);
       backdrop-filter:blur(16px); border-bottom:1px solid var(--border); animation:navDrop .7s ease-out; }
     @keyframes navDrop { from{transform:translateY(-100%);opacity:0} to{transform:translateY(0);opacity:1} }
-    .nav-inner { display:flex; align-items:center; justify-content:space-between; gap:14px; }
+    .nav-inner { display:flex; align-items:center; justify-content:space-between; gap:12px; }
     .brand { display:flex; align-items:center; gap:10px; }
     .brand img { width:38px; height:38px; object-fit:contain; filter:drop-shadow(0 0 8px rgba(0,102,255,.5)); }
-    .brand span { font-family:'Orbitron',monospace; font-weight:900; font-size:.74rem; line-height:1.1; }
-    .btn-back { padding:9px 18px; border-radius:50px; cursor:pointer; background:rgba(0,102,255,.14);
-      border:1px solid rgba(0,102,255,.5); color:#fff; font-family:inherit; font-weight:800; font-size:.76rem; transition:.25s; }
-    .btn-back:hover { background:var(--blue); transform:translateY(-2px); }
+    .brand span { font-family:'Orbitron',monospace; font-weight:900; font-size:.7rem; line-height:1.05; letter-spacing:.5px; }
+    .nav-links { display:flex; gap:5px; flex-wrap:wrap; }
+    .nav-link { display:inline-flex; align-items:center; gap:7px; padding:8px 14px; border-radius:50px;
+      color:var(--white-soft); font-size:.76rem; font-weight:800; transition:.25s; border:1px solid transparent; white-space:nowrap; }
+    .nav-link:hover { color:#fff; background:rgba(0,102,255,.16); }
+    .nav-link.active { background:rgba(0,102,255,.2); border-color:rgba(0,212,255,.45); color:#fff; }
+    .nav-user { display:flex; align-items:center; gap:9px; padding:6px 12px; border-radius:50px;
+      background:rgba(255,255,255,.04); border:1px solid var(--border); }
+    .nav-avatar { width:32px; height:32px; border-radius:50%; display:grid; place-items:center;
+      font-family:'Orbitron',monospace; font-size:.72rem; font-weight:900; background:linear-gradient(135deg,var(--blue),var(--cyan)); }
+    .nav-user b { font-size:.76rem; } .nav-user small { display:block; color:var(--cyan); font-size:.64rem; }
 
     main { flex:1; padding:22px 0 50px; }
     .hero { display:flex; align-items:center; justify-content:space-between; gap:18px; flex-wrap:wrap;
@@ -65,16 +75,45 @@
       background:rgba(34,197,94,.12); border:1px solid rgba(34,197,94,.5); color:var(--green); font-size:.76rem; font-weight:900; letter-spacing:1px; }
     .online i { width:9px; height:9px; border-radius:50%; background:var(--green); box-shadow:0 0 12px var(--green); }
 
+    /* Barra aeropuerto + clima */
+    .airport-bar { display:flex; align-items:center; gap:18px; flex-wrap:wrap; padding:16px 22px; border-radius:18px;
+      margin-bottom:16px; background:linear-gradient(160deg,rgba(13,27,42,.96),rgba(8,19,31,.94));
+      border:1px solid var(--border); animation:riseUp .6s .1s ease-out both; }
+    .airport-sel-wrap { display:flex; align-items:center; gap:12px; min-width:270px; flex:1; }
+    .airport-ico { width:42px; height:42px; border-radius:12px; display:grid; place-items:center;
+      background:rgba(0,102,255,.16); border:1px solid rgba(0,212,255,.4); color:var(--cyan); font-size:1.2rem; }
+    .airport-sel { flex:1; padding:11px 14px; border-radius:12px; background:rgba(0,0,0,.4);
+      border:1px solid var(--border); color:#fff; font-family:'Orbitron',monospace; font-size:.85rem; font-weight:700; cursor:pointer; }
+    .airport-sel:focus { outline:none; border-color:var(--cyan); }
+    .clima-item { display:flex; align-items:center; gap:10px; padding:0 14px; border-left:1px solid var(--border);
+      color:var(--white-soft); font-size:.82rem; white-space:nowrap; }
+    .clima-item .ico { color:var(--cyan); font-size:1.3rem; }
+    .clima-item b { color:#fff; font-family:'Orbitron',monospace; }
+
+    /* Stats tipo screenshot */
+    .stats { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:16px; }
+    .stat { padding:16px 18px; border-radius:16px; border:1px solid var(--border);
+      background:linear-gradient(160deg,rgba(13,27,42,.95),rgba(8,19,31,.92)); position:relative; overflow:hidden;
+      animation:riseUp .5s ease-out both; transition:transform .3s, border-color .3s; }
+    .stat:nth-child(2){animation-delay:.05s} .stat:nth-child(3){animation-delay:.1s}
+    .stat:nth-child(4){animation-delay:.15s} .stat:nth-child(5){animation-delay:.2s}
+    .stat::before { content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--c,var(--cyan)); }
+    .stat:hover { transform:translateY(-4px); border-color:rgba(0,212,255,.5); }
+    .stat-top { display:flex; align-items:center; gap:8px; color:var(--gray); font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.8px; }
+    .stat-top .ico { color:var(--c,var(--cyan)); }
+    .stat-num { font-family:'Orbitron',monospace; font-size:1.7rem; font-weight:900; color:var(--c,var(--white)); margin-top:4px; }
+
     .tabs-main { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
-    .tab-main { padding:11px 24px; border-radius:50px; cursor:pointer; font-family:'Orbitron',monospace; font-weight:900; font-size:.8rem;
-      background:rgba(255,255,255,.04); border:1px solid var(--border); color:var(--white-soft); transition:.3s; }
+    .tab-main { padding:10px 22px; border-radius:50px; cursor:pointer; font-family:'Orbitron',monospace;
+      font-weight:900; font-size:.76rem; background:rgba(255,255,255,.04); border:1px solid var(--border);
+      color:var(--white-soft); transition:.3s; }
     .tab-main:hover { border-color:var(--cyan); color:var(--cyan); transform:translateY(-2px); }
-    .tab-main.active { background:linear-gradient(135deg,var(--blue),var(--blue-light)); border-color:transparent; color:#fff; box-shadow:0 10px 24px rgba(0,102,255,.4); }
+    .tab-main.active { background:linear-gradient(135deg,var(--blue),var(--blue-light)); border-color:transparent; color:#fff; }
     .tab-main.rej.active { background:linear-gradient(135deg,#be123c,var(--red)); }
 
     .columns { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; animation:fadeIn .35s ease-out; }
     @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-    .col { border-radius:18px; padding:14px; border:1px solid var(--border); min-height:240px;
+    .col { border-radius:18px; padding:14px; border:1px solid var(--border); min-height:230px;
       background:rgba(0,0,0,.22); animation:riseUp .45s ease-out both; }
     .col:nth-child(2){animation-delay:.06s} .col:nth-child(3){animation-delay:.12s}
     .col-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
@@ -95,11 +134,6 @@
     @keyframes fadeSlide { from{opacity:0;transform:translateX(-8px)} to{opacity:1;transform:translateX(0)} }
     .col-empty { color:var(--gray); font-size:.78rem; text-align:center; padding:22px 8px; font-style:italic; }
 
-    .strip-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-    .strip-field { padding:10px 12px; border-radius:11px; background:rgba(0,0,0,.35); border:1px solid var(--border); }
-    .strip-field label { display:block; color:var(--gray); font-size:.62rem; font-weight:800; text-transform:uppercase; letter-spacing:.8px; }
-    .strip-field b { display:block; margin-top:4px; font-family:'Orbitron',monospace; font-size:.82rem; color:#fff; overflow-wrap:anywhere; }
-
     .modal-overlay { position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,.8); backdrop-filter:blur(9px);
       display:none; align-items:center; justify-content:center; padding:20px; }
     .modal-overlay.active { display:flex; animation:fadeIn .25s; }
@@ -114,6 +148,10 @@
       border:1px solid rgba(0,102,255,.45); color:var(--blue-light); font-size:.66rem; font-weight:900; letter-spacing:1px; text-transform:uppercase; }
     .modal-card h2 { font-family:'Orbitron',monospace; font-size:1.25rem; margin-bottom:4px; }
     .modal-card .sub { color:var(--gray); font-size:.8rem; margin-bottom:20px; }
+    .strip-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .strip-field { padding:10px 12px; border-radius:11px; background:rgba(0,0,0,.35); border:1px solid var(--border); }
+    .strip-field label { display:block; color:var(--gray); font-size:.62rem; font-weight:800; text-transform:uppercase; letter-spacing:.8px; }
+    .strip-field b { display:block; margin-top:4px; font-family:'Orbitron',monospace; font-size:.82rem; color:#fff; overflow-wrap:anywhere; }
     .squawk-box { margin:16px 0; padding:14px; border-radius:13px; text-align:center;
       background:rgba(0,212,255,.09); border:1px solid rgba(0,212,255,.45); }
     .squawk-code { font-family:'Orbitron',monospace; font-size:2rem; font-weight:900; color:var(--cyan); letter-spacing:8px; margin-top:6px; }
@@ -126,25 +164,61 @@
       cursor:pointer; border:1px solid transparent; font-family:inherit; font-weight:800; font-size:.8rem; transition:.3s; }
     .btn:hover { transform:translateY(-2px); }
     .btn-green { background:linear-gradient(135deg,var(--green),#16a34a); color:#fff; }
-    .btn-ghost { background:rgba(255,255,255,.05); border-color:var(--border); color:var(--white-soft); }
     .btn-red { background:linear-gradient(135deg,#be123c,var(--red)); color:#fff; }
-    .empty { color:var(--gray); font-size:.82rem; padding:14px; text-align:center; }
+
+    /* Error aeropuerto lleno */
+    .toast-error { position:fixed; top:80px; left:50%; transform:translateX(-50%) translateY(-20px);
+      background:linear-gradient(135deg,#7f1d1d,#b91c1c); border:1px solid var(--red); color:#fff;
+      padding:14px 24px; border-radius:14px; font-weight:800; font-size:.85rem; z-index:2000;
+      box-shadow:0 12px 34px rgba(0,0,0,.6),0 0 30px rgba(244,63,94,.4); opacity:0; pointer-events:none;
+      transition:.35s; text-align:center; max-width:90vw; }
+    .toast-error.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
     footer { border-top:1px solid var(--border); background:var(--black); padding:14px 0; text-align:center; color:var(--gray); font-size:.72rem; }
-    @media (max-width:900px) { .columns { grid-template-columns:1fr; } .strip-grid { grid-template-columns:1fr; } }
+    @media (max-width:1000px) { .stats{grid-template-columns:repeat(2,1fr)} .columns{grid-template-columns:1fr}
+      .nav-links{display:none} .strip-grid{grid-template-columns:1fr} }
   </style>
 </head>
 <body>
   <div class="bg"></div>
   <nav><div class="container nav-inner">
     <div class="brand"><img src="https://i.imgur.com/V47UGra.png" alt="LAN"><span>LATIN AVIATION<br>NETWORK</span></div>
-    <a href="/dashboard" class="btn-back" style="margin-left:auto"><i class="ico ico-chev ico-left"></i> Volver al dashboard</a>
+    <div class="nav-links">
+      <a href="/dashboard" class="nav-link"><i class="ico ico-plane"></i> Dashboard ATC</a>
+      <a href="/dashboard/planes-de-vuelo" class="nav-link"><i class="ico ico-clip"></i> Plan de Vuelo</a>
+      <a href="#" class="nav-link" id="nav-atish" onclick="return false"><i class="ico ico-cloud"></i> ATIS</a>
+      <a href="#" class="nav-link" onclick="return false"><i class="ico ico-clip"></i> Operaciones</a>
+      <a href="#" class="nav-link" onclick="return false"><i class="ico ico-user"></i> Personal</a>
+      <a href="#" class="nav-link" onclick="return false"><i class="ico ico-clock"></i> Historial</a>
+    </div>
+    <div class="nav-user"><span class="nav-avatar" id="nav-avatar">AT</span>
+      <div><b id="nav-name">Controlador</b><small id="nav-pos">ATC</small></div></div>
   </div></nav>
 
   <main class="container">
     <header class="hero">
-      <div><h1>ATC OPERATIONS</h1><p>Centro de Control Aeronáutico · Vuelos y autorizaciones</p></div>
+      <div><h1>ATC OPERATIONS</h1><p>Centro de Control Aeronáutico · Gestión de vuelos y posiciones ATC</p></div>
       <span class="online"><i></i> SISTEMA EN LÍNEA</span>
     </header>
+
+    <div class="airport-bar">
+      <div class="airport-sel-wrap">
+        <span class="airport-ico"><i class="ico ico-plane"></i></span>
+        <div style="flex:1"><div style="color:var(--gray);font-size:.66rem;font-weight:800;text-transform:uppercase;letter-spacing:.8px">Aeropuerto Activo</div>
+          <select class="airport-sel" id="airport-sel"></select></div>
+      </div>
+      <div class="clima-item" id="clima-temp"><i class="ico ico-cloud"></i> <b>—</b></div>
+      <div class="clima-item" id="clima-viento"><i class="ico ico-wind"></i> <b>—</b></div>
+      <div class="clima-item" id="clima-qnh"><i class="ico ico-clock"></i> <b>QNH —</b></div>
+    </div>
+
+    <div class="stats">
+      <div class="stat" style="--c:var(--white-soft)"><div class="stat-top"><i class="ico ico-plane"></i> Vuelos Totales</div><div class="stat-num" id="s-total">0</div></div>
+      <div class="stat" style="--c:var(--cyan)"><div class="stat-top"><i class="ico ico-clip"></i> Delivery</div><div class="stat-num" id="s-del">0</div></div>
+      <div class="stat" style="--c:var(--green)"><div class="stat-top"><i class="ico ico-check"></i> Verificados</div><div class="stat-num" id="s-ver">0</div></div>
+      <div class="stat" style="--c:var(--yellow)"><div class="stat-top"><i class="ico ico-tower"></i> Tower</div><div class="stat-num" id="s-twr">0</div></div>
+      <div class="stat" style="--c:var(--blue-light)"><div class="stat-top"><i class="ico ico-user"></i> Posiciones ATC</div><div class="stat-num" id="s-pos">0/3</div></div>
+    </div>
 
     <div class="tabs-main">
       <button class="tab-main active" data-tab="salidas">Salidas (DEP)</button>
@@ -152,52 +226,31 @@
       <button class="tab-main rej" data-tab="rechazados">Rechazados</button>
     </div>
 
-    <!-- SALIDAS -->
-    <div id="tab-salidas">
-      <div class="columns">
-        <div class="col del">
-          <div class="col-head"><span class="col-name"><i class="ico ico-clip"></i> DELIVERY (DEL)</span><span class="col-count" id="c-del">0</span></div>
-          <p class="col-sub">Vuelos en espera de autorización</p><div id="list-del"></div>
-        </div>
-        <div class="col ver">
-          <div class="col-head"><span class="col-name"><i class="ico ico-check"></i> VUELOS VERIFICADOS</span><span class="col-count" id="c-ver">0</span></div>
-          <p class="col-sub">Autorizados · esperando rodaje</p><div id="list-ver"></div>
-        </div>
-        <div class="col twr">
-          <div class="col-head"><span class="col-name"><i class="ico ico-tower"></i> TOWER (TWR)</span><span class="col-count" id="c-twr">0</span></div>
-          <p class="col-sub">Vuelos en pista (despegues)</p><div id="list-twr"></div>
-        </div>
-      </div>
-    </div>
+    <div id="tab-salidas"><div class="columns">
+      <div class="col del"><div class="col-head"><span class="col-name"><i class="ico ico-clip"></i> DELIVERY (DEL)</span><span class="col-count" id="c-del">0</span></div>
+        <p class="col-sub">Vuelos en espera de autorización</p><div id="list-del"></div></div>
+      <div class="col ver"><div class="col-head"><span class="col-name"><i class="ico ico-check"></i> VUELOS VERIFICADOS</span><span class="col-count" id="c-ver">0</span></div>
+        <p class="col-sub">Autorizados · esperando rodaje</p><div id="list-ver"></div></div>
+      <div class="col twr"><div class="col-head"><span class="col-name"><i class="ico ico-tower"></i> TOWER (TWR)</span><span class="col-count" id="c-twr">0</span></div>
+        <p class="col-sub">Vuelos en pista (despegues)</p><div id="list-twr"></div></div>
+    </div></div>
 
-    <!-- LLEGADAS -->
-    <div id="tab-llegadas" hidden>
-      <div class="columns">
-        <div class="col arr">
-          <div class="col-head"><span class="col-name">🛬 LLEGÓ</span><span class="col-count" id="c-arr">0</span></div>
-          <p class="col-sub">El vuelo llegó al destino</p><div id="list-arr"></div>
-        </div>
-        <div class="col ver">
-          <div class="col-head"><span class="col-name">🅿️ A ESTACIONAR</span><span class="col-count" id="c-park">0</span></div>
-          <p class="col-sub">Yendo a la pista / estacionando</p><div id="list-park"></div>
-        </div>
-        <div class="col rej">
-          <div class="col-head"><span class="col-name">✅ FINALIZADOS</span><span class="col-count" id="c-fin">0</span></div>
-          <p class="col-sub">Se eliminan 1 día después</p><div id="list-fin"></div>
-        </div>
-      </div>
-    </div>
+    <div id="tab-llegadas" hidden><div class="columns">
+      <div class="col arr"><div class="col-head"><span class="col-name">🛬 LLEGÓ</span><span class="col-count" id="c-arr">0</span></div>
+        <p class="col-sub">El vuelo llegó al destino</p><div id="list-arr"></div></div>
+      <div class="col ver"><div class="col-head"><span class="col-name">🅿️ A ESTACIONAR</span><span class="col-count" id="c-park">0</span></div>
+        <p class="col-sub">Yendo a estacionar / bajar pasajeros</p><div id="list-park"></div></div>
+      <div class="col rej"><div class="col-head"><span class="col-name">✅ FINALIZADOS</span><span class="col-count" id="c-fin">0</span></div>
+        <p class="col-sub">Se eliminan 1 día después</p><div id="list-fin"></div></div>
+    </div></div>
 
-    <!-- RECHAZADOS -->
-    <div id="tab-rechazados" hidden>
-      <div class="columns" style="grid-template-columns:1fr">
-        <div class="col rej">
-          <div class="col-head"><span class="col-name"><i class="ico ico-x"></i> VUELOS RECHAZADOS</span><span class="col-count" id="c-rej">0</span></div>
-          <p class="col-sub">Se eliminan 2 días después</p><div id="list-rej"></div>
-        </div>
-      </div>
-    </div>
+    <div id="tab-rechazados" hidden><div class="columns" style="grid-template-columns:1fr">
+      <div class="col rej"><div class="col-head"><span class="col-name"><i class="ico ico-x"></i> VUELOS RECHAZADOS</span><span class="col-count" id="c-rej">0</span></div>
+        <p class="col-sub">Se eliminan 2 días después</p><div id="list-rej"></div></div>
+    </div></div>
   </main>
+
+  <div class="toast-error" id="toast-error"></div>
 
   <div class="modal-overlay" id="strip-modal"><div class="modal-card">
     <button class="modal-close" id="strip-close"><i class="ico ico-x"></i></button>
@@ -206,68 +259,109 @@
     <div id="strip-body"></div>
   </div></div>
 
-  <footer><span style="font-family:'Orbitron',monospace;color:var(--blue)">0.0.0.0.1</span> © 2026 Latin Aviation Network</footer>
+  <footer><span style="font-family:'Orbitron',monospace;color:var(--blue)">0.0.0.0.1</span> © 2026 Latin Aviation Network. Todos los derechos reservados.</footer>
 
   <script>
     const $ = id => document.getElementById(id);
-    let strips = [], tabActual = 'salidas';
+    let strips = [], positions = [], clima = null, aeropuerto = '', tabActual = 'salidas';
     function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
-    document.querySelectorAll('.tab-main').forEach(t => t.addEventListener('click', () => {
-      document.querySelectorAll('.tab-main').forEach(x => x.classList.remove('active'));
-      t.classList.add('active'); tabActual = t.dataset.tab;
-      ['salidas','llegadas','rechazados'].forEach(x => $('tab-'+x).hidden = x !== tabActual);
-      pintar();
-    }));
+    function toast(msg){
+      const t=$('toast-error'); t.textContent=msg; t.classList.add('show');
+      setTimeout(()=>t.classList.remove('show'),5000);
+    }
 
-    async function cargar(){
+    async function cargarAirports(){
       try{
-        const r = await fetch('/api/atc/strips',{cache:'no-store'});
-        if(!r.ok) return;
-        strips = (await r.json()).strips || [];
+        const [rA,rMe]=await Promise.all([fetch('/api/atc/airports',{cache:'no-store'}),fetch('/api/me',{cache:'no-store'})]);
+        if(!rA.ok) return;
+        const d=await rA.json(); clima=d.clima;
+        if(rMe.ok){const me=await rMe.json(); $('nav-name').textContent=me.global_name||me.username;
+          $('nav-avatar').textContent=String((me.global_name||me.username||'AT')[0]).toUpperCase();}
+        const sel=$('airport-sel');
+        sel.innerHTML=d.airports.map(a=>`<option value="${a.code}">${a.code} — ${a.name}</option>`).join('');
+        aeropuerto=d.airports[0]?d.airports[0].code:'';
+        pintarClima(); await recargar();
+      }catch(e){console.error(e);}
+    }
+    function pintarClima(){
+      if(!clima) return;
+      $('clima-temp').innerHTML=`<i class="ico ico-cloud"></i> <b>${clima.temp}°C</b> ${esc(clima.desc)}`;
+      $('clima-viento').innerHTML=`<i class="ico ico-wind"></i> <b>${esc(clima.wind)}</b>`;
+      $('clima-qnh').innerHTML=`<i class="ico ico-clock"></i> <b>QNH ${clima.qnh} hPa</b>`;
+    }
+
+    async function cambiarAeropuerto(code){
+      // Verificar posiciones: máximo 3 controladores por aeropuerto
+      try{
+        const r=await fetch('/api/atc/positions?airport='+code,{cache:'no-store'});
+        const d=await r.json();
+        const ocupadas=(d.positions||[]).filter(p=>p.controller_id).length;
+        if(ocupadas>=3){
+          toast('❌ No puedes entrar a este aeropuerto: está lleno de ATC ('+ocupadas+'/3). Elige otro aeropuerto.');
+          $('airport-sel').value=aeropuerto; return;
+        }
+        aeropuerto=code; recargar();
+      }catch(e){console.error(e);}
+    }
+    $('airport-sel').addEventListener('change',e=>cambiarAeropuerto(e.target.value));
+
+    async function recargar(){
+      try{
+        const [rS,rP]=await Promise.all([
+          fetch('/api/atc/strips',{cache:'no-store'}),
+          fetch('/api/atc/positions?airport='+aeropuerto,{cache:'no-store'})
+        ]);
+        strips=(await rS.json()).strips||[]; positions=(await rP.json()).positions||[];
         pintar();
       }catch(e){console.error(e);}
     }
 
+    document.querySelectorAll('.tab-main').forEach(t=>t.addEventListener('click',()=>{
+      document.querySelectorAll('.tab-main').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active'); tabActual=t.dataset.tab;
+      ['salidas','llegadas','rechazados'].forEach(x=>$('tab-'+x).hidden=x!==tabActual);
+      pintar();
+    }));
+
     function destino(s){
-      const k = s.flight_kind || 'DEP';
-      if(['rejected','cancelled','FINISHED'].includes(s.atc_stage) || s.status==='rejected') return 'rej';
-      if(s.atc_stage==='DEL' || !s.atc_stage) return 'del';
+      const k=s.flight_kind||'DEP';
+      if(s.status==='rejected') return 'rej';
+      if(s.atc_stage==='DEL'||!s.atc_stage) return 'del';
       if(s.atc_stage==='VERIFIED') return 'ver';
-      if(s.atc_stage==='LINEUP'||s.atc_stage==='TWR') return 'twr';
+      if(s.atc_stage==='LINEUP'||s.atc_stage==='TWR'||s.atc_stage==='TAXI') return 'twr';
       if(s.atc_stage==='ARRIVED') return 'arr';
       if(s.atc_stage==='PARKING') return 'park';
       if(s.atc_stage==='FINISHED') return 'fin';
-      return k==='ARR' ? 'arr' : 'del';
+      return k==='ARR'?'arr':'del';
     }
-    function destinoFin(s){
-      if(s.atc_stage==='FINISHED' && (s.flight_kind||'DEP')==='ARR') return 'fin';
-      return null;
-    }
-
     function pintar(){
-      const g = k => strips.filter(s => destino(s) === k);
-      const render = (list, el) => {
-        $(el).innerHTML = list.length
+      const g=k=>strips.filter(s=>destino(s)===k);
+      const render=(list,el)=>{
+        $(el).innerHTML=list.length
           ? list.map((s,i)=>`<button class="strip" data-id="${s.id}" style="animation-delay:${i*.05}s"><span>${esc(s.callsign)}</span><span>›</span></button>`).join('')
-          : '<p class="col-empty">Sin vuelos</p>';
-        $(el).querySelectorAll('.strip').forEach(b => b.onclick = () => abrir(b.dataset.id));
+          : '<p class="col-empty">Sin vuelos en esta posición</p>';
+        $(el).querySelectorAll('.strip').forEach(b=>b.onclick=()=>abrir(b.dataset.id));
       };
-      render(g('del'),'list-del'); render(g('ver'),'list-ver'); render(g('twr'),'list-twr');
-      render(g('arr'),'list-arr'); render(g('park'),'list-park');
+      render(g('del'),'list-del');render(g('ver'),'list-ver');render(g('twr'),'list-twr');
+      render(g('arr'),'list-arr');render(g('park'),'list-park');
       render(strips.filter(s=>s.atc_stage==='FINISHED'),'list-fin');
       render(strips.filter(s=>s.status==='rejected'),'list-rej');
-      $('c-del').textContent=g('del').length; $('c-ver').textContent=g('ver').length;
-      $('c-twr').textContent=g('twr').length; $('c-arr').textContent=g('arr').length;
-      $('c-park').textContent=g('park').length; $('c-rej').textContent=strips.filter(s=>s.status==='rejected').length;
-      $('c-fin').textContent=strips.filter(s=>s.atc_stage==='FINISHED').length;
+      $('c-del').textContent=g('del').length;$('c-ver').textContent=g('ver').length;
+      $('c-twr').textContent=g('twr').length;$('c-arr').textContent=g('arr').length;
+      $('c-park').textContent=g('park').length;$('c-fin').textContent=strips.filter(s=>s.atc_stage==='FINISHED').length;
+      $('c-rej').textContent=strips.filter(s=>s.status==='rejected').length;
+      const ocupadas=positions.filter(p=>p.controller_id).length;
+      $('s-pos').textContent=ocupadas+'/'+positions.length;
+      $('s-total').textContent=strips.filter(s=>!['FINISHED'].includes(s.atc_stage)).length;
+      $('s-del').textContent=g('del').length;$('s-ver').textContent=g('ver').length;$('s-twr').textContent=g('twr').length;
     }
 
     async function abrir(id){
       try{
-        const r = await fetch('/api/atc/strips/'+id,{cache:'no-store'}); const d = await r.json();
-        if(!r.ok) return alert('❌ '+d.error);
-        const s = d.strip;
+        const r=await fetch('/api/atc/strips/'+id,{cache:'no-store'});const d=await r.json();
+        if(!r.ok)return alert('❌ '+d.error);
+        const s=d.strip;
         $('strip-title').textContent=s.callsign;
         $('strip-sub').textContent='Plan #'+s.id+' · '+(s.atc_stage||s.status);
         const campo=(l,v)=>`<div class="strip-field"><label>${l}</label><b>${esc(v||'—')}</b></div>`;
@@ -275,24 +369,22 @@
           ${campo('Reglas',s.flight_rules)} ${campo('Aerolínea',s.airline)}
           ${campo('Aeronave',s.aircraft)} ${campo('Matrícula',s.registration)}
           ${campo('Origen',s.departure)} ${campo('Destino',s.destination)}
-          ${campo('Pista',s.runway)} ${campo('SID',s.sid)}
+          ${campo('Pista asignada',s.runway)} ${campo('SID',s.sid)}
           ${campo('Altitud',s.cruise_altitude)} ${campo('Estado',s.atc_stage)}
         </div>
-        <div class="squawk-box"><label>Squawk (solo ATC)</label><div class="squawk-code">${esc(s.squawk||'—')}</div>
+        <div class="squawk-box"><label>Squawk asignado (solo ATC)</label><div class="squawk-code">${esc(s.squawk||'—')}</div>
           <div style="margin-top:8px;font-weight:900;color:${s.squawk_validated?'var(--green)':'var(--red)'}">
             ${s.squawk_validated?'✅ El piloto YA hizo el Squawk':'🔴 El piloto aún NO ha hecho el Squawk'}</div></div>
         <div class="actions" id="strip-actions"></div>`;
         const acc=$('strip-actions');
         if(s.atc_stage==='DEL'||!s.atc_stage){
           acc.innerHTML=`<div class="field"><label>Pista asignada</label><input id="in-runway" placeholder="26L" maxlength="8"></div>
-            <div class="field"><label>SID</label><input id="in-sid" placeholder="LONGA1A" maxlength="40"></div>
+            <div class="field"><label>SID (si aplica)</label><input id="in-sid" placeholder="LONGA1A" maxlength="40"></div>
             <div class="actions"><button class="btn btn-green" id="a-ok">Autorizar → Vuelos verificados</button>
             <button class="btn btn-red" id="a-no">Denegar</button></div>`;
-          $('a-ok').onclick=()=>{
-            const rw=$('in-runway').value.trim(); if(!rw) return alert('Indica la pista');
-            accion(s.id,'/clear',{runway:rw,sid:$('in-sid').value.trim()});
-          };
-          $('a-no').onclick=()=>{const m=prompt('Motivo del rechazo:'); if(m) accion(s.id,'/decision',{action:'reject',reason:m});};
+          $('a-ok').onclick=()=>{const rw=$('in-runway').value.trim(); if(!rw)return alert('Indica la pista');
+            accion(s.id,'/clear',{runway:rw,sid:$('in-sid').value.trim()});};
+          $('a-no').onclick=()=>{const m=prompt('Motivo del rechazo:');if(m)accion(s.id,'/decision',{action:'reject',reason:m});};
         }
         $('strip-modal').classList.add('active');
       }catch(e){console.error(e);}
@@ -300,14 +392,14 @@
     async function accion(id,path,body){
       try{
         const r=await fetch('/api/atc/strips/'+id+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-        const d=await r.json(); if(!r.ok) return alert('❌ '+(d.error||'Error'));
-        $('strip-modal').classList.remove('active'); cargar();
+        const d=await r.json(); if(!r.ok)return alert('❌ '+(d.error||'Error'));
+        $('strip-modal').classList.remove('active');recargar();
       }catch(e){alert('Error de conexión');}
     }
     $('strip-close').onclick=()=>$('strip-modal').classList.remove('active');
     $('strip-modal').onclick=e=>{if(e.target===$('strip-modal'))$('strip-modal').classList.remove('active')};
-    setInterval(()=>{if(!document.hidden)cargar()},5000);
-    cargar();
+    setInterval(()=>{if(!document.hidden)recargar()},5000);
+    cargarAirports();
   </script>
 </body>
 </html>

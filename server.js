@@ -1871,7 +1871,21 @@ app.get('/api/atc/airports', requireAuth, async (req, res) => {
       return res.status(403).json({ error: 'Sin permisos ATC' });
     }
     const [rows] = await pool.query('SELECT code, name FROM atc_airports WHERE active = 1 ORDER BY code');
-    res.json({ airports: rows });
+    // 🌤️ Clima aleatorio pero ESTABLE durante una hora (cambia a cada hora en punto)
+    const CLIMAS = [
+      { temp:18, desc:'Nublado',       wind:'070° / 8 kt',  qnh:1016, icon:'cloud' },
+      { temp:24, desc:'Despejado',     wind:'210° / 12 kt', qnh:1021, icon:'sun' },
+      { temp:16, desc:'Lluvia ligera', wind:'140° / 6 kt',  qnh:1009, icon:'rain' },
+      { temp:21, desc:'Parcialmente nublado', wind:'300° / 10 kt', qnh:1013, icon:'cloudsun' },
+      { temp:27, desc:'Despejado',     wind:'090° / 5 kt',  qnh:1024, icon:'sun' },
+      { temp:14, desc:'Neblina',       wind:'050° / 4 kt',  qnh:1007, icon:'fog' },
+      { temp:19, desc:'Viento fuerte', wind:'250° / 18 kt', qnh:1011, icon:'wind' }
+    ];
+    const hora = new Date().toISOString().slice(0,13); // YYYY-MM-DDTHH
+    let seed = 0;
+    for (const ch of hora) seed = (seed * 31 + ch.charCodeAt(0)) >>> 0;
+    const clima = CLIMAS[seed % CLIMAS.length];
+    res.json({ airports: rows, clima, hora });
   } catch (err) {
     console.error('Error atc/airports:', err.message);
     res.status(500).json({ error: 'Error interno' });
