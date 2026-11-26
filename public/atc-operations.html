@@ -257,12 +257,7 @@
         <img src="https://i.imgur.com/V47UGra.png" alt="LAN">
         <span>LATIN AVIATION<br>NETWORK</span>
       </div>
-      <div class="nav-links">
-        <a href="/dashboard" class="nav-link"><i class="ico ico-plane"></i> Dashboard</a>
-        <a href="/dashboard/atc-operations" class="nav-link active"><i class="ico ico-tower"></i> ATC Operations</a>
-        <a href="/dashboard/planes-de-vuelo" class="nav-link"><i class="ico ico-clip"></i> Planes de vuelo</a>
-        <a href="/dashboard/notificaciones" class="nav-link bell"><i class="ico ico-check"></i> Notificaciones <b id="nav-notif" hidden>0</b></a>
-      </div>
+      <a href="/dashboard" class="btn-back" style="margin-left:auto"><i class="ico ico-chev ico-left"></i> Volver al dashboard</a>
       <div class="nav-user">
         <span class="nav-avatar" id="nav-avatar">AT</span>
         <div><b id="nav-name" style="font-size:.78rem">Controlador</b><small id="nav-pos">ATC</small></div>
@@ -397,22 +392,18 @@
       $('strip-airport').textContent = aeropuerto;
       $('airport-name').textContent = $('airport-sel').selectedOptions[0] ? $('airport-sel').selectedOptions[0].text : aeropuerto;
       try {
-        const [rS, rP, rL, rN] = await Promise.all([
+        const [rS, rP, rL] = await Promise.all([
           fetch('/api/atc/strips?airport=' + aeropuerto, {cache:'no-store'}),
           fetch('/api/atc/positions?airport=' + aeropuerto, {cache:'no-store'}),
-          fetch('/api/atc/log?airport=' + aeropuerto, {cache:'no-store'}),
-          fetch('/api/notifications', {cache:'no-store'})
+          fetch('/api/atc/log?airport=' + aeropuerto, {cache:'no-store'})
         ]);
         strips = (await rS.json()).strips || [];
         posiciones = (await rP.json()).positions || [];
         const logs = (await rL.json()).operations || [];
-        const notifs = (await rN.json()).notifications || [];
         pintarStats();
         pintarPosiciones();
         pintarStrips();
         pintarHistorial(logs);
-        const sinLeer = notifs.filter(n => !n.read_at).length;
-        $('nav-notif').textContent = sinLeer; $('nav-notif').hidden = sinLeer === 0;
       } catch (e) { console.error(e); }
     }
 

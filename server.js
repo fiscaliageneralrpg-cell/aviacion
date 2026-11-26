@@ -1955,12 +1955,16 @@ app.get('/api/atc/strips', requireAuth, async (req, res) => {
       `SELECT s.*, u.discord_username, u.discord_global_name
        FROM flight_plans s
        LEFT JOIN verified_users u ON u.discord_id = s.discord_id
-       WHERE (s.departure = ? OR s.destination = ?)
-         AND s.atc_stage IS NOT NULL
-       ORDER BY FIELD(s.atc_stage,'DEL','GND','TWR','FINISHED'), s.id DESC`,
-      [airport, airport]
+       WHERE s.status NOT IN ('draft','rejected','cancelled')
+       ORDER BY FIELD(COALESCE(s.atc_stage,'DEL'),'DEL','GND','TWR','FINISHED'), s.id DESC`
     );
-    res.json({ strips: rows.map(r => stripPublico(r)) });
+    // Los planes viejos sin atc_stage se muestran en Delivery
+    const strips = rows.map(r => {
+      if (!r.atc_stage && r.status === 'pending') r.atc_stage = 'DEL';
+      if (!r.atc_stage && ['approved','active','finished'].includes(r.status)) r.atc_stage = 'FINISHED';
+      return stripPublico(r);
+    });
+    res.json({ strips });
   } catch (err) {
     console.error('Error atc/strips:', err.message);
     res.status(500).json({ error: 'Error interno' });
@@ -2207,7 +2211,7 @@ app.get('/api/flight-charts', requireAuth, async (req, res) => {
       SELECT s.*, u.discord_username, u.discord_global_name
       FROM flight_plans s
       LEFT JOIN verified_users u ON u.discord_id = s.discord_id
-      WHERE s.atc_stage IS NOT NULL AND s.squawk_validated = 1`;
+      WHERE (s.squawk_validated = 1 OR s.status IN ('approved','active','finished'))`;
     const params = [];
     if (!controlador) { sql += ' AND s.discord_id = ?'; params.push(discordId); }
     if (id) { sql += ' AND s.id = ?'; params.push(id); }
