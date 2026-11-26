@@ -182,7 +182,8 @@
       opacity: 0.9;
     }
     .nav-inner { position: relative; z-index: 2; display: flex; flex-direction: column; gap: 14px; }
-    .nav-top { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+    .nav-top { display: flex; justify-content: flex-start; align-items: center; gap: 14px; }
+    .nav-profile { display: flex; align-items: center; gap: 18px; min-width: 0; flex: 1; }
     .bell-btn {
       position:relative; width:40px; height:40px; flex-shrink:0; border-radius:50%; cursor:pointer;
       background:rgba(0,102,255,.08); border:1px solid rgba(0,212,255,.35);
@@ -245,8 +246,7 @@
     }
     .avatar-wrap::before {
       content: ""; position: absolute; inset: 0; border-radius: 50%;
-      background: conic-gradient(from 0deg, var(--blue), var(--cyan), var(--blue-light), var(--blue));
-      animation: spin 4s linear infinite;
+      background: linear-gradient(135deg, var(--blue), var(--cyan));
     }
     .nav-avatar {
       position: relative; z-index: 1; width: 76px; height: 76px; border-radius: 50%;
@@ -332,13 +332,7 @@
       font-size: 0.62rem; font-weight: 900; letter-spacing: 1.5px;
       text-transform: uppercase; opacity: 0.65; margin-right: 2px;
     }
-    .rank-more {
-      width: 40px; height: 40px; flex-shrink: 0; border-radius: 14px;
-      background: rgba(255,255,255,0.05); border: 1px solid var(--border);
-      color: var(--white-soft); font-size: 1.3rem; font-weight: 800; line-height: 1;
-      cursor: pointer; transition: 0.3s; display: none; align-items: center; justify-content: center;
-      animation: riseUp 0.5s 1s ease-out both;
-    }
+    .rank-more { display: none !important; }
     .rank-more:hover { border-color: var(--cyan); color: var(--cyan); transform: translateY(-2px); box-shadow: 0 0 18px rgba(0,212,255,0.35); }
     .rank-more.show { display: inline-flex; }
     .rank-list {
@@ -2250,8 +2244,16 @@
       }));
       modal.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', async e => {
         e.stopPropagation();
-        await fetch('/api/notifications/' + b.dataset.del + '/delete', { method:'POST' });
-        firmaNotif = ''; cargarNotificaciones();
+        e.preventDefault();
+        try {
+          const res = await fetch('/api/notifications/' + b.dataset.del + '/delete', { method:'POST' });
+          const d = await res.json();
+          if (!res.ok || !d.success) throw new Error('No se pudo eliminar');
+          // Forzar recarga quitando la notificación del DOM y del array local
+          todasNotif = todasNotif.filter(n => String(n.id) !== String(b.dataset.del));
+          firmaNotif = '';
+          pintarNotif(todasNotif);
+        } catch (err) { alert('❌ No se pudo eliminar la notificación.'); }
       }));
       modal.querySelectorAll('.notif-item').forEach(el => el.addEventListener('click', async () => {
         if (el.dataset.id) {
@@ -2289,8 +2291,14 @@
     // Eliminar TODAS
     document.getElementById('notif-delete-all').addEventListener('click', async () => {
       if (!confirm('¿Eliminar todas las notificaciones?')) return;
-      await fetch('/api/notifications/delete-all', { method:'POST' });
-      firmaNotif = ''; cargarNotificaciones();
+      try {
+        const res = await fetch('/api/notifications/delete-all', { method:'POST' });
+        const d = await res.json();
+        if (!res.ok || !d.success) throw new Error('Error');
+        todasNotif = [];
+        firmaNotif = '';
+        pintarNotif([]);
+      } catch (e) { alert('❌ No se pudieron eliminar.'); }
     });
 
     setInterval(cargarNotificaciones, 8000);
