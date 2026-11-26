@@ -183,16 +183,25 @@
     }
     .nav-inner { position: relative; z-index: 2; display: flex; flex-direction: column; gap: 14px; }
     .nav-top { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
-
-    .nav-top { display: flex; align-items: center; gap: 14px; }
     .bell-btn {
-      position:relative; background:rgba(255,255,255,.05); border:1px solid var(--border);
-      width:42px; height:42px; border-radius:50%; cursor:pointer; font-size:1.1rem; flex-shrink:0;
+      position:relative; width:40px; height:40px; flex-shrink:0; border-radius:50%; cursor:pointer;
+      background:rgba(0,102,255,.08); border:1px solid rgba(0,212,255,.35);
       display:grid; place-items:center; transition:.25s;
     }
-    .bell-btn:hover { border-color:var(--cyan); transform:scale(1.08); }
+    .bell-btn:hover { background:rgba(0,102,255,.2); border-color:var(--cyan); transform:translateY(-2px); }
+    /* Campana hecha con CSS puro */
+    .bell-ico { position:relative; width:17px; height:17px; display:block; }
+    .bell-ico::before {
+      content:""; position:absolute; left:2px; top:1px; width:13px; height:13px;
+      border:2px solid var(--white-soft); border-radius:9px 9px 3px 3px;
+    }
+    .bell-ico::after {
+      content:""; position:absolute; left:6px; bottom:1px; width:5px; height:3px;
+      background:var(--white-soft); border-radius:2px;
+    }
+    .bell-btn:hover .bell-ico::before, .bell-btn:hover .bell-ico::after { border-color:var(--cyan); background:var(--cyan); }
     .bell-badge {
-      position:absolute; top:-5px; right:-5px; min-width:18px; height:18px; padding:0 4px;
+      position:absolute; top:-4px; right:-4px; min-width:18px; height:18px; padding:0 4px;
       border-radius:50px; background:var(--red); color:#fff; font-size:.65rem; font-weight:900;
       display:grid; place-items:center; box-shadow:0 0 12px rgba(244,63,94,.7);
       animation:pulseBadge 2s ease-in-out infinite;
@@ -1081,10 +1090,7 @@
     @keyframes radar { 0%, 100% { transform: scale(1); opacity: 0.65; } 50% { transform: scale(1.12); opacity: 1; } }
     @keyframes pulseDot { 0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.7); } 50% { box-shadow: 0 0 0 7px rgba(34,197,94,0); } }
     @keyframes lightFlow { from { background-position: 200% 0; } to { background-position: -200% 0; } }
-    .nav-plane {
-      position: absolute; bottom: 4px; left: 0; width: 18px; height: 18px; z-index: 3; pointer-events: none;
-      animation: fly 9s 1.5s linear infinite; filter: drop-shadow(0 0 6px rgba(0,212,255,0.9)); opacity: 0;
-    }
+    .nav-plane { display:none !important; }
     .nav-plane svg { width: 100%; height: 100%; fill: var(--cyan); transform: rotate(90deg); }
     @keyframes fly { 0% { left: -30px; opacity: 0; } 8% { opacity: 1; } 92% { opacity: 1; } 100% { left: calc(100% + 10px); opacity: 0; } }
     .btn-roblox:active, .logout-link:active, .rank-more:active { transform: scale(0.96); }
@@ -1150,7 +1156,7 @@
     <div class="nav-inner container">
 
       <div class="nav-top">
-        <button class="bell-btn" id="bell-btn" type="button" title="Notificaciones">🔔<span class="bell-badge" id="bell-badge" hidden>0</span></button>
+        <button class="bell-btn" id="bell-btn" type="button" title="Notificaciones"><span class="bell-ico"></span><span class="bell-badge" id="bell-badge" hidden>0</span></button>
         <div class="nav-profile">
           <div class="avatar-wrap">
             <img id="user-avatar" class="nav-avatar" alt="Avatar de Discord" src="https://cdn.discordapp.com/embed/avatars/0.png">
@@ -1197,17 +1203,6 @@
 
     </div>
   </nav>
-
-  <!-- ===== NOTIFICACIONES (se muestran al inicio del dashboard) ===== -->
-  <section class="academy-section" id="notif-section" hidden>
-    <div class="academy-card notif-card">
-      <div class="notif-head">
-        <h3><i class="ico ico-bell"></i> Notificaciones <span class="notif-count" id="notif-count">0</span></h3>
-        <button class="notif-clear" id="notif-clear" type="button"><i class="ico ico-check"></i> Marcar todas como leídas</button>
-      </div>
-      <div id="notif-list"></div>
-    </div>
-  </section>
 
   <!-- ===== ACCESOS POR ROL (organizados) ===== -->
   <section class="academy-section" id="academy-section">
@@ -2231,7 +2226,6 @@
       const badge = document.getElementById('bell-badge');
       badge.textContent = sinLeer;
       badge.hidden = sinLeer === 0;   // círculo rojo con la cantidad hasta que entres a ver
-      document.getElementById('notif-count').textContent = sinLeer;
       document.getElementById('notif-modal-sub').textContent =
         sinLeer ? sinLeer + ' sin leer' : 'Todas leídas';
 
@@ -2245,30 +2239,26 @@
             <button data-del="${n.id}">🗑️ Eliminar</button>
           </div>
         </div>`).join('');
-      const lista = document.getElementById('notif-list');
       const modal = document.getElementById('notif-modal-list');
-      lista.innerHTML = html || '<p style="color:var(--gray);font-size:.8rem;padding:14px">Sin notificaciones.</p>';
       modal.innerHTML = html || '<p style="color:var(--gray);font-size:.8rem;padding:14px">Sin notificaciones.</p>';
 
-      [lista, modal].forEach(box => {
-        box.querySelectorAll('[data-dots]').forEach(b => b.addEventListener('click', e => {
-          e.stopPropagation();
-          document.querySelectorAll('.notif-menu').forEach(m => m.classList.remove('menu-open'));
-          const menu = document.getElementById('menu-' + b.dataset.dots);
-          if (menu) menu.classList.add('menu-open');
-        }));
-        box.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', async e => {
-          e.stopPropagation();
-          await fetch('/api/notifications/' + b.dataset.del + '/delete', { method:'POST' });
+      modal.querySelectorAll('[data-dots]').forEach(b => b.addEventListener('click', e => {
+        e.stopPropagation();
+        document.querySelectorAll('.notif-menu').forEach(m => m.classList.remove('menu-open'));
+        const menu = document.getElementById('menu-' + b.dataset.dots);
+        if (menu) menu.classList.add('menu-open');
+      }));
+      modal.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', async e => {
+        e.stopPropagation();
+        await fetch('/api/notifications/' + b.dataset.del + '/delete', { method:'POST' });
+        firmaNotif = ''; cargarNotificaciones();
+      }));
+      modal.querySelectorAll('.notif-item').forEach(el => el.addEventListener('click', async () => {
+        if (el.dataset.id) {
+          await fetch('/api/notifications/' + el.dataset.id + '/read', { method:'POST' });
           firmaNotif = ''; cargarNotificaciones();
-        }));
-        box.querySelectorAll('.notif-item').forEach(el => el.addEventListener('click', async () => {
-          if (el.dataset.id) {
-            await fetch('/api/notifications/' + el.dataset.id + '/read', { method:'POST' });
-            firmaNotif = ''; cargarNotificaciones();
-          }
-        }));
-      });
+        }
+      }));
     }
 
     async function cargarNotificaciones() {
@@ -2281,7 +2271,6 @@
         if (firma === firmaNotif) return;
         firmaNotif = firma;
         todasNotif = items;
-        document.getElementById('notif-section').hidden = items.length === 0;
         pintarNotif(items);
       } catch (e) { console.warn('Error notificaciones:', e); }
     }
@@ -2304,13 +2293,6 @@
       firmaNotif = ''; cargarNotificaciones();
     });
 
-    // Marcar todas como leídas (panel inferior)
-    document.getElementById('notif-clear').addEventListener('click', async () => {
-      for (const n of todasNotif.filter(n => !n.read_at)) {
-        await fetch('/api/notifications/' + n.id + '/read', { method:'POST' });
-      }
-      firmaNotif = ''; cargarNotificaciones();
-    });
     setInterval(cargarNotificaciones, 8000);
 
     loadUser();
