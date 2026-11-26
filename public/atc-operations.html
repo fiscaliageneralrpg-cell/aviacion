@@ -274,7 +274,27 @@
         const sel=$('airport-sel');
         sel.innerHTML=d.airports.map(a=>`<option value="${a.code}">${a.code} — ${a.name}</option>`).join('');
         aeropuerto=d.airports[0]?d.airports[0].code:'';
-        pintarClima(); await recargar();
+        pintarClima();
+        await entrar(aeropuerto, true);
+      }catch(e){console.error(e);}
+    }
+
+    // Entrar al aeropuerto: el servidor toma una posición libre o rechaza si está lleno
+    async function entrar(code, inicial){
+      try{
+        const r=await fetch('/api/atc/airport/enter',{
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ airport: code })
+        });
+        const d=await r.json();
+        if(!r.ok){
+          toast('❌ '+d.error);
+          if(inicial && d.positions){ $('airport-sel').value=d.positions; }
+          return;
+        }
+        aeropuerto=code;
+        $('nav-pos').textContent='ATC · '+code+' · '+d.position;
+        await recargar();
       }catch(e){console.error(e);}
     }
     function pintarClima(){
@@ -284,20 +304,7 @@
       $('clima-qnh').innerHTML=`<i class="ico ico-clock"></i> <b>QNH ${clima.qnh} hPa</b>`;
     }
 
-    async function cambiarAeropuerto(code){
-      // Verificar posiciones: máximo 3 controladores por aeropuerto
-      try{
-        const r=await fetch('/api/atc/positions?airport='+code,{cache:'no-store'});
-        const d=await r.json();
-        const ocupadas=(d.positions||[]).filter(p=>p.controller_id).length;
-        if(ocupadas>=3){
-          toast('❌ No puedes entrar a este aeropuerto: está lleno de ATC ('+ocupadas+'/3). Elige otro aeropuerto.');
-          $('airport-sel').value=aeropuerto; return;
-        }
-        aeropuerto=code; recargar();
-      }catch(e){console.error(e);}
-    }
-    $('airport-sel').addEventListener('change',e=>cambiarAeropuerto(e.target.value));
+    $('airport-sel').addEventListener('change',e=>entrar(e.target.value, false));
 
     async function recargar(){
       try{

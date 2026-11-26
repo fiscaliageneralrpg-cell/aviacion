@@ -1892,6 +1892,57 @@ app.get('/api/atc/airports', requireAuth, async (req, res) => {
   }
 });
 
+// Entrar a un aeropuerto: toma automáticamente una posición libre (máx. 3)
+app.post('/api/atc/airport/enter', requireAuth, async (req, res) => {
+  try {
+    const discordId = String(req.session.discordUser.id);
+    if (!(await esControlador(discordId))) return res.status(403).json({ error: 'Sin permisos ATC' });
+    const airport = String(req.body && req.body.airport || '').slice(0, 8).toUpperCase();
+    if (!/^[A-Z0-9]{3,8}$/.test(airport)) return res.status(400).json({ error: 'Aeropuerto no válido' });
+
+    // Asegurar posiciones
+    for (const pos of ['DEL','GND','TWR']) {
+      await pool.query('INSERT IGNORE INTO atc_positions (airport_code, position) VALUES (?, ?)', [airport, pos]);
+    }
+    // ¿Ya tengo posición en ESTE aeropuerto? → devolverla
+    const [mias] = await pool.query(
+      'SELECT * FROM atc_positions WHERE airport_code = ? AND controller_id = ?',
+      [airport, discordId]
+    );
+    if (mias.length) {
+      return res.json({ success: true, position: mias[0].position, ocupadas: 3 });
+    }
+
+    // Contar ocupadas
+    const [occ] = await pool.query(
+      'SELECT COUNT(*) AS n FROM atc_positions WHERE airport_code = ? AND controller_id IS NOT NULL',
+      [airport]
+    );
+    if (occ[0].n >= 3) {
+      return res.status(409).json({ error: 'Este aeropuerto ya tiene 3 controladores (3/3). Elige otro aeropuerto.' });
+    }
+    // Soltar posiciones en OTROS aeropuertos (el controlador solo está en uno)
+    await pool.query('UPDATE atc_positions SET controller_id = NULL, controller_name = NULL, session_start = NULL WHERE controller_id = ?', [discordId]);
+    // Tomar la primera libre
+    const [libres] = await pool.query(
+      `SELECT * FROM atc_positions WHERE airport_code = ? AND controller_id IS NULL
+       ORDER BY FIELD(position,'DEL','GND','TWR') LIMIT 1`,
+      [airport]
+    );
+    if (!libres.length) return res.status(409).json({ error: 'No hay posiciones libres en este aeropuerto.' });
+    const nombre = await nombreControlador(discordId);
+    await pool.query(
+      'UPDATE atc_positions SET controller_id = ?, controller_name = ?, session_start = NOW() WHERE id = ?',
+      [discordId, nombre, libres[0].id]
+    );
+    await registrarOperacion(airport, null, libres[0].position, `Posición ${libres[0].position} ocupada al conectar`, discordId, nombre);
+    res.json({ success: true, position: libres[0].position, ocupadas: occ[0].n + 1 });
+  } catch (err) {
+    console.error('Error atc/airport/enter:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
 // Posiciones (ocupadas/libres) de un aeropuerto
 app.get('/api/atc/positions', requireAuth, async (req, res) => {
   try {
