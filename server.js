@@ -2204,6 +2204,9 @@ app.post('/api/flight-plans/:id/validate-squawk', requireAuth, async (req, res) 
     if (!rows.length) return res.status(404).json({ error: 'Plan no encontrado' });
     const fp = rows[0];
     if (fp.discord_id !== discordId) return res.status(403).json({ error: 'No es tu plan' });
+    if (['rejected','cancelled','finished'].includes(fp.status)) {
+      return res.status(409).json({ error: 'Este plan ya no puede validar Squawk (rechazado, cancelado o finalizado).' });
+    }
     if (!fp.squawk) return res.status(409).json({ error: 'Este plan aún no tiene squawk asignado.' });
     const code = String(req.body && req.body.squawk ? String(req.body.squawk).trim() : '');
     if (!/^\d{4}$/.test(code)) return res.status(400).json({ error: 'Ingresa 4 dígitos.' });

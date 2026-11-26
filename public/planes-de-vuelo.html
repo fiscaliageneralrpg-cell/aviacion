@@ -818,7 +818,7 @@
                 ${['draft','cancelled'].includes(p.status) ? '<button class="mini-btn" data-edit="' + p.id + '">Editar</button><button class="mini-btn" data-send="' + p.id + '">Enviar</button>' : ''}
                 ${['rejected','finished'].includes(p.status) ? '<span class="plan-bloqueado">🔒 Definitivo</span>' : ''}
                 ${p.status === 'pending' ? '<button class="mini-btn danger" data-cancel="' + p.id + '">Cancelar</button>' : ''}
-                ${p.has_squawk && !p.squawk_validated ? '<button class="mini-btn" data-clearance="' + p.id + '">Validar Squawk</button>' : ''}
+                ${p.has_squawk && !p.squawk_validated && !['rejected','finished','cancelled'].includes(p.status) ? '<button class="mini-btn" data-clearance="' + p.id + '">Validar Squawk</button>' : ''}
               `}
             `}
             ${esMio ? '<button class="mini-btn ver-detalle" data-id="${p.id}">Ver detalle</button>' : ''}
