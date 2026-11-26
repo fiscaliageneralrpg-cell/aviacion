@@ -177,6 +177,19 @@
     footer { border-top:1px solid var(--border); background:var(--black); padding:14px 0; text-align:center; color:var(--gray); font-size:.72rem; }
     @media (max-width:1000px) { .stats{grid-template-columns:repeat(2,1fr)} .columns{grid-template-columns:1fr}
       .nav-links{display:none} .strip-grid{grid-template-columns:1fr} }
+    @media (max-width:600px) {
+      .container { padding:0 14px; }
+      .hero { padding:18px 16px; } .hero h1 { font-size:1.35rem; }
+      .airport-bar { padding:14px; gap:10px; }
+      .clima-item { padding:0; border:none; }
+      .stats { grid-template-columns:1fr 1fr; gap:8px; }
+      .stat { padding:12px 14px; } .stat-num { font-size:1.3rem; }
+      .tabs-main { width:100%; }
+      .tab-main { flex:1; padding:9px 12px; font-size:.68rem; }
+      .modal-overlay { padding:10px; }
+      .modal-card { padding:20px 16px; }
+      .squawk-code { font-size:1.5rem; letter-spacing:4px; }
+    }
   </style>
 </head>
 <body>

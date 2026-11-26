@@ -155,6 +155,16 @@
     footer { border-top:1px solid var(--border); background:var(--black); padding:14px 0; text-align:center;
       color:var(--gray); font-size:.72rem; }
     @media (max-width:1050px) { .grid-main { grid-template-columns:1fr; } }
+    @media (max-width:640px) {
+      .nav-links { display:none; }
+      .hero { padding:18px 16px; } .hero h1 { font-size:1.3rem; }
+      .trans-title { font-size:1rem; }
+      .digit { width:46px; height:56px; font-size:1.3rem; }
+      .digits { gap:6px; }
+      .btn-connect { padding:13px 18px; font-size:.85rem; }
+      .status-chip { display:block; width:100%; margin:12px 0 0; text-align:center; }
+    }
+    @media (max-width:380px) { .digit { width:40px; height:50px; font-size:1.1rem; } }
   </style>
 </head>
 <body>
