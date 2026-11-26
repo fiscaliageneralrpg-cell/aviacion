@@ -368,6 +368,8 @@
     .tab-item.approved::after { opacity: 1; background: linear-gradient(90deg, transparent, #fff, transparent); }
 
     .tab-item.staff { color: var(--gold); background: rgba(255,215,0,0.07); border-color: rgba(255,215,0,0.42); animation-delay: 1.2s; }
+    .tab-item.atc { color: var(--cyan); background: rgba(0,212,255,0.08); border-color: rgba(0,212,255,0.45); animation-delay: 1.1s; }
+    .tab-item.atc:hover { background: rgba(0,212,255,0.2); transform: translateY(-2px); }
     .tab-item.staff:hover { color: var(--gold); background: rgba(255,215,0,0.16); border-color: var(--gold); box-shadow: 0 12px 30px rgba(255,215,0,0.28); }
     .tab-item.staff::after { background: linear-gradient(90deg, transparent, var(--gold), transparent); }
     .tab-item[hidden] { display: none !important; }
@@ -1072,6 +1074,7 @@
     <div class="academy-card" id="academy-card">
       <div class="tabs-row" role="tablist">
         <button class="tab-item soon" id="academy-cta" data-mode="soon"><i class="ico ico-clock"></i> Cargando…</button>
+        <button class="tab-item atc" id="quick-atc" hidden><i class="ico ico-tower"></i> ATC Operations</button>
         <span class="tab-sep" id="tab-sep" hidden></span>
         <button class="tab-item staff" id="quick-staff" hidden><i class="ico ico-shield"></i> Panel Staff</button>
       </div>
@@ -1425,6 +1428,10 @@
       const cta = document.getElementById('academy-cta');
       cta.hidden = false;
       cta.className = 'tab-item';
+      // Botón ATC Operations solo para ATC aprobado
+      document.getElementById('quick-atc').hidden = !(
+        trackActual === 'atc' && academyStatus.status === 'approved'
+      );
       if (academyStatus.status === 'approved') {
         // La ruta ELEGIDA manda: Piloto → "Planes de vuelo", ATC → "Solicitudes..."
         const esAtc = trackActual === 'atc';
@@ -1449,6 +1456,9 @@
       }
     }
     document.getElementById('academy-cta').addEventListener('click', abrirFormulario);
+    document.getElementById('quick-atc').addEventListener('click', () => {
+      window.location.href = '/dashboard/atc-operations';
+    });
     document.getElementById('quick-staff').addEventListener('click', () => abrirPanelStaff());
 
     /* ---------- Ruta: GET /api/track → muestra overlay si la BD dice null ----------

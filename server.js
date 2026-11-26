@@ -47,7 +47,7 @@ app.use(session({
 // podía abrir /dashboard.html o /dashboard-aviacion.html a mano y saltarse
 // el paso de Roblox.
 app.use((req, res, next) => {
-  if (req.path === '/dashboard.html' || req.path === '/dashboard-aviacion.html' || req.path === '/planes-de-vuelo.html') {
+  if (req.path === '/dashboard.html' || req.path === '/dashboard-aviacion.html' || req.path === '/planes-de-vuelo.html' || req.path === '/atc-operations.html') {
     return requireVerificado(req, res, next);
   }
   next();
@@ -518,7 +518,92 @@ async function ensureAcademyTables() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
 
-    console.log('🗂️ Tablas user_roles + academy_submissions + flight_plans listas.');
+    // Columnas ATC Operations (Flight Strips + transferencias entre posiciones)
+    const columnasAtc = [
+      'ALTER TABLE flight_plans ADD COLUMN atc_stage VARCHAR(12) DEFAULT NULL',
+      'ALTER TABLE flight_plans ADD COLUMN flight_kind VARCHAR(4) DEFAULT NULL',
+      'ALTER TABLE flight_plans ADD COLUMN runway VARCHAR(8) DEFAULT NULL',
+      'ALTER TABLE flight_plans ADD COLUMN sid VARCHAR(40) DEFAULT NULL',
+      'ALTER TABLE flight_plans ADD COLUMN squawk_validated TINYINT NOT NULL DEFAULT 0',
+      'ALTER TABLE flight_plans ADD COLUMN atc_controller_id VARCHAR(20) DEFAULT NULL',
+      'ALTER TABLE flight_plans ADD COLUMN cleared_at DATETIME DEFAULT NULL',
+      'ALTER TABLE flight_plans ADD COLUMN taxi_at DATETIME DEFAULT NULL',
+      'ALTER TABLE flight_plans ADD COLUMN finished_at DATETIME DEFAULT NULL'
+    ];
+    for (const sql of columnasAtc) {
+      try { await pool.query(sql); }
+      catch (e) { if (e.code !== 'ER_DUP_FIELDNAME') console.error('Error columna ATC:', e.message); }
+    }
+
+    // Aeropuertos ATC (los que tienen vuelos + los del spec)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS atc_airports (
+        code VARCHAR(8) NOT NULL PRIMARY KEY,
+        name VARCHAR(120) NOT NULL,
+        active TINYINT NOT NULL DEFAULT 1
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+    const aeropuertosIniciales = [
+      ['SKBO','El Dorado International'], ['SKRG','José María Córdova'], ['SKIB','Perales'],
+      ['EGFF','Cardiff Airport'], ['EGKK','London Gatwick'], ['EGLC','London City'],
+      ['LCLK','Larnaca International'], ['LCPH','Paphos International'], ['LCRA','RAF Akrotiri'],
+      ['LPMA','Madeira Airport'], ['MDAB','Arroyo Barril International'], ['MDCR','Cabo Rojo'],
+      ['MDPC','Punta Cana International'], ['MDST','Cibao International'],
+      ['MTCA','Cap-Haitien International'], ['PAFA','Fairbanks International']
+    ];
+    for (const [code, name] of aeropuertosIniciales) {
+      await pool.query('INSERT IGNORE INTO atc_airports (code, name) VALUES (?, ?)', [code, name]);
+    }
+
+    // Posiciones ATC por aeropuerto (DEL/GND/TWR) — un controlador por posición
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS atc_positions (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        airport_code VARCHAR(8) NOT NULL,
+        position VARCHAR(4) NOT NULL,
+        controller_id VARCHAR(20) DEFAULT NULL,
+        controller_name VARCHAR(120) DEFAULT NULL,
+        session_start DATETIME DEFAULT NULL,
+        updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY uq_atc_pos (airport_code, position)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+    for (const code of aeropuertosIniciales.map(a => a[0])) {
+      for (const pos of ['DEL','GND','TWR']) {
+        await pool.query('INSERT IGNORE INTO atc_positions (airport_code, position) VALUES (?, ?)', [code, pos]);
+      }
+    }
+
+    // Registro de operaciones ATC
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS atc_operations (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        airport_code VARCHAR(8) NOT NULL,
+        callsign VARCHAR(40) DEFAULT NULL,
+        position VARCHAR(4) DEFAULT NULL,
+        action VARCHAR(80) NOT NULL,
+        controller_id VARCHAR(20) DEFAULT NULL,
+        controller_name VARCHAR(120) DEFAULT NULL,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        KEY idx_atc_ops_airport (airport_code)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+
+    // Notificaciones internas
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS lan_notifications (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        discord_id VARCHAR(20) NOT NULL,
+        title VARCHAR(120) NOT NULL,
+        message VARCHAR(500) NOT NULL,
+        icon VARCHAR(20) DEFAULT 'plane',
+        read_at DATETIME DEFAULT NULL,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        KEY idx_notif_user (discord_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+
+    console.log('🗂️ Tablas user_roles + academy_submissions + flight_plans + ATC listas.');
   } catch (err) {
     console.error('Error creando tablas academy:', err.message);
   }
@@ -892,7 +977,7 @@ async function requiereAprobacion(req, res) {
   return discordId;
 }
 
-function planPublico(r) {
+function planPublico(r, conSquawk) {
   return {
     id: r.id,
     discord_id: r.discord_id,
@@ -907,11 +992,37 @@ function planPublico(r) {
     aircraft: r.aircraft,
     cruise_altitude: r.cruise_altitude || '',
     alternate: r.alternate || '',
-    squawk: r.squawk || null,
+    // 🔒 Squawk: SOLO ATC. El piloto nunca lo ve (debe digitarlo en Clearance).
+    squawk: conSquawk ? (r.squawk || null) : null,
+    has_squawk: !!r.squawk,
+    squawk_validated: !!r.squawk_validated,
+    atc_stage: r.atc_stage || null,
+    atc_controller_id: r.atc_controller_id || null,
     rejection_reason: r.rejection_reason || null,
     created_at: r.created_at,
     updated_at: r.updated_at
   };
+}
+
+// Crear notificación interna (DM lo hace el bot en segundo plano)
+async function notificar(discordId, title, message, icon) {
+  try {
+    await pool.query(
+      'INSERT INTO lan_notifications (discord_id, title, message, icon) VALUES (?, ?, ?, ?)',
+      [discordId, title, message, icon || 'plane']
+    );
+  } catch (e) { console.error('Error notificando:', e.message); }
+}
+
+// Registrar operación ATC
+async function registrarOperacion(airport, callsign, position, action, controllerId, controllerName) {
+  try {
+    await pool.query(
+      `INSERT INTO atc_operations (airport_code, callsign, position, action, controller_id, controller_name)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [airport, callsign || null, position || null, action, controllerId || null, controllerName || null]
+    );
+  } catch (e) { console.error('Error registrando operación ATC:', e.message); }
 }
 
 // --- Planes ACTIVOS/APROBADOS: visibles para cualquier usuario aprobado ---
@@ -926,7 +1037,7 @@ app.get('/api/flight-plans/active', requireAuth, async (req, res) => {
        WHERE s.status IN ('approved','active','pending')
        ORDER BY FIELD(s.status,'active','approved','pending'), s.id DESC`
     );
-    res.json({ plans: rows.map(planPublico) });
+    res.json({ plans: rows.map(r => planPublico(r, false)) });
   } catch (err) {
     console.error('Error flight-plans/active:', err.message);
     res.status(500).json({ error: 'Error interno' });
@@ -946,7 +1057,7 @@ app.get('/api/flight-plans', requireAuth, async (req, res) => {
        ORDER BY s.id DESC`,
       [discordId]
     );
-    res.json({ plans: rows.map(planPublico) });
+    res.json({ plans: rows.map(r => planPublico(r, false)) });
   } catch (err) {
     console.error('Error flight-plans/list:', err.message);
     res.status(500).json({ error: 'Error interno' });
@@ -990,14 +1101,31 @@ app.post('/api/flight-plans', requireAuth, async (req, res) => {
 
     const enviar = !!(req.body && req.body.enviar);
     const status = enviar ? 'pending' : 'draft';
+    // 🔒 Squawk nace AL ENVIAR (solo lo ve ATC). Nunca se crea en borrador.
+    let squawk = null;
+    if (enviar) {
+      squawk = generarSquawk();
+      for (let i = 0; i < 10; i++) {
+        const [dupe] = await pool.query('SELECT id FROM flight_plans WHERE squawk = ?', [squawk]);
+        if (!dupe.length) break;
+        squawk = generarSquawk();
+      }
+    }
     const [r] = await pool.query(
       `INSERT INTO flight_plans
         (discord_id, status, flight_rules, departure, destination, airline,
-         registration, flight_number, aircraft, cruise_altitude, alternate)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         registration, flight_number, aircraft, cruise_altitude, alternate,
+         squawk, atc_stage, flight_kind)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [discordId, status, plan.flight_rules, plan.departure, plan.destination, plan.airline,
-       plan.registration, plan.flight_number, plan.aircraft, plan.cruise_altitude, plan.alternate]
+       plan.registration, plan.flight_number, plan.aircraft, plan.cruise_altitude, plan.alternate,
+       squawk, enviar ? 'DEL' : null, enviar ? 'DEP' : null]
     );
+    if (enviar) {
+      await registrarOperacion(plan.departure, plan.flight_number || ('#' + r.insertId), 'DEL', 'Plan recibido en Delivery', discordId, null);
+      await notificar(discordId, 'Tu plan de vuelo ha sido recibido',
+        `${plan.departure} → ${plan.destination} está en espera de autorización de Delivery.`, 'plane');
+    }
     console.log(`✈️ Plan #${r.insertId} de ${discordId} → ${status} (${plan.departure} → ${plan.destination})`);
     res.json({ success: true, id: r.insertId, status });
   } catch (err) {
@@ -1025,16 +1153,28 @@ app.put('/api/flight-plans/:id', requireAuth, async (req, res) => {
 
     const enviar = !!(req.body && req.body.enviar);
     const status = enviar ? 'pending' : 'draft';
+    let squawk = fp.squawk;
+    if (enviar && !squawk) {
+      squawk = generarSquawk();
+      for (let i = 0; i < 10; i++) {
+        const [dupe] = await pool.query('SELECT id FROM flight_plans WHERE squawk = ? AND id != ?', [squawk, fp.id]);
+        if (!dupe.length) break;
+        squawk = generarSquawk();
+      }
+    }
     await pool.query(
       `UPDATE flight_plans
        SET status = ?, flight_rules = ?, departure = ?, destination = ?, airline = ?,
            registration = ?, flight_number = ?, aircraft = ?, cruise_altitude = ?,
-           alternate = ?, rejection_reason = NULL, updated_at = NOW()
+           alternate = ?, rejection_reason = NULL,
+           squawk = ?, squawk_validated = 0, atc_stage = ?, flight_kind = 'DEP', updated_at = NOW()
        WHERE id = ?`,
       [status, plan.flight_rules, plan.departure, plan.destination, plan.airline,
        plan.registration, plan.flight_number, plan.aircraft, plan.cruise_altitude,
-       plan.alternate, fp.id]
+       plan.alternate, squawk, enviar ? 'DEL' : null, fp.id]
     );
+    if (enviar) await notificar(discordId, 'Tu plan de vuelo ha sido recibido',
+      `${plan.departure} → ${plan.destination} está en espera de autorización de Delivery.`, 'plane');
     res.json({ success: true, status });
   } catch (err) {
     console.error('Error flight-plans/update:', err.message);
@@ -1102,7 +1242,7 @@ app.get('/api/flight-plans/staff', requireAuth, async (req, res) => {
        LEFT JOIN verified_users u ON u.discord_id = s.discord_id
        ORDER BY FIELD(s.status, 'pending', 'approved', 'active', 'rejected', 'draft', 'cancelled', 'finished'), s.id DESC`
     );
-    res.json({ plans: rows.map(planPublico) });
+    res.json({ plans: rows.map(r => planPublico(r, true)) });   // ATC SÍ ve el squawk
   } catch (err) {
     console.error('Error flight-plans/staff:', err.message);
     res.status(500).json({ error: 'Error interno' });
@@ -1663,6 +1803,377 @@ app.post('/api/verify-complete', requireAuth, async (req, res) => {
   } catch (err) {
     console.error('Error verify-complete:', err.message);
     res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// ============================================================
+// ✈️ LAN ATC OPERATIONS — Flight Strips y transferencias
+// ============================================================
+const ATC_ROLE = '1555512718046404609';
+const ATC_INSTRUCTOR_ROLE = '1555512949391495218';
+
+async function esControlador(discordId) {
+  const ids = await obtenerRangosIds(discordId);
+  return ids.includes(ATC_ROLE) || ids.includes(ATC_INSTRUCTOR_ROLE) || STAFF_ROLES.some(r => ids.includes(r));
+}
+async function nombreControlador(discordId) {
+  const [rows] = await pool.query(
+    'SELECT discord_global_name, discord_username FROM verified_users WHERE discord_id = ?', [discordId]
+  );
+  if (!rows.length) return 'Controlador';
+  return rows[0].discord_global_name || rows[0].discord_username || 'Controlador';
+}
+function stripPublico(r) {
+  return {
+    id: r.id,
+    callsign: (r.airline || '') + (r.flight_number || '') || ('#' + r.id),
+    flight_number: r.flight_number || '',
+    airline: r.airline || '',
+    aircraft: r.aircraft,
+    registration: r.registration || '',
+    flight_rules: r.flight_rules,
+    departure: r.departure,
+    destination: r.destination,
+    cruise_altitude: r.cruise_altitude || '',
+    alternate: r.alternate || '',
+    squawk: r.squawk || null,          // ATC ve el squawk
+    squawk_validated: !!r.squawk_validated,
+    atc_stage: r.atc_stage,
+    flight_kind: r.flight_kind || 'DEP',
+    runway: r.runway || null,
+    sid: r.sid || null,
+    status: r.status,
+    atc_controller_id: r.atc_controller_id || null,
+    username: r.discord_global_name || r.discord_username || r.discord_id,
+    discord_id: r.discord_id,
+    created_at: r.created_at
+  };
+}
+
+// Aeropuertos disponibles
+app.get('/api/atc/airports', requireAuth, async (req, res) => {
+  try {
+    if (!(await esControlador(req.session.discordUser.id))) {
+      return res.status(403).json({ error: 'Sin permisos ATC' });
+    }
+    const [rows] = await pool.query('SELECT code, name FROM atc_airports WHERE active = 1 ORDER BY code');
+    res.json({ airports: rows });
+  } catch (err) {
+    console.error('Error atc/airports:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// Posiciones (ocupadas/libres) de un aeropuerto
+app.get('/api/atc/positions', requireAuth, async (req, res) => {
+  try {
+    if (!(await esControlador(req.session.discordUser.id))) {
+      return res.status(403).json({ error: 'Sin permisos ATC' });
+    }
+    const airport = String(req.query.airport || '').slice(0, 8).toUpperCase();
+    const [rows] = await pool.query(
+      `SELECT id, airport_code, position, controller_id, controller_name, session_start,
+              TIMESTAMPDIFF(SECOND, session_start, NOW()) AS seconds_on
+       FROM atc_positions WHERE airport_code = ? ORDER BY FIELD(position,'DEL','GND','TWR')`,
+      [airport]
+    );
+    res.json({ positions: rows });
+  } catch (err) {
+    console.error('Error atc/positions:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// Tomar / liberar posición
+app.post('/api/atc/position/:id/take', requireAuth, async (req, res) => {
+  try {
+    const discordId = String(req.session.discordUser.id);
+    if (!(await esControlador(discordId))) return res.status(403).json({ error: 'Sin permisos ATC' });
+    const [rows] = await pool.query('SELECT * FROM atc_positions WHERE id = ?', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'Posición no encontrada' });
+    const pos = rows[0];
+    if (pos.controller_id && pos.controller_id !== discordId &&
+        !(await esStaff(discordId))) {
+      return res.status(409).json({ error: 'Esta posición ya está ocupada por ' + (pos.controller_name || 'otro controlador') });
+    }
+    const nombre = await nombreControlador(discordId);
+    await pool.query(
+      `UPDATE atc_positions SET controller_id = ?, controller_name = ?, session_start = NOW()
+       WHERE id = ?`,
+      [discordId, nombre, pos.id]
+    );
+    await registrarOperacion(pos.airport_code, null, pos.position, `Posición ${pos.position} ocupada por ${nombre}`, discordId, nombre);
+    res.json({ success: true, controller_id: discordId, controller_name: nombre });
+  } catch (err) {
+    console.error('Error atc/position/take:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+app.post('/api/atc/position/:id/release', requireAuth, async (req, res) => {
+  try {
+    const discordId = String(req.session.discordUser.id);
+    if (!(await esControlador(discordId))) return res.status(403).json({ error: 'Sin permisos ATC' });
+    const [rows] = await pool.query('SELECT * FROM atc_positions WHERE id = ?', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'Posición no encontrada' });
+    const pos = rows[0];
+    if (pos.controller_id && pos.controller_id !== discordId && !(await esStaff(discordId))) {
+      return res.status(403).json({ error: 'No puedes liberar la posición de otro controlador' });
+    }
+    await pool.query(
+      'UPDATE atc_positions SET controller_id = NULL, controller_name = NULL, session_start = NULL WHERE id = ?',
+      [pos.id]
+    );
+    await registrarOperacion(pos.airport_code, null, pos.position, `Posición ${pos.position} liberada`, discordId, pos.controller_name);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error atc/position/release:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// Flight Strips por aeropuerto y posición
+app.get('/api/atc/strips', requireAuth, async (req, res) => {
+  try {
+    if (!(await esControlador(req.session.discordUser.id))) {
+      return res.status(403).json({ error: 'Sin permisos ATC' });
+    }
+    const airport = String(req.query.airport || '').slice(0, 8).toUpperCase();
+    const [rows] = await pool.query(
+      `SELECT s.*, u.discord_username, u.discord_global_name
+       FROM flight_plans s
+       LEFT JOIN verified_users u ON u.discord_id = s.discord_id
+       WHERE (s.departure = ? OR s.destination = ?)
+         AND s.atc_stage IS NOT NULL
+       ORDER BY FIELD(s.atc_stage,'DEL','GND','TWR','FINISHED'), s.id DESC`,
+      [airport, airport]
+    );
+    res.json({ strips: rows.map(r => stripPublico(r)) });
+  } catch (err) {
+    console.error('Error atc/strips:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// Ficha completa de un vuelo (solo ATC)
+app.get('/api/atc/strips/:id', requireAuth, async (req, res) => {
+  try {
+    if (!(await esControlador(req.session.discordUser.id))) {
+      return res.status(403).json({ error: 'Sin permisos ATC' });
+    }
+    const [rows] = await pool.query(
+      `SELECT s.*, u.discord_username, u.discord_global_name
+       FROM flight_plans s LEFT JOIN verified_users u ON u.discord_id = s.discord_id
+       WHERE s.id = ?`, [req.params.id]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Vuelo no encontrado' });
+    res.json({ strip: stripPublico(rows[0]) });
+  } catch (err) {
+    console.error('Error atc/strip/:id:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// Delivery: autorizar (requiere squawk validado por el piloto) → Ground
+app.post('/api/atc/strips/:id/clear', requireAuth, async (req, res) => {
+  try {
+    const discordId = String(req.session.discordUser.id);
+    if (!(await esControlador(discordId))) return res.status(403).json({ error: 'Sin permisos ATC' });
+    const [rows] = await pool.query('SELECT * FROM flight_plans WHERE id = ?', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'Vuelo no encontrado' });
+    const fp = rows[0];
+    if (fp.atc_stage !== 'DEL') return res.status(409).json({ error: 'El vuelo no está en Delivery' });
+    if (!fp.squawk_validated) {
+      return res.status(409).json({ error: 'El piloto aún no ha validado el Squawk en ATC Clearance.' });
+    }
+    const runway = String(req.body.runway || '').trim().slice(0, 8).toUpperCase();
+    const sid = String(req.body.sid || '').trim().slice(0, 40).toUpperCase();
+    if (!runway) return res.status(400).json({ error: 'Indica la pista asignada.' });
+    const nombre = await nombreControlador(discordId);
+    await pool.query(
+      `UPDATE flight_plans SET atc_stage = 'GND', status = 'approved', runway = ?, sid = ?,
+       atc_controller_id = ?, cleared_at = NOW(), updated_at = NOW() WHERE id = ?`,
+      [runway, sid, discordId, fp.id]
+    );
+    const callsign = (fp.airline || '') + (fp.flight_number || '');
+    await registrarOperacion(fp.departure, callsign, 'DEL', 'Autorización IFR/VFR concedida. Transferido a Ground.', discordId, nombre);
+    await notificar(fp.discord_id, 'Delivery ha concedido tu autorización',
+      `${callsign}: autorización concedida, pista ${runway}. Transferido a Ground.`, 'check');
+    res.json({ success: true, atc_stage: 'GND' });
+  } catch (err) {
+    console.error('Error atc/clear:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// Ground: instrucción de rodaje → Tower
+app.post('/api/atc/strips/:id/taxi', requireAuth, async (req, res) => {
+  try {
+    const discordId = String(req.session.discordUser.id);
+    if (!(await esControlador(discordId))) return res.status(403).json({ error: 'Sin permisos ATC' });
+    const [rows] = await pool.query('SELECT * FROM flight_plans WHERE id = ?', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'Vuelo no encontrado' });
+    const fp = rows[0];
+    if (fp.atc_stage !== 'GND') return res.status(409).json({ error: 'El vuelo no está en Ground' });
+    const nombre = await nombreControlador(discordId);
+    await pool.query(
+      `UPDATE flight_plans SET atc_stage = 'TWR', atc_controller_id = ?, taxi_at = NOW(), updated_at = NOW() WHERE id = ?`,
+      [discordId, fp.id]
+    );
+    const callsign = (fp.airline || '') + (fp.flight_number || '');
+    await registrarOperacion(fp.departure, callsign, 'GND', 'Rodaje completado. Transferido a Tower.', discordId, nombre);
+    await notificar(fp.discord_id, 'Tu vuelo ha sido transferido a Ground',
+      `${callsign}: rodaje autorizado y completado. Ahora en Tower.`, 'plane');
+    res.json({ success: true, atc_stage: 'TWR' });
+  } catch (err) {
+    console.error('Error atc/taxi:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// Tower: despegue (salida) o aterrizaje (llegada)
+app.post('/api/atc/strips/:id/tower', requireAuth, async (req, res) => {
+  try {
+    const discordId = String(req.session.discordUser.id);
+    if (!(await esControlador(discordId))) return res.status(403).json({ error: 'Sin permisos ATC' });
+    const [rows] = await pool.query('SELECT * FROM flight_plans WHERE id = ?', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'Vuelo no encontrado' });
+    const fp = rows[0];
+    if (fp.atc_stage !== 'TWR') return res.status(409).json({ error: 'El vuelo no está en Tower' });
+    const accion = req.body && req.body.action;    // 'takeoff' | 'landing'
+    const nombre = await nombreControlador(discordId);
+    const callsign = (fp.airline || '') + (fp.flight_number || '');
+    if (accion === 'landing') {
+      // Llegada: Tower → Ground (rodaje a plataforma)
+      await pool.query(
+        `UPDATE flight_plans SET atc_stage = 'GND', atc_controller_id = ?, updated_at = NOW() WHERE id = ?`,
+        [discordId, fp.id]
+      );
+      await registrarOperacion(fp.destination, callsign, 'TWR', 'Aterrizaje completado. Transferido a Ground.', discordId, nombre);
+      await notificar(fp.discord_id, 'Tu vuelo ha aterrizado', `${callsign}: transferido a Ground para rodaje a plataforma.`, 'plane');
+      return res.json({ success: true, atc_stage: 'GND' });
+    }
+    // Salida: despegue → finalizado
+    await pool.query(
+      `UPDATE flight_plans SET atc_stage = 'FINISHED', status = 'finished', finished_at = NOW(),
+       atc_controller_id = ?, updated_at = NOW() WHERE id = ?`,
+      [discordId, fp.id]
+    );
+    await registrarOperacion(fp.departure, callsign, 'TWR', 'Despegue completado. Vuelo finalizado.', discordId, nombre);
+    await notificar(fp.discord_id, 'Tu vuelo ha finalizado', `${callsign}: despegue completado. Operación finalizada.`, 'check');
+    res.json({ success: true, atc_stage: 'FINISHED' });
+  } catch (err) {
+    console.error('Error atc/tower:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// Ground (llegada): rodaje a plataforma → finalizado
+app.post('/api/atc/strips/:id/park', requireAuth, async (req, res) => {
+  try {
+    const discordId = String(req.session.discordUser.id);
+    if (!(await esControlador(discordId))) return res.status(403).json({ error: 'Sin permisos ATC' });
+    const [rows] = await pool.query('SELECT * FROM flight_plans WHERE id = ?', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'Vuelo no encontrado' });
+    const fp = rows[0];
+    if (fp.atc_stage !== 'GND' || fp.flight_kind !== 'ARR') {
+      return res.status(409).json({ error: 'Solo se puede estacionar una llegada en Ground' });
+    }
+    const nombre = await nombreControlador(discordId);
+    await pool.query(
+      `UPDATE flight_plans SET atc_stage = 'FINISHED', status = 'finished', finished_at = NOW(),
+       atc_controller_id = ?, updated_at = NOW() WHERE id = ?`,
+      [discordId, fp.id]
+    );
+    const callsign = (fp.airline || '') + (fp.flight_number || '');
+    await registrarOperacion(fp.destination, callsign, 'GND', 'Rodaje a plataforma completado. Vuelo finalizado.', discordId, nombre);
+    await notificar(fp.discord_id, 'Tu vuelo ha finalizado', `${callsign}: en plataforma. Operación finalizada.`, 'check');
+    res.json({ success: true, atc_stage: 'FINISHED' });
+  } catch (err) {
+    console.error('Error atc/park:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// Historial de operaciones
+app.get('/api/atc/log', requireAuth, async (req, res) => {
+  try {
+    if (!(await esControlador(req.session.discordUser.id))) {
+      return res.status(403).json({ error: 'Sin permisos ATC' });
+    }
+    const airport = String(req.query.airport || '').slice(0, 8).toUpperCase();
+    const where = airport ? 'WHERE airport_code = ?' : '';
+    const params = airport ? [airport] : [];
+    const [rows] = await pool.query(
+      `SELECT * FROM atc_operations ${where} ORDER BY id DESC LIMIT 50`, params
+    );
+    res.json({ operations: rows });
+  } catch (err) {
+    console.error('Error atc/log:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// Validar Squawk (piloto digita el código que le dio Delivery)
+app.post('/api/flight-plans/:id/validate-squawk', requireAuth, async (req, res) => {
+  try {
+    const discordId = await requiereAprobacion(req, res);
+    if (!discordId) return;
+    const [rows] = await pool.query('SELECT * FROM flight_plans WHERE id = ?', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'Plan no encontrado' });
+    const fp = rows[0];
+    if (fp.discord_id !== discordId) return res.status(403).json({ error: 'No es tu plan' });
+    if (!fp.squawk) return res.status(409).json({ error: 'Este plan aún no tiene squawk asignado.' });
+    const code = String(req.body && req.body.squawk ? String(req.body.squawk).trim() : '');
+    if (!/^\d{4}$/.test(code)) return res.status(400).json({ error: 'Ingresa 4 dígitos.' });
+    if (code !== fp.squawk) {
+      return res.status(400).json({ error: 'El código no coincide. Verifica con Delivery.' });
+    }
+    await pool.query('UPDATE flight_plans SET squawk_validated = 1, updated_at = NOW() WHERE id = ?', [fp.id]);
+    await notificar(discordId, 'Tu Squawk ha sido validado',
+      `Código ${fp.squawk} confirmado. Tu vuelo está listo para transferencia a Ground.`, 'check');
+    res.json({ success: true, validated: true });
+  } catch (err) {
+    console.error('Error validate-squawk:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// Notificaciones internas del usuario
+app.get('/api/notifications', requireAuth, async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      'SELECT id, title, message, icon, read_at, created_at FROM lan_notifications WHERE discord_id = ? ORDER BY id DESC LIMIT 30',
+      [String(req.session.discordUser.id)]
+    );
+    res.json({ notifications: rows });
+  } catch (err) {
+    console.error('Error notifications:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+app.post('/api/notifications/:id/read', requireAuth, async (req, res) => {
+  try {
+    await pool.query(
+      'UPDATE lan_notifications SET read_at = NOW() WHERE id = ? AND discord_id = ?',
+      [req.params.id, String(req.session.discordUser.id)]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error notifications/read:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// Ruta protegida del Dashboard ATC
+app.get('/dashboard/atc-operations', requireVerificado, async (req, res) => {
+  try {
+    if (!(await esControlador(String(req.session.discordUser.id)))) {
+      return res.redirect('/dashboard');
+    }
+    res.sendFile(path.join(__dirname, 'public', 'atc-operations.html'));
+  } catch (err) {
+    console.error('Error atc-operations:', err.message);
+    res.redirect('/dashboard');
   }
 });
 
