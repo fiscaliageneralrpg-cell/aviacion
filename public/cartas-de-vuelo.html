@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cartas de Vuelo | Latin Aviation Network</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --black:#030305; --card:#08131f; --white:#fff; --white-soft:#cbd5e1;
+      --gray:#64748b; --blue:#0066ff; --blue-light:#3399ff; --cyan:#00d4ff;
+      --border:#1e3a5f; --green:#22c55e; --red:#f43f5e; --yellow:#facc15;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    [hidden] { display:none !important; }
+    body { font-family:'Inter',system-ui,sans-serif; background:var(--black); color:var(--white);
+      line-height:1.55; min-height:100vh; overflow-x:hidden; display:flex; flex-direction:column; }
+    a { text-decoration:none; color:inherit; }
+    .container { max-width:1140px; margin:0 auto; padding:0 22px; width:100%; }
+    .bg { position:fixed; inset:0; z-index:-2; background-size:cover; background-position:center;
+      background-image:linear-gradient(rgba(3,8,18,.82),rgba(3,8,18,.94)),url("https://i.imgur.com/rjEhr3O.jpeg"); }
+    .bg::after { content:""; position:absolute; inset:0;
+      background:radial-gradient(circle at 20% 10%,rgba(0,102,255,.18),transparent 45%),
+                 radial-gradient(circle at 85% 80%,rgba(0,212,255,.12),transparent 45%); }
+
+    .ico { display:inline-block; position:relative; flex-shrink:0; width:1.1em; height:1.1em; vertical-align:-.16em; }
+    .ico::before,.ico::after { content:""; position:absolute; display:block; }
+    .ico-clip { border:.12em solid currentColor; border-radius:.2em; }
+    .ico-clip::before { left:0; top:0; width:100%; height:32%; background:currentColor; }
+    .ico-plane { background:currentColor; clip-path:polygon(50% 0,62% 38%,100% 62%,100% 74%,60% 62%,56% 86%,70% 94%,70% 100%,50% 95%,30% 100%,30% 94%,44% 86%,40% 62%,0 74%,0 62%,38% 38%); }
+    .ico-chev::before { left:24%; top:18%; width:42%; height:42%; border:solid currentColor; border-width:0 .17em .17em 0; transform:rotate(45deg); }
+    .ico-left { transform:rotate(90deg); }
+    .ico-print { border:.12em solid currentColor; border-radius:.2em; }
+    .ico-retry { border:.14em solid currentColor; border-top-color:transparent; border-radius:50%; animation:spin 2.4s linear infinite; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+
+    nav { position:sticky; top:0; z-index:60; padding:11px 0; background:rgba(3,8,18,.92);
+      backdrop-filter:blur(16px); border-bottom:1px solid var(--border); animation:navDrop .7s ease-out; }
+    @keyframes navDrop { from{transform:translateY(-100%);opacity:0} to{transform:translateY(0);opacity:1} }
+    .nav-inner { display:flex; align-items:center; justify-content:space-between; gap:14px; }
+    .brand { display:flex; align-items:center; gap:10px; }
+    .brand img { width:38px; height:38px; object-fit:contain; filter:drop-shadow(0 0 8px rgba(0,102,255,.5)); }
+    .brand span { font-family:'Orbitron',monospace; font-weight:900; font-size:.74rem; line-height:1.1; }
+    .nav-links { display:flex; gap:6px; flex-wrap:wrap; }
+    .nav-link { display:inline-flex; align-items:center; gap:7px; padding:9px 15px; border-radius:50px;
+      color:var(--white-soft); font-size:.78rem; font-weight:800; transition:.25s; border:1px solid transparent; }
+    .nav-link:hover { color:#fff; background:rgba(0,102,255,.16); }
+    .nav-link.active { background:rgba(0,102,255,.2); border-color:rgba(0,212,255,.4); color:#fff; }
+
+    main { flex:1; padding:22px 0 50px; }
+    .hero { display:flex; align-items:center; justify-content:space-between; gap:18px; flex-wrap:wrap;
+      padding:22px 28px; border-radius:22px; margin-bottom:18px;
+      background:linear-gradient(115deg,rgba(0,102,255,.22),rgba(0,212,255,.06) 65%,rgba(8,19,31,.9));
+      border:1px solid rgba(0,212,255,.35); box-shadow:0 18px 44px rgba(0,0,0,.55);
+      position:relative; overflow:hidden; animation:riseUp .6s ease-out; }
+    .hero::after { content:""; position:absolute; top:0; left:-60%; width:45%; height:100%;
+      background:linear-gradient(100deg,transparent,rgba(255,255,255,.07),transparent); transform:skewX(-20deg);
+      animation:shine 8s 1s infinite; pointer-events:none; }
+    @keyframes shine { 0%{left:-60%} 60%,100%{left:130%} }
+    @keyframes riseUp { from{transform:translateY(14px);opacity:0} to{transform:translateY(0);opacity:1} }
+    .hero h1 { font-family:'Orbitron',monospace; font-size:1.7rem; font-weight:900; letter-spacing:1px; }
+    .hero p { color:var(--white-soft); font-size:.85rem; }
+    .btn-print { display:inline-flex; align-items:center; gap:8px; padding:10px 20px; border-radius:50px; cursor:pointer;
+      background:rgba(0,102,255,.18); border:1px solid rgba(0,212,255,.5); color:#fff;
+      font-family:inherit; font-weight:800; font-size:.78rem; transition:.25s; }
+    .btn-print:hover { background:var(--blue); transform:translateY(-2px); }
+
+    .toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
+    .chips { display:flex; gap:8px; flex-wrap:wrap; }
+    .chip { padding:7px 15px; border-radius:50px; cursor:pointer; font-family:inherit; font-weight:800; font-size:.74rem;
+      background:rgba(255,255,255,.04); border:1px solid var(--border); color:var(--white-soft); transition:.25s; }
+    .chip:hover { border-color:var(--cyan); color:var(--cyan); }
+    .chip.active { background:rgba(0,102,255,.2); border-color:var(--blue-light); color:#fff; }
+    .search { display:flex; align-items:center; gap:8px; padding:8px 14px; border-radius:50px;
+      background:rgba(0,0,0,.4); border:1px solid var(--border); color:var(--gray); }
+    .search input { background:none; border:none; outline:none; color:#fff; font-family:inherit; font-size:.8rem; width:190px; }
+
+    /* Carta */
+    .chart {
+      position:relative; overflow:hidden; border-radius:20px; margin-bottom:16px;
+      background:linear-gradient(160deg,rgba(13,27,42,.97),rgba(8,19,31,.95));
+      border:1px solid var(--border); box-shadow:0 16px 40px rgba(0,0,0,.45);
+      animation:riseUp .5s ease-out both; transition:transform .3s, border-color .3s;
+    }
+    .chart:hover { transform:translateY(-4px); border-color:rgba(0,212,255,.5); }
+    .chart::before { content:""; position:absolute; left:0; top:0; bottom:0; width:4px;
+      background:linear-gradient(180deg,var(--cyan),var(--blue)); }
+    .chart-head { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;
+      padding:18px 22px; border-bottom:1px solid var(--border);
+      background:linear-gradient(90deg,rgba(0,102,255,.12),transparent); }
+    .chart-title { display:flex; align-items:center; gap:12px; }
+    .chart-title .ico { color:var(--cyan); font-size:1.2rem; }
+    .callsign { font-family:'Orbitron',monospace; font-size:1.15rem; font-weight:900; letter-spacing:1px; }
+    .chart-sub { color:var(--gray); font-size:.72rem; }
+    .status-tag { padding:5px 13px; border-radius:50px; font-size:.68rem; font-weight:900; text-transform:uppercase;
+      letter-spacing:.6px; border:1px solid currentColor; }
+    .status-tag.gnd { color:var(--green); } .status-tag.twr { color:var(--yellow); }
+    .status-tag.finished { color:var(--gray); } .status-tag.del { color:var(--cyan); }
+    .squawk-tag { padding:5px 13px; border-radius:10px; background:rgba(0,212,255,.1); border:1px solid rgba(0,212,255,.45);
+      color:var(--cyan); font-family:'Orbitron',monospace; font-size:.82rem; font-weight:900; letter-spacing:1.5px; }
+
+    .route-line { display:flex; align-items:center; justify-content:center; gap:18px; padding:18px 22px 6px; flex-wrap:wrap; }
+    .icao { font-family:'Orbitron',monospace; font-size:1.5rem; font-weight:900; color:#fff; }
+    .icao small { display:block; font-family:'Inter',sans-serif; font-size:.66rem; color:var(--gray); font-weight:600; text-align:center; }
+    .route-arrow { flex:1; min-width:100px; display:flex; align-items:center; gap:8px; color:var(--cyan); }
+    .route-arrow .line { flex:1; height:2px; background:linear-gradient(90deg,transparent,var(--cyan),transparent); position:relative; }
+    .route-arrow .line::after { content:"✈"; position:absolute; right:0; top:-9px; color:var(--cyan); animation:fly 3s linear infinite; }
+    @keyframes fly { 0%{right:100%;opacity:0} 20%{opacity:1} 80%{opacity:1} 100%{right:0;opacity:0} }
+
+    .chart-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; padding:16px 22px 22px; }
+    .cell { padding:11px 13px; border-radius:12px; background:rgba(0,0,0,.32); border:1px solid var(--border); }
+    .cell label { display:block; color:var(--gray); font-size:.62rem; font-weight:800; text-transform:uppercase; letter-spacing:.8px; }
+    .cell b { display:block; margin-top:4px; font-family:'Orbitron',monospace; font-size:.82rem; color:#fff; overflow-wrap:anywhere; }
+    .cell.highlight b { color:var(--cyan); }
+    .chart-foot { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
+      padding:12px 22px; border-top:1px solid var(--border); color:var(--gray); font-size:.72rem; }
+    .empty { color:var(--gray); font-size:.86rem; text-align:center; padding:50px 20px; }
+    .empty .ico { font-size:2rem; color:rgba(0,212,255,.35); display:block; margin-bottom:12px; }
+    footer { border-top:1px solid var(--border); background:var(--black); padding:14px 0; text-align:center; color:var(--gray); font-size:.72rem; }
+    @media (max-width:900px) { .chart-grid { grid-template-columns:repeat(2,1fr); } }
+    @media (max-width:600px) {
+      .nav-links { display:none; } .chart-grid { grid-template-columns:1fr; }
+      .icao { font-size:1.15rem; } .hero h1 { font-size:1.3rem; }
+    }
+    @media print {
+      nav, .toolbar, .btn-print, footer, .bg { display:none !important; }
+      body { background:#fff; color:#000; }
+      .chart { background:#fff; border-color:#ccc; color:#000; box-shadow:none; }
+      .chart *, .cell b, .icao, .callsign { color:#000 !important; }
+      .cell { background:#f4f4f4; border-color:#ddd; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg"></div>
+  <nav>
+    <div class="container nav-inner">
+      <div class="brand"><img src="https://i.imgur.com/V47UGra.png" alt="LAN"><span>LATIN AVIATION<br>NETWORK</span></div>
+      <div class="nav-links">
+        <a href="/dashboard" class="nav-link"><i class="ico ico-plane"></i> Dashboard</a>
+        <a href="/dashboard/planes-de-vuelo" class="nav-link"><i class="ico ico-clip"></i> Planes de vuelo</a>
+        <a href="/dashboard/atc-clearance" class="nav-link"><i class="ico ico-plane"></i> ATC Clearance</a>
+        <a href="/dashboard/cartas-de-vuelo" class="nav-link active"><i class="ico ico-clip"></i> Cartas de Vuelo</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <header class="hero">
+      <div>
+        <span class="hero-badge"><i class="ico ico-clip"></i> FLIGHT CHARTS</span>
+        <h1>Cartas de Vuelo</h1>
+        <p>Planes autorizados con toda la información operativa de tu vuelo.</p>
+      </div>
+      <button class="btn-print" onclick="window.print()"><i class="ico ico-print"></i> Imprimir cartas</button>
+    </header>
+
+    <div class="toolbar">
+      <div class="chips" id="filtros">
+        <button class="chip active" data-f="all">Todas</button>
+        <button class="chip" data-f="GND">En rodaje</button>
+        <button class="chip" data-f="TWR">En pista</button>
+        <button class="chip" data-f="FINISHED">Finalizadas</button>
+      </div>
+      <label class="search"><input type="search" id="buscar" placeholder="Buscar callsign o ruta…" autocomplete="off"></label>
+    </div>
+
+    <div id="charts"><div class="empty"><i class="ico ico-clip"></i>Cargando cartas de vuelo…</div></div>
+  </main>
+
+  <footer>
+    <div class="container"><span style="font-family:'Orbitron',monospace;color:var(--blue)">0.0.0.0.1</span> © 2026 Latin Aviation Network. Todos los derechos reservados.</div>
+  </footer>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    let charts = [], curFiltro = 'all', curBusqueda = '';
+    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    const AIRPORTS = {
+      EGFF:'Cardiff', EGKK:'Gatwick', EGLC:'London City', LCLK:'Larnaca', LCPH:'Paphos',
+      LCRA:'Akrotiri', LPMA:'Madeira', MDAB:'Arroyo Barril', MDCR:'Cabo Rojo',
+      MDPC:'Punta Cana', MDST:'Cibao', MTCA:'Cap-Haitien', PAFA:'Fairbanks',
+      SKBO:'El Dorado', SKRG:'José María Córdova', SKIB:'Perales'
+    };
+    const nombre = c => AIRPORTS[c] || c;
+
+    function pintar() {
+      const visibles = charts.filter(c =>
+        (curFiltro === 'all' || c.atc_stage === curFiltro) &&
+        (!curBusqueda || [c.callsign, c.departure, c.destination, c.aircraft]
+          .join(' ').toLowerCase().includes(curBusqueda))
+      );
+      const box = $('charts');
+      if (!visibles.length) {
+        box.innerHTML = '<div class="empty"><i class="ico ico-clip"></i>' +
+          (charts.length ? 'No hay cartas que coincidan con el filtro.' : 'Aún no tienes vuelos autorizados. Una vez aprobado por Delivery, tu carta aparecerá aquí.') + '</div>';
+        return;
+      }
+      box.innerHTML = visibles.map((c, i) => {
+        const tagClass = c.atc_stage === 'FINISHED' ? 'finished' : (c.atc_stage || '').toLowerCase();
+        return `<article class="chart" style="animation-delay:${i * .07}s">
+          <div class="chart-head">
+            <div class="chart-title">
+              <i class="ico ico-plane"></i>
+              <div><div class="callsign">${esc(c.callsign)}</div>
+                <div class="chart-sub">${esc(c.airline || 'Sin aerolínea')} · ${esc(c.aircraft)} · ${esc(c.registration || '—')}</div></div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <span class="status-tag ${tagClass}">${esc(c.atc_stage || '—')}</span>
+              ${c.squawk ? '<span class="squawk-tag">SQK ' + esc(c.squawk) + '</span>' : ''}
+            </div>
+          </div>
+          <div class="route-line">
+            <div class="icao">${esc(c.departure)}<small>${esc(nombre(c.departure))}</small></div>
+            <div class="route-arrow"><span class="line"></span> ${esc(c.flight_rules)} ${esc(c.cruise_altitude || 'FL')} <span class="line"></span></div>
+            <div class="icao">${esc(c.destination)}<small>${esc(nombre(c.destination))}</small></div>
+          </div>
+          <div class="chart-grid">
+            <div class="cell highlight"><label>Callsign</label><b>${esc(c.callsign)}</b></div>
+            <div class="cell"><label>Aerolínea</label><b>${esc(c.airline || '—')}</b></div>
+            <div class="cell"><label>Aeronave / Matrícula</label><b>${esc(c.aircraft)} · ${esc(c.registration || '—')}</b></div>
+            <div class="cell"><label>Reglas de vuelo</label><b>${esc(c.flight_rules)}</b></div>
+            <div class="cell"><label>Altitud crucero</label><b>${esc(c.cruise_altitude || 'Automática')}</b></div>
+            <div class="cell"><label>Alternate</label><b>${esc(c.alternate || 'Automático')}</b></div>
+            <div class="cell highlight"><label>Pista asignada</label><b>${esc(c.runway || 'Por asignar')}</b></div>
+            <div class="cell highlight"><label>SID</label><b>${esc(c.sid || '—')}</b></div>
+            <div class="cell"><label>Squawk</label><b>${c.squawk ? esc(c.squawk) : '—'} ${c.squawk_validated ? '✓' : ''}</b></div>
+            <div class="cell"><label>Tipo</label><b>${esc(c.flight_kind || 'DEP')}</b></div>
+            <div class="cell"><label>Controlador</label><b>${esc(c.atc_controller_id || '—')}</b></div>
+            <div class="cell"><label>Estado</label><b>${esc(c.status)}</b></div>
+          </div>
+          <div class="chart-foot">
+            <span>Emitida: ${new Date(c.created_at).toLocaleString('es')}</span>
+            <span>${esc(c.username || '')}</span>
+          </div>
+        </article>`;
+      }).join('');
+    }
+
+    async function cargar() {
+      try {
+        const res = await fetch('/api/flight-charts', {cache:'no-store'});
+        if (res.status === 401) { window.location.href = '/iniciar-seccion.html'; return; }
+        const data = await res.json();
+        charts = data.charts || [];
+        pintar();
+      } catch (e) {
+        $('charts').innerHTML = '<div class="empty">Error al cargar las cartas de vuelo.</div>';
+      }
+    }
+
+    document.querySelectorAll('#filtros .chip').forEach(chip => chip.addEventListener('click', () => {
+      document.querySelectorAll('#filtros .chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active'); curFiltro = chip.dataset.f; pintar();
+    }));
+    $('buscar').addEventListener('input', e => { curBusqueda = e.target.value.trim().toLowerCase(); pintar(); });
+    setInterval(() => { if (!document.hidden) cargar(); }, 5000);
+    cargar();
+  </script>
+</body>
+</html>

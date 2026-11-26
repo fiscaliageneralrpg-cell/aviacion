@@ -47,7 +47,7 @@ app.use(session({
 // podía abrir /dashboard.html o /dashboard-aviacion.html a mano y saltarse
 // el paso de Roblox.
 app.use((req, res, next) => {
-  if (req.path === '/dashboard.html' || req.path === '/dashboard-aviacion.html' || req.path === '/planes-de-vuelo.html' || req.path === '/atc-operations.html' || req.path === '/atc-clearance.html') {
+  if (req.path === '/dashboard.html' || req.path === '/dashboard-aviacion.html' || req.path === '/planes-de-vuelo.html' || req.path === '/atc-operations.html' || req.path === '/atc-clearance.html' || req.path === '/cartas-de-vuelo.html') {
     return requireVerificado(req, res, next);
   }
   next();
@@ -998,6 +998,12 @@ function planPublico(r, conSquawk) {
     squawk_validated: !!r.squawk_validated,
     atc_stage: r.atc_stage || null,
     atc_controller_id: r.atc_controller_id || null,
+    runway: r.runway || null,
+    sid: r.sid || null,
+    flight_kind: r.flight_kind || null,
+    cleared_at: r.cleared_at || null,
+    taxi_at: r.taxi_at || null,
+    finished_at: r.finished_at || null,
     rejection_reason: r.rejection_reason || null,
     created_at: r.created_at,
     updated_at: r.updated_at
@@ -2180,6 +2186,40 @@ app.get('/dashboard/atc-operations', requireVerificado, async (req, res) => {
 // Ruta protegida de ATC Clearance (piloto valida el squawk)
 app.get('/dashboard/atc-clearance', requireVerificado, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'atc-clearance.html'));
+});
+
+// ============================================================
+// 📋 CARTAS DE VUELO (Flight Charts) — solo vuelos autorizados
+// ============================================================
+app.get('/api/flight-charts', requireAuth, async (req, res) => {
+  try {
+    const discordId = String(req.session.discordUser.id);
+    const id = req.query.id;
+    const controlador = await esControlador(discordId);
+    let sql = `
+      SELECT s.*, u.discord_username, u.discord_global_name
+      FROM flight_plans s
+      LEFT JOIN verified_users u ON u.discord_id = s.discord_id
+      WHERE s.atc_stage IS NOT NULL AND s.squawk_validated = 1`;
+    const params = [];
+    if (!controlador) { sql += ' AND s.discord_id = ?'; params.push(discordId); }
+    if (id) { sql += ' AND s.id = ?'; params.push(id); }
+    sql += ' ORDER BY FIELD(s.atc_stage,\'GND\',\'TWR\',\'FINISHED\',\'DEL\'), s.id DESC';
+    const [rows] = await pool.query(sql, params);
+    const charts = rows.map(r => {
+      const c = planPublico(r, controlador || !!r.squawk_validated);
+      c.callsign = (r.airline || '') + (r.flight_number || '') || ('#' + r.id);
+      return c;
+    });
+    res.json({ charts, is_atc: controlador });
+  } catch (err) {
+    console.error('Error flight-charts:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+app.get('/dashboard/cartas-de-vuelo', requireVerificado, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'cartas-de-vuelo.html'));
 });
 
 // --- Logout: destruye la sesión y borra la cookie (await para que no reviva) ---

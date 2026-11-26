@@ -372,6 +372,8 @@
     .tab-item.atc:hover { background: rgba(0,212,255,0.2); transform: translateY(-2px); }
     .tab-item.clearance { color: var(--green); background: rgba(34,197,94,0.08); border-color: rgba(34,197,94,0.45); animation-delay: 1.15s; }
     .tab-item.clearance:hover { background: rgba(34,197,94,0.2); transform: translateY(-2px); }
+    .tab-item.charts { color: var(--blue-light); background: rgba(51,153,255,0.08); border-color: rgba(51,153,255,0.45); animation-delay: 1.18s; }
+    .tab-item.charts:hover { background: rgba(51,153,255,0.2); transform: translateY(-2px); }
     .tab-item.staff:hover { color: var(--gold); background: rgba(255,215,0,0.16); border-color: var(--gold); box-shadow: 0 12px 30px rgba(255,215,0,0.28); }
     .tab-item.staff::after { background: linear-gradient(90deg, transparent, var(--gold), transparent); }
     .tab-item[hidden] { display: none !important; }
@@ -1078,6 +1080,7 @@
         <button class="tab-item soon" id="academy-cta" data-mode="soon"><i class="ico ico-clock"></i> Cargando…</button>
         <button class="tab-item atc" id="quick-atc" hidden><i class="ico ico-tower"></i> ATC Operations</button>
         <button class="tab-item clearance" id="quick-clearance" hidden><i class="ico ico-plane"></i> ATC Clearance</button>
+        <button class="tab-item charts" id="quick-charts" hidden><i class="ico ico-doc"></i> Cartas de Vuelo</button>
         <span class="tab-sep" id="tab-sep" hidden></span>
         <button class="tab-item staff" id="quick-staff" hidden><i class="ico ico-shield"></i> Panel Staff</button>
       </div>
@@ -1436,6 +1439,7 @@
         trackActual === 'atc' && academyStatus.status === 'approved'
       );
       document.getElementById('quick-clearance').hidden = academyStatus.status !== 'approved';
+      document.getElementById('quick-charts').hidden = academyStatus.status !== 'approved';
       if (academyStatus.status === 'approved') {
         // La ruta ELEGIDA manda: Piloto → "Planes de vuelo", ATC → "Solicitudes..."
         const esAtc = trackActual === 'atc';
@@ -1465,6 +1469,9 @@
     });
     document.getElementById('quick-clearance').addEventListener('click', () => {
       window.location.href = '/dashboard/atc-clearance';
+    });
+    document.getElementById('quick-charts').addEventListener('click', () => {
+      window.location.href = '/dashboard/cartas-de-vuelo';
     });
     document.getElementById('quick-staff').addEventListener('click', () => abrirPanelStaff());
 
