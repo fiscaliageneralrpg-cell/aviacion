@@ -2118,12 +2118,51 @@ app.get('/api/atc/log', requireAuth, async (req, res) => {
       return res.status(403).json({ error: 'Sin permisos ATC' });
     }
     const airport = String(req.query.airport || '').slice(0, 8).toUpperCase();
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const POR_PAGINA = 5;
+
+    // 🧹 Borrar operaciones con más de 2 días (se hace en cada consulta)
+    await pool.query('DELETE FROM atc_operations WHERE created_at < DATE_SUB(NOW(), INTERVAL 2 DAY)');
+
     const where = airport ? 'WHERE airport_code = ?' : '';
     const params = airport ? [airport] : [];
-    const [rows] = await pool.query(
-      `SELECT * FROM atc_operations ${where} ORDER BY id DESC LIMIT 50`, params
+
+    // Combinar: operaciones ATC reales + planes de vuelo (para que ningún vuelo falte)
+    const [ops] = await pool.query(
+      `SELECT * FROM atc_operations ${where}`, params
     );
-    res.json({ operations: rows });
+    const [planes] = await pool.query(
+      `SELECT id, departure, destination, airline, flight_number, status, atc_stage,
+              created_at, updated_at
+       FROM flight_plans
+       WHERE created_at >= DATE_SUB(NOW(), INTERVAL 2 DAY)`
+    );
+    const historial = [
+      ...ops.map(o => ({
+        id: 'op-' + o.id,
+        callsign: o.callsign || '',
+        action: o.action,
+        controller_name: o.controller_name || '',
+        airport_code: o.airport_code,
+        created_at: o.created_at,
+        tipo: 'op'
+      })),
+      ...planes.map(p => ({
+        id: 'fp-' + p.id,
+        callsign: (p.airline || '') + (p.flight_number || '') || ('#' + p.id),
+        action: p.atc_stage
+          ? 'Plan de vuelo en ' + p.atc_stage + ' · ' + p.status
+          : 'Plan de vuelo recibido · ' + p.status,
+        controller_name: '',
+        airport_code: p.departure,
+        created_at: p.created_at,
+        tipo: 'plan'
+      }))
+    ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    const total = historial.length;
+    const pageRows = historial.slice((page - 1) * POR_PAGINA, page * POR_PAGINA);
+    res.json({ operations: pageRows, total, page, pages: Math.max(1, Math.ceil(total / POR_PAGINA)) });
   } catch (err) {
     console.error('Error atc/log:', err.message);
     res.status(500).json({ error: 'Error interno' });

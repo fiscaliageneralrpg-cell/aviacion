@@ -190,6 +190,12 @@
     .hist-icon { color:var(--blue-light); }
     .hist-callsign { font-family:'Orbitron',monospace; font-weight:800; min-width:80px; }
     .hist-text { color:var(--white-soft); flex:1; }
+    .pagination-hist { display:flex; align-items:center; justify-content:center; gap:10px; padding-top:12px; margin-top:8px; border-top:1px solid var(--border); }
+    .pagination-hist .page-btn { min-width:32px; height:32px; padding:0 10px; border-radius:9px; cursor:pointer;
+      background:rgba(255,255,255,.04); border:1px solid var(--border); color:var(--white-soft); font-size:.8rem; }
+    .pagination-hist .page-btn:hover:not(:disabled) { border-color:var(--cyan); color:var(--cyan); }
+    .pagination-hist .page-btn:disabled { opacity:.35; cursor:not-allowed; }
+    .pagination-hist .page-info { color:var(--gray); font-size:.72rem; font-weight:700; }
 
     /* Overlay ficha */
     .modal-overlay { position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,.8); backdrop-filter:blur(9px);
@@ -395,15 +401,16 @@
         const [rS, rP, rL] = await Promise.all([
           fetch('/api/atc/strips?airport=' + aeropuerto, {cache:'no-store'}),
           fetch('/api/atc/positions?airport=' + aeropuerto, {cache:'no-store'}),
-          fetch('/api/atc/log?airport=' + aeropuerto, {cache:'no-store'})
+          fetch('/api/atc/log?airport=' + aeropuerto + '&page=' + paginaHistorial, {cache:'no-store'})
         ]);
         strips = (await rS.json()).strips || [];
         posiciones = (await rP.json()).positions || [];
-        const logs = (await rL.json()).operations || [];
+        const logsData = await rL.json();
+        const logs = logsData.operations || [];
         pintarStats();
         pintarPosiciones();
         pintarStrips();
-        pintarHistorial(logs);
+        pintarHistorial(logs, logsData);
       } catch (e) { console.error(e); }
     }
 
@@ -475,10 +482,12 @@
       pintarStats();
     }
 
-    function pintarHistorial(logs) {
+    let paginaHistorial = 1, totalHistorial = 0, paginasHistorial = 1;
+    function pintarHistorial(logs, data) {
       const box = $('history-list');
+      if (data) { totalHistorial = data.total; paginasHistorial = data.pages; }
       if (!logs.length) { box.innerHTML = '<p style="color:var(--gray);font-size:.8rem">Sin operaciones registradas.</p>'; return; }
-      box.innerHTML = logs.slice(0,10).map(l => {
+      box.innerHTML = logs.map(l => {
         const t = new Date(l.created_at);
         const hora = String(t.getHours()).padStart(2,'0') + ':' + String(t.getMinutes()).padStart(2,'0');
         return `<div class="hist-row">
@@ -488,7 +497,14 @@
           <span class="hist-text">${esc(l.action)}</span>
           <span style="color:var(--gray);font-size:.7rem">${esc(l.controller_name || '')}</span>
         </div>`;
-      }).join('');
+      }).join('') + `
+        <div class="pagination-hist">
+          <button class="page-btn" id="hist-ant" ${paginaHistorial <= 1 ? 'disabled' : ''}><i class="ico ico-chev ico-left"></i></button>
+          <span class="page-info">${paginaHistorial} / ${paginasHistorial} · ${totalHistorial} registro${totalHistorial === 1 ? '' : 's'}</span>
+          <button class="page-btn" id="hist-sig" ${paginaHistorial >= paginasHistorial ? 'disabled' : ''}><i class="ico ico-chev"></i></button>
+        </div>`;
+      $('hist-ant').onclick = () => { if (paginaHistorial > 1) { paginaHistorial--; recargar(); } };
+      $('hist-sig').onclick = () => { if (paginaHistorial < paginasHistorial) { paginaHistorial++; recargar(); } };
     }
 
     async function abrirStrip(id) {
