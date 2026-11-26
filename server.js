@@ -2008,15 +2008,15 @@ app.post('/api/atc/strips/:id/clear', requireAuth, async (req, res) => {
     if (!runway) return res.status(400).json({ error: 'Indica la pista asignada.' });
     const nombre = await nombreControlador(discordId);
     await pool.query(
-      `UPDATE flight_plans SET atc_stage = 'GND', status = 'approved', runway = ?, sid = ?,
+      `UPDATE flight_plans SET atc_stage = 'VERIFIED', status = 'approved', runway = ?, sid = ?,
        atc_controller_id = ?, cleared_at = NOW(), updated_at = NOW() WHERE id = ?`,
       [runway, sid, discordId, fp.id]
     );
     const callsign = (fp.airline || '') + (fp.flight_number || '');
-    await registrarOperacion(fp.departure, callsign, 'DEL', 'Autorización IFR/VFR concedida. Transferido a Ground.', discordId, nombre);
+    await registrarOperacion(fp.departure, callsign, 'DEL', 'Autorización concedida. Vuelo verificado — en espera de rodaje.', discordId, nombre);
     await notificar(fp.discord_id, 'Delivery ha concedido tu autorización',
-      `${callsign}: autorización concedida, pista ${runway}. Transferido a Ground.`, 'check');
-    res.json({ success: true, atc_stage: 'GND' });
+      `${callsign}: autorización concedida, pista ${runway}. Puedes actualizar tu estatus desde el detalle del plan.`, 'check');
+    res.json({ success: true, atc_stage: 'VERIFIED' });
   } catch (err) {
     console.error('Error atc/clear:', err.message);
     res.status(500).json({ error: 'Error interno' });
@@ -2266,6 +2266,61 @@ app.post('/api/notifications/delete-all', requireAuth, async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error('Error notifications/delete-all:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// ATC: denegar un vuelo en Delivery
+app.post('/api/atc/strips/:id/decision', requireAuth, async (req, res) => {
+  try {
+    const discordId = String(req.session.discordUser.id);
+    if (!(await esControlador(discordId))) return res.status(403).json({ error: 'Sin permisos ATC' });
+    const [rows] = await pool.query('SELECT * FROM flight_plans WHERE id = ?', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'Vuelo no encontrado' });
+    const fp = rows[0];
+    if (fp.atc_stage !== 'DEL') return res.status(409).json({ error: 'Solo se pueden denegar vuelos en Delivery' });
+    const reason = String(req.body && req.body.reason || '').trim();
+    if (!reason) return res.status(400).json({ error: 'Indica el motivo' });
+    const nombre = await nombreControlador(discordId);
+    const callsign = (fp.airline || '') + (fp.flight_number || '');
+    await pool.query(
+      `UPDATE flight_plans SET status = 'rejected', rejection_reason = ?, reviewed_by = ?,
+       reviewed_at = NOW(), atc_controller_id = ?, updated_at = NOW() WHERE id = ?`,
+      [reason, discordId, discordId, fp.id]
+    );
+    await registrarOperacion(fp.departure, callsign, 'DEL', 'Vuelo denegado: ' + reason, discordId, nombre);
+    await notificar(fp.discord_id, 'Tu vuelo ha sido denegado', callsign + ': ' + reason, 'warn');
+    res.json({ success: true, status: 'rejected' });
+  } catch (err) {
+    console.error('Error atc/decision:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// Piloto: avanzar estatus de su vuelo (rodaje → en pista → aire → llegada → estacionando → terminado)
+const ESTATUS_PILOTO = ['VERIFIED','TAXI','LINEUP','AIR','ARRIVED','PARKING','FINISHED'];
+app.post('/api/flight-plans/:id/mi-estatus', requireAuth, async (req, res) => {
+  try {
+    const discordId = String(req.session.discordUser.id);
+    const [rows] = await pool.query('SELECT * FROM flight_plans WHERE id = ?', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'Plan no encontrado' });
+    const fp = rows[0];
+    if (fp.discord_id !== discordId) return res.status(403).json({ error: 'No es tu plan' });
+    const sig = req.body && req.body.status;
+    if (!ESTATUS_PILOTO.includes(sig)) return res.status(400).json({ error: 'Estado no válido' });
+    const idx = ESTATUS_PILOTO.indexOf(fp.atc_stage || 'VERIFIED');
+    const idxSig = ESTATUS_PILOTO.indexOf(sig);
+    if (idxSig !== idx + 1) return res.status(409).json({ error: 'Debes avanzar de uno en uno.' });
+    const fin = sig === 'FINISHED';
+    await pool.query(
+      `UPDATE flight_plans SET atc_stage = ?, status = ?, finished_at = ?, updated_at = NOW() WHERE id = ?`,
+      [sig, fin ? 'finished' : 'active', fin ? new Date() : null, fp.id]
+    );
+    await notificar(discordId, 'Actualización de tu vuelo',
+      'Tu vuelo pasó a: ' + sig, 'plane');
+    res.json({ success: true, atc_stage: sig });
+  } catch (err) {
+    console.error('Error mi-estatus:', err.message);
     res.status(500).json({ error: 'Error interno' });
   }
 });

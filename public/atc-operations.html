@@ -164,6 +164,10 @@
     .col.twr { border-color:rgba(250,204,21,.5); box-shadow:inset 0 0 24px rgba(250,204,21,.06); }
     .col.air { border-color:rgba(51,153,255,.5); box-shadow:inset 0 0 24px rgba(51,153,255,.06); }
     .col.air .col-name { color:var(--blue-light); }
+    .col.verified { border-color:rgba(34,197,94,.5); box-shadow:inset 0 0 24px rgba(34,197,94,.06); }
+    .col.verified .col-name { color:var(--green); }
+    .col.arr { border-color:rgba(244,63,94,.5); box-shadow:inset 0 0 24px rgba(244,63,94,.06); }
+    .col.arr .col-name { color:#fda4af; }
     .col-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:12px; }
     .col-name { display:flex; align-items:center; gap:8px; font-family:'Orbitron',monospace; font-size:.82rem; font-weight:900; }
     .col.del .col-name { color:var(--cyan); } .col.gnd .col-name { color:var(--green); } .col.twr .col-name { color:var(--yellow); }
@@ -325,20 +329,20 @@
             <p class="col-sub">Vuelos en espera de autorización</p>
             <div id="list-del"></div>
           </div>
-          <div class="col gnd">
-            <div class="col-head"><span class="col-name"><i class="ico ico-plane"></i> GROUND (GND)</span><span class="col-count" id="c-gnd">0</span></div>
-            <p class="col-sub">Vuelos en rodaje / superficie</p>
-            <div id="list-gnd"></div>
+          <div class="col verified">
+            <div class="col-head"><span class="col-name"><i class="ico ico-check"></i> VUELOS VERIFICADOS</span><span class="col-count" id="c-verified">0</span></div>
+            <p class="col-sub">Autorizados · esperando rodaje</p>
+            <div id="list-verified"></div>
           </div>
           <div class="col twr">
             <div class="col-head"><span class="col-name"><i class="ico ico-tower"></i> TOWER (TWR)</span><span class="col-count" id="c-twr">0</span></div>
-            <p class="col-sub">Vuelos en pista (despegues y aterrizajes)</p>
+            <p class="col-sub">Vuelos en pista (despegues)</p>
             <div id="list-twr"></div>
           </div>
-          <div class="col air">
-            <div class="col-head"><span class="col-name"><i class="ico ico-plane"></i> EN EL AIRE (AIR)</span><span class="col-count" id="c-air">0</span></div>
-            <p class="col-sub">Vuelos en operación aérea</p>
-            <div id="list-air"></div>
+          <div class="col arr">
+            <div class="col-head"><span class="col-name"><i class="ico ico-plane"></i> LLEGADAS (ARR)</span><span class="col-count" id="c-arr">0</span></div>
+            <p class="col-sub">Vuelos que llegaron / estacionando</p>
+            <div id="list-arr"></div>
           </div>
         </div>
       </section>
@@ -473,13 +477,13 @@
     }
 
     function pintarStrips() {
-      const activos = s => ['DEL','GND','TWR','AIR'].includes(s.atc_stage);
       const del = strips.filter(s => s.atc_stage === 'DEL');
-      const gnd = strips.filter(s => s.atc_stage === 'GND' && s.flight_kind === towerTab);
-      const twr = strips.filter(s => s.atc_stage === 'TWR' && s.flight_kind === towerTab);
-      const air = strips.filter(s => s.atc_stage === 'AIR' && s.flight_kind === towerTab);
-      $('c-del').textContent = del.length; $('c-gnd').textContent = gnd.length;
-      $('c-twr').textContent = twr.length; $('c-air').textContent = air.length;
+      const verified = strips.filter(s => s.atc_stage === 'VERIFIED');
+      const twr = strips.filter(s => s.atc_stage === 'LINEUP' || s.atc_stage === 'TWR');
+      const arr = strips.filter(s => ['ARRIVED','PARKING'].includes(s.atc_stage) ||
+                                     (s.flight_kind === 'ARR' && !['DEL','VERIFIED','FINISHED'].includes(s.atc_stage)));
+      $('c-del').textContent = del.length; $('c-verified').textContent = verified.length;
+      $('c-twr').textContent = twr.length; $('c-arr').textContent = arr.length;
       const render = (list, el) => {
         $(el).innerHTML = list.length
           ? list.map((s,i) => `<button class="strip" data-id="${s.id}" style="animation-delay:${i*.05}s">
@@ -487,7 +491,7 @@
           : '<p class="col-empty">Sin vuelos en esta posición</p>';
         $(el).querySelectorAll('.strip').forEach(b => b.addEventListener('click', () => abrirStrip(b.dataset.id)));
       };
-      render(del, 'list-del'); render(gnd, 'list-gnd'); render(twr, 'list-twr'); render(air, 'list-air');
+      render(del, 'list-del'); render(verified, 'list-verified'); render(twr, 'list-twr'); render(arr, 'list-arr');
       pintarStats();
     }
 
@@ -558,27 +562,18 @@
             <div class="field"><label>Pista asignada</label><input id="in-runway" placeholder="Ej. 26L" maxlength="8"></div>
             <div class="field"><label>SID (si aplica)</label><input id="in-sid" placeholder="Ej. LONGA1A" maxlength="40"></div>
             <div class="actions">
-              <button class="btn btn-green" id="a-clear"><i class="ico ico-check"></i> Autorizar → Ground</button>
+              <button class="btn btn-green" id="a-clear"><i class="ico ico-check"></i> Autorizar → Vuelos verificados</button>
+              <button class="btn btn-ghost" id="a-deny"><i class="ico ico-x"></i> Denegar</button>
             </div>`;
           $('a-clear').onclick = () => {
             const runway = $('in-runway').value.trim(), sid = $('in-sid').value.trim();
             if (!runway) return alert('Indica la pista asignada.');
             transferir('/api/atc/strips/' + s.id + '/clear', { runway, sid });
           };
-        } else if (s.atc_stage === 'GND') {
-          acc.innerHTML = '<div class="actions"><button class="btn btn-green" id="a-taxi"><i class="ico ico-plane"></i> Rodaje completado → Tower</button></div>';
-          $('a-taxi').onclick = () => transferir('/api/atc/strips/' + s.id + '/taxi', {});
-        } else if (s.atc_stage === 'TWR') {
-          acc.innerHTML = `<div class="actions">
-            ${s.flight_kind === 'ARR'
-              ? '<button class="btn btn-yellow" id="a-land">Aterrizaje → Ground</button>'
-              : '<button class="btn btn-green" id="a-takeoff">Despegue → En el aire</button>'}
-          </div>`;
-          if ($('a-land')) $('a-land').onclick = () => transferir('/api/atc/strips/' + s.id + '/tower', {action:'landing'});
-          if ($('a-takeoff')) $('a-takeoff').onclick = () => transferir('/api/atc/strips/' + s.id + '/tower', {action:'takeoff'});
-        } else if (s.atc_stage === 'AIR') {
-          acc.innerHTML = '<div class="actions"><button class="btn btn-green" id="a-finish"><i class="ico ico-check"></i> Finalizar vuelo</button></div>';
-          $('a-finish').onclick = () => transferir('/api/atc/strips/' + s.id + '/finish', {});
+          $('a-deny').onclick = () => {
+            const reason = prompt('Motivo del rechazo:'); if (!reason) return;
+            transferir('/api/atc/strips/' + s.id + '/decision', { action:'reject', reason });
+          };
         }
         $('strip-modal').classList.add('active');
       } catch (e) { console.error(e); }

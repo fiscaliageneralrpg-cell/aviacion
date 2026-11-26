@@ -943,6 +943,7 @@
             <span><b>Creado:</b> ${new Date(p.created_at).toLocaleString('es')}</span>
             <span><b>Squawk:</b> ${p.squawk ? '<span class="squawk">SQK ' + esc(p.squawk) + '</span>' : '—'}</span>
             <span><b>Squawk validado:</b> ${p.squawk_validated ? '<span style="color:var(--green);font-weight:900">✅ SÍ — listo para autorización</span>' : '<span style="color:var(--red);font-weight:900">🔴 PENDIENTE</span>'}</span>
+            <span style="grid-column:1/-1"><b>ESTATUS ACTUAL:</b> <span class="chip ${esc(p.atc_stage || p.status)}" style="font-size:.78rem">${esc(p.atc_stage || p.status)}</span></span>
             ${p.rejection_reason ? '<span style="grid-column:1/-1;color:var(--red)"><b>Motivo:</b> ' + esc(p.rejection_reason) + '</span>' : ''}
           </div>
         </div>
@@ -964,6 +965,26 @@
           acc.innerHTML = '<button class="btn btn-primary" id="d-finalizar">Finalizar vuelo</button>';
           document.getElementById('d-finalizar').onclick = () => cambiarEstado(p.id, 'finished');
         }
+      } else if (p.atc_stage && !['FINISHED'].includes(p.atc_stage)) {
+        // Piloto: avanzar estatus de uno en uno
+        const SIG = { VERIFIED:'TAXI', TAXI:'LINEUP', LINEUP:'AIR', AIR:'ARRIVED', ARRIVED:'PARKING', PARKING:'FINISHED' };
+        const NOMBRE = { VERIFIED:'Verificado', TAXI:'En rodaje', LINEUP:'En pista para despegar',
+                         AIR:'En el aire', ARRIVED:'Llegó al destino', PARKING:'Estacionando / bajando pasajeros', FINISHED:'Finalizado' };
+        const sig = SIG[p.atc_stage];
+        acc.innerHTML = `
+          <div style="width:100%;margin-bottom:10px;padding:10px;border-radius:11px;background:rgba(0,102,255,.12);border:1px solid rgba(0,212,255,.4)">
+            <b>Estatus: ${esc(NOMBRE[p.atc_stage] || p.atc_stage)}</b>
+          </div>
+          ${sig ? '<button class="btn btn-primary" id="d-next">Siguiente estatus → ' + esc(NOMBRE[sig]) + '</button>' : ''}`;
+        if (sig) document.getElementById('d-next').onclick = async () => {
+          const res = await fetch('/api/flight-plans/' + p.id + '/mi-estatus', {
+            method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ status: sig })
+          });
+          const d = await res.json();
+          if (!res.ok) { showAlert(errorAmigable(d.error), 'error'); return; }
+          showAlert('✅ Estatus actualizado: ' + NOMBRE[sig], 'ok');
+          detalleModal.classList.remove('active'); await cargarPlanes(true);
+        };
       } else if (['draft','cancelled'].includes(p.status)) {
         acc.innerHTML = '<button class="btn btn-primary" id="d-reenviar">Enviar a revisión</button>';
         document.getElementById('d-reenviar').onclick = async () => {
