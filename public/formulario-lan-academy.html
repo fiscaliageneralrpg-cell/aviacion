@@ -379,7 +379,7 @@
     </div>
   </div>
 
-  <script src="/academy-bank.js"></script>
+  <script src="/academy-bank.js?v=atc15"></script>
   <script>
     /* =========================================================
        BANCO DE PREGUNTAS — LAN ACADEMY (por ruta)
@@ -758,19 +758,8 @@
         if (!res.ok) throw new Error('estado no disponible');
         const st = await res.json();
 
-        // Ruta: primero el parámetro ?track= (viene del overlay), luego la BD, luego local
-        const params = new URLSearchParams(window.location.search);
-        const trackParam = params.get('track');
-        let localTrack = null;
-        try { localTrack = localStorage.getItem('lan_track_elegido'); } catch (e) { /* ignore */ }
-        const rutaElegida = trackParam || localTrack;
-
-        examenKey = (trackParam === 'atc' || trackParam === 'piloto')
-          ? trackParam
-          : ((st.exam && st.exam.key === 'atc') ? 'atc' : 'piloto');
-        if (rutaElegida && !trackParam) {
-          examenKey = rutaElegida === 'atc' ? 'atc' : 'piloto';
-        }
+        // 🔒 El servidor es la ÚNICA fuente de verdad: exam.key viene del track guardado
+        examenKey = (st.exam && st.exam.key === 'atc') ? 'atc' : 'piloto';
         MODULOS = examenKey === 'atc'
           ? (window.LAN_ACADEMY_ATC_MODULOS || MODULOS_PILOTO)
           : MODULOS_PILOTO;
@@ -779,6 +768,7 @@
         // Actualizar encabezado del examen
         document.getElementById('form-title').textContent =
           'Formulario ' + (examenKey === 'atc' ? 'ATC' : 'Piloto') + ' LAN Academy';
+        console.log('📝 Examen cargado:', examenKey, '| banco:', MODULOS.length, 'módulos,', totalPreguntas, 'preguntas');
         const heroSub = document.getElementById('form-subtitle');
         if (heroSub) {
           heroSub.textContent = examenKey === 'atc'
