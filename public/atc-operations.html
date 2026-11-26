@@ -214,9 +214,9 @@
 
     <div class="stats">
       <div class="stat" style="--c:var(--white-soft)"><div class="stat-top"><i class="ico ico-plane"></i> Vuelos Totales</div><div class="stat-num" id="s-total">0</div></div>
-      <div class="stat" style="--c:var(--cyan)"><div class="stat-top"><i class="ico ico-clip"></i> Delivery</div><div class="stat-num" id="s-del">0</div></div>
-      <div class="stat" style="--c:var(--green)"><div class="stat-top"><i class="ico ico-check"></i> Verificados</div><div class="stat-num" id="s-ver">0</div></div>
-      <div class="stat" style="--c:var(--yellow)"><div class="stat-top"><i class="ico ico-tower"></i> Tower</div><div class="stat-num" id="s-twr">0</div></div>
+      <div class="stat" style="--c:var(--cyan)"><div class="stat-top"><i class="ico ico-clip"></i> <span id="lbl-del">Delivery</span></div><div class="stat-num" id="s-del">0</div></div>
+      <div class="stat" style="--c:var(--green)"><div class="stat-top"><i class="ico ico-check"></i> <span id="lbl-ver">Verificados</span></div><div class="stat-num" id="s-ver">0</div></div>
+      <div class="stat" style="--c:var(--yellow)"><div class="stat-top"><i class="ico ico-tower"></i> <span id="lbl-twr">Tower</span></div><div class="stat-num" id="s-twr">0</div></div>
       <div class="stat" style="--c:var(--blue-light)"><div class="stat-top"><i class="ico ico-user"></i> Posiciones ATC</div><div class="stat-num" id="s-pos">0/3</div></div>
     </div>
 
@@ -352,9 +352,24 @@
       $('c-park').textContent=g('park').length;$('c-fin').textContent=strips.filter(s=>s.atc_stage==='FINISHED').length;
       $('c-rej').textContent=strips.filter(s=>s.status==='rejected').length;
       const ocupadas=positions.filter(p=>p.controller_id).length;
-      $('s-pos').textContent=ocupadas+'/'+positions.length;
-      $('s-total').textContent=strips.filter(s=>!['FINISHED'].includes(s.atc_stage)).length;
-      $('s-del').textContent=g('del').length;$('s-ver').textContent=g('ver').length;$('s-twr').textContent=g('twr').length;
+      $('s-pos').textContent=ocupadas+'/'+(positions.length||3);
+      const total = tabActual==='salidas'
+        ? strips.filter(s=>!['FINISHED','rejected'].includes(s.status)&&!['FINISHED'].includes(s.atc_stage)).length
+        : tabActual==='llegadas'
+          ? strips.filter(s=>['ARRIVED','PARKING','FINISHED'].includes(s.atc_stage)).length
+          : strips.filter(s=>s.status==='rejected').length;
+      $('s-total').textContent=total;
+      if(tabActual==='salidas'){
+        $('lbl-del').textContent='Delivery'; $('lbl-ver').textContent='Verificados'; $('lbl-twr').textContent='Tower';
+        $('s-del').textContent=g('del').length;$('s-ver').textContent=g('ver').length;$('s-twr').textContent=g('twr').length;
+      } else if(tabActual==='llegadas'){
+        $('lbl-del').textContent='Llegó'; $('lbl-ver').textContent='A estacionar'; $('lbl-twr').textContent='Finalizados';
+        $('s-del').textContent=g('arr').length;$('s-ver').textContent=g('park').length;
+        $('s-twr').textContent=strips.filter(s=>s.atc_stage==='FINISHED').length;
+      } else {
+        $('lbl-del').textContent='Rechazados'; $('lbl-ver').textContent='—'; $('lbl-twr').textContent='—';
+        $('s-del').textContent=strips.filter(s=>s.status==='rejected').length;$('s-ver').textContent=0;$('s-twr').textContent=0;
+      }
     }
 
     async function abrir(id){

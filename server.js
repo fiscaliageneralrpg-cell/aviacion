@@ -1899,6 +1899,13 @@ app.get('/api/atc/positions', requireAuth, async (req, res) => {
       return res.status(403).json({ error: 'Sin permisos ATC' });
     }
     const airport = String(req.query.airport || '').slice(0, 8).toUpperCase();
+    // 🔧 Auto-crear las 3 posiciones si no existen (BD importada sin INSERTs)
+    for (const pos of ['DEL','GND','TWR']) {
+      await pool.query(
+        'INSERT IGNORE INTO atc_positions (airport_code, position) VALUES (?, ?)',
+        [airport, pos]
+      );
+    }
     const [rows] = await pool.query(
       `SELECT id, airport_code, position, controller_id, controller_name, session_start,
               TIMESTAMPDIFF(SECOND, session_start, NOW()) AS seconds_on

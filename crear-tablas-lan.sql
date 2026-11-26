@@ -124,6 +124,25 @@ CREATE TABLE IF NOT EXISTS atc_positions (
   UNIQUE KEY uq_atc_pos (airport_code, position)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- ⭐ POSICIONES DEL/GND/TWR PARA CADA AEROPUERTO (3 por aeropuerto)
+INSERT IGNORE INTO atc_positions (airport_code, position) VALUES
+ ('SKBO','DEL'),('SKBO','GND'),('SKBO','TWR'),
+ ('SKRG','DEL'),('SKRG','GND'),('SKRG','TWR'),
+ ('SKIB','DEL'),('SKIB','GND'),('SKIB','TWR'),
+ ('EGFF','DEL'),('EGFF','GND'),('EGFF','TWR'),
+ ('EGKK','DEL'),('EGKK','GND'),('EGKK','TWR'),
+ ('EGLC','DEL'),('EGLC','GND'),('EGLC','TWR'),
+ ('LCLK','DEL'),('LCLK','GND'),('LCLK','TWR'),
+ ('LCPH','DEL'),('LCPH','GND'),('LCPH','TWR'),
+ ('LCRA','DEL'),('LCRA','GND'),('LCRA','TWR'),
+ ('LPMA','DEL'),('LPMA','GND'),('LPMA','TWR'),
+ ('MDAB','DEL'),('MDAB','GND'),('MDAB','TWR'),
+ ('MDCR','DEL'),('MDCR','GND'),('MDCR','TWR'),
+ ('MDPC','DEL'),('MDPC','GND'),('MDPC','TWR'),
+ ('MDST','DEL'),('MDST','GND'),('MDST','TWR'),
+ ('MTCA','DEL'),('MTCA','GND'),('MTCA','TWR'),
+ ('PAFA','DEL'),('PAFA','GND'),('PAFA','TWR');
+
 -- 8) HISTORIAL DE OPERACIONES ATC
 CREATE TABLE IF NOT EXISTS atc_operations (
   id INT AUTO_INCREMENT PRIMARY KEY,
