@@ -1182,6 +1182,11 @@ app.post('/api/flight-plans/:id/status', requireAuth, async (req, res) => {
     if (!rows.length) return res.status(404).json({ error: 'Plan no encontrado' });
     const fp = rows[0];
 
+    // 🔒 Planes definitivos: rechazados o finalizados NO se pueden modificar
+    if (['rejected', 'finished'].includes(fp.status)) {
+      return res.status(409).json({ error: 'Este plan es definitivo (rechazado o finalizado) y ya no se puede modificar.' });
+    }
+
     // Aprobar → asigna squawk aleatorio (4 dígitos, nunca inicia con 7) si no tiene
     let squawk = fp.squawk;
     let motivo = fp.rejection_reason;

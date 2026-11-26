@@ -632,6 +632,11 @@
       font-family: inherit; font-size: 0.75rem; font-weight: 700;
     }
     .fp-status-select:focus { outline: none; border-color: var(--cyan); }
+    .plan-bloqueado {
+      display:inline-flex; align-items:center; gap:6px; padding:5px 11px; border-radius:50px;
+      background:rgba(244,63,94,.1); border:1px solid rgba(244,63,94,.4); color:#fda4af;
+      font-size:.68rem; font-weight:800; letter-spacing:.4px;
+    }
     .fp-empty { color: var(--gray); font-size: 0.86rem; text-align: center; padding: 20px; }
     .fp-chip {
       display: inline-block; padding: 3px 9px; border-radius: 50px; font-size: 0.68rem; font-weight: 800;
@@ -1504,9 +1509,11 @@
               <span class="sub-user">${escapeHtml(p.departure)} → ${escapeHtml(p.destination)}<small>${escapeHtml(p.username)} · ${escapeHtml(p.aircraft)} · ${escapeHtml(p.flight_number || '—')}</small></span>
               <span class="fp-chip ${escapeHtml(p.status)}">${escapeHtml(ESTADOS_PLAN[p.status] || p.status)}</span>
               ${p.squawk ? '<span class="fp-squawk">SQK ' + escapeHtml(p.squawk) + '</span>' : ''}
-              <select class="fp-status-select staff-fp-sel" data-id="${p.id}">
-                ${Object.keys(ESTADOS_PLAN).map(s => '<option value="' + s + '"' + (s === p.status ? ' selected' : '') + '>' + ESTADOS_PLAN[s] + '</option>').join('')}
-              </select>
+              ${['rejected','finished'].includes(p.status)
+                ? '<span class="plan-bloqueado">🔒 Definitivo</span>'
+                : `<select class="fp-status-select staff-fp-sel" data-id="${p.id}">
+                     ${Object.keys(ESTADOS_PLAN).map(s => '<option value="' + s + '"' + (s === p.status ? ' selected' : '') + '>' + ESTADOS_PLAN[s] + '</option>').join('')}
+                   </select>`}
             </div>
             ${p.rejection_reason ? '<div class="plan-meta">Motivo: ' + escapeHtml(p.rejection_reason) + '</div>' : ''}
           </div>`).join('');
