@@ -1538,21 +1538,27 @@
       if (!academyStatus) return;
       const st = academyStatus;
       const aprobado = st.status === 'approved';
-      const esAtc = trackActual === 'atc';
+      // Roles REALES del usuario: puede tener Piloto y ATC a la vez
+      const roles = Array.isArray(st.roles) ? st.roles : [];
+      const tienePiloto = roles.includes('1555489377151623178');
+      const tieneAtc = roles.includes('1555512718046404609');
+      const esAtc = tieneAtc || trackActual === 'atc';
+      const esPiloto = tienePiloto || trackActual === 'piloto' || (!tieneAtc && !tienePiloto);
       const esInstructor = Array.isArray(st.instructor_roles) && st.instructor_roles.length > 0;
 
-      // Grupos visibles
-      document.querySelector('[data-group="piloto"]').hidden = esAtc;
+      // Grupos visibles: AMBOS si tiene ambos roles
+      document.querySelector('[data-group="piloto"]').hidden = !esPiloto;
       document.querySelector('[data-group="atc"]').hidden = !esAtc;
       document.querySelector('[data-group="staff"]').hidden = !(st.is_staff === true || esInstructor);
 
-      document.getElementById('access-sub').textContent = esAtc
-        ? 'Herramientas de control de tránsito aéreo.'
-        : 'Herramientas de piloto y academia.';
+      document.getElementById('access-sub').textContent = (esPiloto && esAtc)
+        ? 'Tienes permisos de Piloto y Controlador Aéreo.'
+        : esAtc ? 'Herramientas de control de tránsito aéreo.'
+                : 'Herramientas de piloto y academia.';
 
-      // Botón principal PILOTO
+      // Botón principal PILOTO (solo si es piloto)
       const cta = document.getElementById('academy-cta');
-      cta.hidden = false;
+      cta.hidden = !esPiloto;
       if (aprobado) {
         cta.innerHTML = '<i class="ico ico-plane"></i><span><b>Planes de Vuelo</b><small>Crea y gestiona tus planes</small></span>';
         cta.dataset.mode = 'planes';
@@ -1562,12 +1568,10 @@
         cta.dataset.form = esAtc ? 'atc' : 'piloto';
       }
 
-      // Accesos de piloto aprobado
-      document.getElementById('quick-clearance').hidden = !(aprobado && !esAtc);
-      document.getElementById('quick-charts').hidden = !(aprobado && !esAtc);
-      // ATC Operations (único botón ATC)
+      // Accesos: piloto aprobado → Clearance + Cartas; ATC aprobado → Operations
+      document.getElementById('quick-clearance').hidden = !(aprobado && esPiloto);
+      document.getElementById('quick-charts').hidden = !(aprobado && esPiloto);
       document.getElementById('quick-atc').hidden = !(aprobado && esAtc);
-      // Panel Staff / Instructor
       document.getElementById('quick-staff').hidden = !(st.is_staff === true || esInstructor);
     }
 

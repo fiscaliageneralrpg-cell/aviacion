@@ -164,6 +164,10 @@ async function ensureVerifiedUsersTable() {
     }
     await pool.query('ALTER TABLE verified_users ADD UNIQUE KEY uniq_verified_discord (discord_id)');
     console.log('🔑 Índice único verified_users.discord_id listo.');
+    // Marca para que el bot asigne el rol de formación al elegir ruta
+    try {
+      await pool.query('ALTER TABLE verified_users ADD COLUMN track_role_done TINYINT NOT NULL DEFAULT 0');
+    } catch (e) { if (e.code !== 'ER_DUP_FIELDNAME') console.error('Error columna track_role_done:', e.message); }
   } catch (err) {
     if (err.code === 'ER_DUP_KEYNAME') console.log('🔑 Índice único verified_users.discord_id ya existe.');
     else console.error('Error asegurando verified_users:', err.message);
@@ -764,6 +768,7 @@ app.get('/api/academy/status', requireAuth, async (req, res) => {
       is_staff: STAFF_ROLES.some(r => ids.includes(r)),
       is_atc: await esAtc(discordId),                   // Controlador Aéreo (rol 1555512718046404609)
       instructor_roles: ids.filter(r => r === '1555512949391495218' || r === '1556059095277109348'),
+      roles: ids,   // todos los roles del usuario (para mostrar ambos accesos si tiene Piloto + ATC)
       track,                                          // 'piloto' | 'atc' | null (aún no eligió)
       exam: {                                         // examen que le corresponde según su ruta
         key: track === 'atc' ? 'atc' : 'piloto',

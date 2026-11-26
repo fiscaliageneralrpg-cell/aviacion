@@ -489,9 +489,10 @@
       if (!logs.length) { box.innerHTML = '<p style="color:var(--gray);font-size:.8rem">Sin operaciones registradas.</p>'; return; }
       box.innerHTML = logs.map(l => {
         const t = new Date(l.created_at);
-        const hora = String(t.getHours()).padStart(2,'0') + ':' + String(t.getMinutes()).padStart(2,'0');
+        const hora = String(t.getHours()).padStart(2,'0') + ':' + String(t.getMinutes()).padStart(2,'0') + ':' + String(t.getSeconds()).padStart(2,'0');
+        const fecha = String(t.getDate()).padStart(2,'0') + '/' + String(t.getMonth()+1).padStart(2,'0') + '/' + t.getFullYear();
         return `<div class="hist-row">
-          <span class="hist-time">${hora}</span>
+          <span class="hist-time">${hora}<small style="display:block;color:var(--gray);font-size:.6rem">${fecha}</small></span>
           <span class="hist-icon"><i class="ico ico-plane"></i></span>
           <span class="hist-callsign">${esc(l.callsign || '—')}</span>
           <span class="hist-text">${esc(l.action)}</span>
