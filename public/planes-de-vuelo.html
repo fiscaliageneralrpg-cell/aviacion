@@ -188,6 +188,21 @@
     .alert.show { display:block; animation:riseUp .3s ease-out; }
     .alert.error { background:rgba(244,63,94,.12); border:1px solid rgba(244,63,94,.5); color:#fda4af; }
     .alert.ok { background:rgba(34,197,94,.12); border:1px solid rgba(34,197,94,.5); color:#86efac; }
+    .squawk-panel { border-color:rgba(0,212,255,.55); box-shadow:0 0 40px rgba(0,212,255,.12); animation:riseUp .5s ease-out; }
+    .squawk-panel-head { display:flex; align-items:center; gap:14px; margin-bottom:16px; }
+    .squawk-icon { font-size:2rem; }
+    .squawk-panel h2 { margin:0; font-size:1.1rem; }
+    .squawk-panel p { color:var(--gray); font-size:.78rem; }
+    .squawk-body { text-align:center; }
+    .squawk-flight { display:inline-block; padding:6px 14px; border-radius:50px; background:rgba(0,102,255,.16); border:1px solid rgba(0,212,255,.4); font-size:.8rem; margin-bottom:14px; }
+    .squawk-flight b { font-family:'Orbitron',monospace; color:var(--cyan); }
+    .digits { display:flex; gap:9px; justify-content:center; margin-bottom:14px; }
+    .digit { width:56px; height:64px; border-radius:12px; text-align:center; font-family:'Orbitron',monospace; font-size:1.6rem; font-weight:900; background:rgba(0,0,0,.5); border:2px solid var(--cyan); color:#fff; }
+    .digit:focus { outline:none; border-color:#fff; box-shadow:0 0 20px rgba(0,212,255,.5); }
+    .sq-status { display:inline-block; margin-left:12px; padding:8px 14px; border-radius:50px; font-size:.74rem; font-weight:900; font-family:'Orbitron',monospace; }
+    .sq-status.red { background:rgba(244,63,94,.12); border:1px solid var(--red); color:#fda4af; }
+    .sq-status.green { background:rgba(34,197,94,.12); border:1px solid var(--green); color:var(--green); }
+    .sq-error { margin-top:10px; color:#fda4af; font-size:.8rem; }
 
     /* Botón + flotante */
     .btn-add {
@@ -358,6 +373,29 @@
     </header>
 
     <div class="alert" id="alert"></div>
+
+    <!-- ===== PANEL SQUAWK INTEGRADO (aparece al enviar un plan) ===== -->
+    <section class="card squawk-panel" id="squawk-panel" hidden>
+      <div class="squawk-panel-head">
+        <span class="squawk-icon">📻</span>
+        <div>
+          <h2>Ahora haga el Squawk</h2>
+          <p>Delivery le dará un código de 4 dígitos. Introdúzcalo aquí para conectar su transponder.</p>
+        </div>
+      </div>
+      <div class="squawk-body">
+        <div class="squawk-flight">Tu vuelo: <b id="sq-flight">—</b></div>
+        <div class="digits">
+          <input class="digit" id="sq0" maxlength="1" inputmode="numeric" placeholder="_">
+          <input class="digit" id="sq1" maxlength="1" inputmode="numeric" placeholder="_">
+          <input class="digit" id="sq2" maxlength="1" inputmode="numeric" placeholder="_">
+          <input class="digit" id="sq3" maxlength="1" inputmode="numeric" placeholder="_">
+        </div>
+        <button class="btn btn-primary" id="sq-connect"><i class="ico ico-check"></i> Conectar Squawk</button>
+        <div id="sq-status" class="sq-status">🔴 SQUAWK PENDIENTE</div>
+        <div id="sq-error" class="sq-error" hidden></div>
+      </div>
+    </section>
 
     <div class="stats">
       <div class="stat" style="--c:var(--cyan)"><div class="stat-label">En operación</div><div class="stat-num" id="st-active">0</div></div>
@@ -662,9 +700,18 @@
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'No se pudo guardar el plan');
         modal.classList.remove('active');
-        showAlert(enviar ? '✅ Plan enviado a revisión de ATC.' : '💾 Borrador guardado.', 'ok');
+        if (enviar) {
+          showAlert('✅ Plan enviado. Ahora haga el Squawk con el código que le dé Delivery.', 'ok');
+          // Mostrar panel Squawk con el plan recién creado
+          const idNuevo = data.id || editId;
+          await cargarPlanes(true);
+          const planNuevo = todosPlanes.find(p => p.id == idNuevo) || misPlanes.find(p => p.id == idNuevo);
+          if (planNuevo) mostrarSquawk(planNuevo);
+        } else {
+          showAlert('💾 Borrador guardado.', 'ok');
+          await cargarPlanes();
+        }
         resetForm();
-        await cargarPlanes();
       } catch (e) {
         showAlert(errorAmigable(e.message), 'error');
       } finally { btn.disabled = false; }
@@ -683,6 +730,53 @@
       document.getElementById('btn-submit').innerHTML = '<i class="ico ico-send"></i> Enviar a revisión';
     }
     document.getElementById('btn-cancel-edit').addEventListener('click', resetForm);
+
+    /* ===== SQUAWK INTEGRADO ===== */
+    let planSquawk = null;
+    function mostrarSquawk(p) {
+      planSquawk = p;
+      document.getElementById('sq-flight').textContent = (p.airline || '') + (p.flight_number || '') || ('#' + p.id);
+      document.getElementById('squawk-panel').hidden = false;
+      const st = document.getElementById('sq-status');
+      if (p.squawk_validated) { st.className = 'sq-status green'; st.textContent = '🟢 CONNECTED'; }
+      else { st.className = 'sq-status red'; st.textContent = '🔴 SQUAWK PENDIENTE'; }
+      document.getElementById('sq-error').hidden = true;
+      document.getElementById('squawk-panel').scrollIntoView({ behavior:'smooth', block:'center' });
+    }
+    // Auto-avance dígitos
+    [0,1,2,3].forEach(i => {
+      const inp = document.getElementById('sq'+i);
+      inp.addEventListener('input', e => {
+        e.target.value = e.target.value.replace(/\D/g,'').slice(-1);
+        if (e.target.value && i < 3) document.getElementById('sq'+(i+1)).focus();
+      });
+    });
+    document.getElementById('sq-connect').addEventListener('click', async () => {
+      if (!planSquawk) return;
+      const code = [0,1,2,3].map(i => document.getElementById('sq'+i).value).join('');
+      if (!/^\d{4}$/.test(code)) {
+        const er = document.getElementById('sq-error'); er.hidden = false; er.textContent = 'Ingrese los 4 dígitos.'; return;
+      }
+      const btn = document.getElementById('sq-connect'); btn.disabled = true; btn.textContent = 'Validando…';
+      try {
+        const res = await fetch('/api/flight-plans/' + planSquawk.id + '/validate-squawk', {
+          method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ squawk: code })
+        });
+        const d = await res.json();
+        if (!res.ok) {
+          const er = document.getElementById('sq-error'); er.hidden = false; er.textContent = '❌ ' + (d.error || 'Código incorrecto');
+          document.getElementById('sq-status').className = 'sq-status red';
+          document.getElementById('sq-status').textContent = '🔴 SQUAWK PENDIENTE';
+        } else {
+          const st = document.getElementById('sq-status'); st.className = 'sq-status green'; st.textContent = '🟢 CONNECTED';
+          document.getElementById('sq-error').hidden = true;
+          showAlert('✅ Squawk validado. Su vuelo está listo para autorización.', 'ok');
+          await cargarPlanes(true);
+        }
+      } catch (e) {
+        const er = document.getElementById('sq-error'); er.hidden = false; er.textContent = 'Error de conexión.';
+      } finally { btn.disabled = false; btn.innerHTML = '<i class="ico ico-check"></i> Conectar Squawk'; }
+    });
 
     function aplicarFiltros(reiniciar) {
       if (reiniciar !== false) paginaActual = 1;
@@ -931,6 +1025,10 @@
         document.getElementById('st-pending').textContent = todosPlanes.filter(p => p.status === 'pending').length;
         document.getElementById('st-total').textContent = todosPlanes.length;
         aplicarFiltros();
+        // Si hay un plan esperando Squawk, mostrar el panel automáticamente
+        const pendienteSquawk = misPlanes.find(p => p.has_squawk && !p.squawk_validated);
+        if (pendienteSquawk && !planSquawk) mostrarSquawk(pendienteSquawk);
+        if (!pendienteSquawk) document.getElementById('squawk-panel').hidden = true;
       } catch (e) {
         box.innerHTML = '<p class="empty"><i class="ico ico-plane"></i>' + esc(errorAmigable(e.message)) + '</p>';
       }

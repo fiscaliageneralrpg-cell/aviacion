@@ -6,10 +6,10 @@
 --   3) F5 en el panel izquierdo para ver la BD y sus tablas
 -- ============================================================
 
-CREATE DATABASE IF NOT EXISTS `s61797_aviacion`
+CREATE DATABASE IF NOT EXISTS `s61797_AVIACION`
   DEFAULT CHARACTER SET utf8mb4
   DEFAULT COLLATE utf8mb4_unicode_ci;
-USE `s61797_aviacion`;
+USE `s61797_AVIACION`;
 
 -- ------------------------------------------------------------
 -- 1) USUARIOS VERIFICADOS (Discord + Roblox + ruta Piloto/ATC)

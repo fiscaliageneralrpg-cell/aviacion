@@ -1177,8 +1177,6 @@
         <div class="access-group" data-group="piloto" hidden>
           <div class="group-title"><i class="ico ico-plane"></i> PILOTO</div>
           <button class="access-btn" id="academy-cta"><i class="ico ico-cap"></i><span><b>Formulario Piloto</b><small>Examen de admisión LAN Academy</small></span></button>
-          <button class="access-btn" id="quick-clearance" hidden><i class="ico ico-radio"></i><span><b>ATC Clearance</b><small>Valida tu Squawk con Delivery</small></span></button>
-          <button class="access-btn" id="quick-charts" hidden><i class="ico ico-doc"></i><span><b>Cartas de Vuelo</b><small>Tus vuelos autorizados</small></span></button>
         </div>
 
         <!-- ATC -->
@@ -1568,9 +1566,7 @@
         cta.dataset.form = esAtc ? 'atc' : 'piloto';
       }
 
-      // Accesos: piloto aprobado → Clearance + Cartas; ATC aprobado → Operations
-      document.getElementById('quick-clearance').hidden = !(aprobado && esPiloto);
-      document.getElementById('quick-charts').hidden = !(aprobado && esPiloto);
+      // Un solo botón por rol: Piloto → Planes de Vuelo (todo integrado); ATC → Operations
       document.getElementById('quick-atc').hidden = !(aprobado && esAtc);
       document.getElementById('quick-staff').hidden = !(st.is_staff === true || esInstructor);
     }
@@ -1587,12 +1583,6 @@
     document.getElementById('academy-cta').addEventListener('click', abrirFormulario);
     document.getElementById('quick-atc').addEventListener('click', () => {
       window.location.href = '/dashboard/atc-operations';
-    });
-    document.getElementById('quick-clearance').addEventListener('click', () => {
-      window.location.href = '/dashboard/atc-clearance';
-    });
-    document.getElementById('quick-charts').addEventListener('click', () => {
-      window.location.href = '/dashboard/cartas-de-vuelo';
     });
     document.getElementById('quick-staff').addEventListener('click', () => abrirPanelStaff());
 
