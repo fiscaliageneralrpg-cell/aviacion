@@ -168,4 +168,41 @@ CREATE TABLE IF NOT EXISTS lan_notifications (
   KEY idx_notif_user (discord_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- LISTO: 9 tablas
+-- ============================================================
+--  MIGRACIÓN SEGURA (por si la BD ya existía de antes)
+--  Estos ALTER ignoran el error si la columna ya existe.
+-- ============================================================
+ALTER TABLE verified_users
+  ADD COLUMN IF NOT EXISTS track VARCHAR(10) DEFAULT NULL;
+ALTER TABLE verified_users
+  ADD COLUMN IF NOT EXISTS track_role_done TINYINT NOT NULL DEFAULT 0;
+
+ALTER TABLE academy_submissions
+  ADD COLUMN IF NOT EXISTS denied_ack TINYINT NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS dm_pending TINYINT NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS denied_at DATETIME DEFAULT NULL;
+
+ALTER TABLE flight_plans
+  ADD COLUMN IF NOT EXISTS atc_stage VARCHAR(12) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS flight_kind VARCHAR(4) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS runway VARCHAR(8) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS sid VARCHAR(40) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS squawk_validated TINYINT NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS atc_controller_id VARCHAR(20) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS cleared_at DATETIME DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS taxi_at DATETIME DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS finished_at DATETIME DEFAULT NULL;
+
+-- Asegurar que TODAS las posiciones existan (otra vez, por si se borraron)
+INSERT IGNORE INTO atc_positions (airport_code, position)
+SELECT a.code, p.pos FROM atc_airports a
+CROSS JOIN (SELECT 'DEL' AS pos UNION SELECT 'GND' UNION SELECT 'TWR') p;
+
+-- ============================================================
+--  ✅ LISTO — 9 TABLAS:
+--  1) verified_users        6) atc_airports
+--  2) site_stats            7) atc_positions (DEL/GND/TWR × 16)
+--  3) user_roles            8) atc_operations
+--  4) academy_submissions    9) lan_notifications
+--  5) flight_plans
+-- ============================================================
