@@ -47,7 +47,7 @@ app.use(session({
 // podía abrir /dashboard.html o /dashboard-aviacion.html a mano y saltarse
 // el paso de Roblox.
 app.use((req, res, next) => {
-  if (req.path === '/dashboard.html' || req.path === '/dashboard-aviacion.html' || req.path === '/planes-de-vuelo.html' || req.path === '/atc-operations.html') {
+  if (req.path === '/dashboard.html' || req.path === '/dashboard-aviacion.html' || req.path === '/planes-de-vuelo.html' || req.path === '/atc-operations.html' || req.path === '/atc-clearance.html') {
     return requireVerificado(req, res, next);
   }
   next();
@@ -2175,6 +2175,11 @@ app.get('/dashboard/atc-operations', requireVerificado, async (req, res) => {
     console.error('Error atc-operations:', err.message);
     res.redirect('/dashboard');
   }
+});
+
+// Ruta protegida de ATC Clearance (piloto valida el squawk)
+app.get('/dashboard/atc-clearance', requireVerificado, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'atc-clearance.html'));
 });
 
 // --- Logout: destruye la sesión y borra la cookie (await para que no reviva) ---

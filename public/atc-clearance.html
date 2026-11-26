@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ATC Clearance | Latin Aviation Network</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --black:#030305; --card:#08131f; --card2:#0d1b2a; --white:#fff; --white-soft:#cbd5e1;
+      --gray:#64748b; --blue:#0066ff; --blue-light:#3399ff; --cyan:#00d4ff;
+      --border:#1e3a5f; --green:#22c55e; --red:#f43f5e; --yellow:#facc15;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    [hidden] { display:none !important; }
+    body {
+      font-family:'Inter',system-ui,sans-serif; background:var(--black); color:var(--white);
+      line-height:1.55; min-height:100vh; overflow-x:hidden; display:flex; flex-direction:column;
+    }
+    a { text-decoration:none; color:inherit; }
+    .container { max-width:1320px; margin:0 auto; padding:0 22px; width:100%; }
+    .bg {
+      position:fixed; inset:0; z-index:-2; background-size:cover; background-position:center;
+      background-image:linear-gradient(rgba(3,8,18,.82),rgba(3,8,18,.94)),
+        url("https://i.imgur.com/rjEhr3O.jpeg");
+    }
+    .bg::after { content:""; position:absolute; inset:0;
+      background:radial-gradient(circle at 20% 10%,rgba(0,102,255,.18),transparent 45%),
+                 radial-gradient(circle at 85% 80%,rgba(0,212,255,.12),transparent 45%); }
+
+    .ico { display:inline-block; position:relative; flex-shrink:0; width:1.1em; height:1.1em; vertical-align:-.16em; }
+    .ico::before,.ico::after { content:""; position:absolute; display:block; }
+    .ico-plane { background:currentColor; clip-path:polygon(50% 0,62% 38%,100% 62%,100% 74%,60% 62%,56% 86%,70% 94%,70% 100%,50% 95%,30% 100%,30% 94%,44% 86%,40% 62%,0 74%,0 62%,38% 38%); }
+    .ico-tower { border-bottom:.13em solid currentColor; }
+    .ico-tower::before { left:10%; top:0; width:80%; height:70%; border:.12em solid currentColor; border-bottom:none; }
+    .ico-clip { border:.12em solid currentColor; border-radius:.2em; }
+    .ico-clip::before { left:0; top:0; width:100%; height:32%; background:currentColor; }
+    .ico-chev::before { left:24%; top:18%; width:42%; height:42%; border:solid currentColor; border-width:0 .17em .17em 0; transform:rotate(45deg); }
+    .ico-left { transform:rotate(90deg); }
+    .ico-retry { border:.14em solid currentColor; border-top-color:transparent; border-radius:50%; animation:spin 2.4s linear infinite; }
+    .ico-x::before,.ico-x::after { left:8%; top:43%; width:84%; height:.17em; background:currentColor; border-radius:3px; }
+    .ico-x::before { transform:rotate(45deg); } .ico-x::after { transform:rotate(-45deg); }
+    .ico-check::before { left:30%; top:6%; width:30%; height:60%; border:solid currentColor; border-width:0 .17em .17em 0; transform:rotate(45deg); }
+    .ico-radio { border:.12em solid currentColor; border-radius:50%; }
+    .ico-radio::before { left:42%; top:-30%; width:16%; height:90%; background:currentColor; }
+    .ico-link::before { left:6%; top:34%; width:50%; height:32%; border:.13em solid currentColor; border-radius:50%; }
+    .ico-lock { border:.12em solid currentColor; border-radius:.2em; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+
+    nav { position:sticky; top:0; z-index:60; padding:11px 0; background:rgba(3,8,18,.92);
+      backdrop-filter:blur(16px); border-bottom:1px solid var(--border); animation:navDrop .7s ease-out; }
+    @keyframes navDrop { from{transform:translateY(-100%);opacity:0} to{transform:translateY(0);opacity:1} }
+    .nav-inner { display:flex; align-items:center; justify-content:space-between; gap:14px; }
+    .brand { display:flex; align-items:center; gap:10px; }
+    .brand img { width:38px; height:38px; object-fit:contain; filter:drop-shadow(0 0 8px rgba(0,102,255,.5)); }
+    .brand span { font-family:'Orbitron',monospace; font-weight:900; font-size:.74rem; line-height:1.1; }
+    .nav-links { display:flex; gap:6px; flex-wrap:wrap; }
+    .nav-link { display:inline-flex; align-items:center; gap:7px; padding:9px 15px; border-radius:50px;
+      color:var(--white-soft); font-size:.78rem; font-weight:800; transition:.25s; border:1px solid transparent; }
+    .nav-link:hover { color:#fff; background:rgba(0,102,255,.16); }
+    .nav-link.active { background:rgba(0,102,255,.2); border-color:rgba(0,212,255,.4); color:#fff; }
+    .btn-back { padding:9px 18px; border-radius:50px; cursor:pointer; background:rgba(0,102,255,.14);
+      border:1px solid rgba(0,102,255,.5); color:#fff; font-family:inherit; font-weight:800; font-size:.76rem; transition:.25s; }
+    .btn-back:hover { background:var(--blue); transform:translateY(-2px); }
+
+    main { flex:1; padding:22px 0 50px; }
+    .hero { display:flex; align-items:center; justify-content:space-between; gap:18px; flex-wrap:wrap;
+      padding:22px 28px; border-radius:22px; margin-bottom:18px;
+      background:linear-gradient(115deg,rgba(0,102,255,.22),rgba(0,212,255,.06) 65%,rgba(8,19,31,.9));
+      border:1px solid rgba(0,212,255,.35); box-shadow:0 18px 44px rgba(0,0,0,.55);
+      position:relative; overflow:hidden; animation:riseUp .6s ease-out; }
+    .hero::after { content:""; position:absolute; top:0; left:-60%; width:45%; height:100%;
+      background:linear-gradient(100deg,transparent,rgba(255,255,255,.07),transparent); transform:skewX(-20deg);
+      animation:shine 8s 1s infinite; pointer-events:none; }
+    @keyframes shine { 0%{left:-60%} 60%,100%{left:130%} }
+    @keyframes riseUp { from{transform:translateY(14px);opacity:0} to{transform:translateY(0);opacity:1} }
+    .hero h1 { font-family:'Orbitron',monospace; font-size:1.7rem; font-weight:900; letter-spacing:1px; }
+    .hero p { color:var(--white-soft); font-size:.85rem; }
+    .badge-ok { display:inline-flex; align-items:center; gap:8px; padding:9px 18px; border-radius:50px;
+      background:rgba(34,197,94,.12); border:1px solid rgba(34,197,94,.5); color:var(--green); font-size:.76rem; font-weight:900; }
+    .badge-ok i { width:9px; height:9px; border-radius:50%; background:var(--green); box-shadow:0 0 12px var(--green); }
+    .hero-badge { display:inline-flex; align-items:center; gap:7px; padding:4px 12px; border-radius:50px; margin-bottom:8px;
+      background:rgba(0,102,255,.16); border:1px solid rgba(0,102,255,.45); color:var(--blue-light);
+      font-size:.66rem; font-weight:900; letter-spacing:1px; text-transform:uppercase; }
+
+    .grid-main { display:grid; grid-template-columns:1fr 1.25fr 1fr; gap:16px; align-items:start; }
+    .panel { background:linear-gradient(160deg,rgba(13,27,42,.96),rgba(8,19,31,.94));
+      border:1px solid var(--border); border-radius:20px; padding:18px;
+      box-shadow:0 14px 36px rgba(0,0,0,.4); animation:riseUp .6s .1s ease-out both; }
+    .panel:nth-child(2){animation-delay:.16s} .panel:nth-child(3){animation-delay:.22s}
+    .panel-title { display:flex; align-items:center; gap:9px; font-family:'Orbitron',monospace;
+      font-size:.9rem; font-weight:900; margin-bottom:4px; }
+    .panel-title .ico { color:var(--cyan); }
+    .panel-sub { color:var(--gray); font-size:.72rem; margin-bottom:14px; }
+
+    .group { border:1px solid var(--border); border-radius:13px; padding:11px; margin-bottom:10px; background:rgba(0,0,0,.28); }
+    .group-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+    .group-name { display:flex; align-items:center; gap:7px; font-size:.78rem; font-weight:900; }
+    .group.del .group-name { color:var(--cyan); } .group.gnd .group-name { color:var(--green); } .group.twr .group-name { color:var(--yellow); }
+    .group-count { padding:1px 9px; border-radius:50px; background:rgba(255,255,255,.08); font-size:.68rem; font-weight:900; }
+    .strip-item { display:flex; align-items:center; gap:8px; width:100%; padding:8px 10px; border-radius:9px; margin-bottom:5px;
+      background:rgba(255,255,255,.03); border:1px solid var(--border); color:#fff; cursor:pointer;
+      font-family:'Orbitron',monospace; font-size:.76rem; font-weight:800; transition:.25s; text-align:left; }
+    .strip-item:hover { border-color:var(--cyan); transform:translateX(3px); }
+    .strip-item.active { background:rgba(0,102,255,.2); border-color:var(--cyan); }
+    .strip-item.mine::after { content:"TUYO"; margin-left:auto; font-size:.55rem; color:var(--cyan); }
+    .dot { width:7px; height:7px; border-radius:50%; background:var(--gray); flex-shrink:0; }
+    .group.del .dot { background:var(--cyan); } .group.gnd .dot { background:var(--green); } .group.twr .dot { background:var(--yellow); }
+
+    /* Transponder */
+    .trans-box { text-align:center; padding:6px 0; }
+    .radio-icon { width:92px; height:92px; margin:0 auto 16px; border-radius:50%; display:grid; place-items:center;
+      background:radial-gradient(circle,rgba(0,212,255,.18),rgba(0,102,255,.06)); border:2px solid var(--cyan);
+      box-shadow:0 0 40px rgba(0,212,255,.3), inset 0 0 24px rgba(0,212,255,.12); color:var(--cyan); font-size:2.2rem;
+      animation:radioPulse 2.4s ease-in-out infinite; }
+    @keyframes radioPulse { 0%,100%{box-shadow:0 0 40px rgba(0,212,255,.3), inset 0 0 24px rgba(0,212,255,.12)} 50%{box-shadow:0 0 60px rgba(0,212,255,.55), inset 0 0 34px rgba(0,212,255,.2)} }
+    .trans-title { font-family:'Orbitron',monospace; font-size:1.15rem; font-weight:900; margin-bottom:6px; }
+    .trans-sub { color:var(--gray); font-size:.8rem; margin-bottom:16px; }
+    .flight-chip { display:inline-flex; align-items:center; gap:7px; padding:7px 16px; border-radius:50px;
+      background:rgba(0,102,255,.16); border:1px solid rgba(0,212,255,.4); color:#fff;
+      font-family:'Orbitron',monospace; font-size:.8rem; font-weight:800; margin-bottom:20px; }
+    .digits { display:flex; gap:10px; justify-content:center; margin-bottom:20px; }
+    .digit { width:58px; height:70px; border-radius:13px; text-align:center; font-family:'Orbitron',monospace;
+      font-size:1.7rem; font-weight:900; background:rgba(0,0,0,.5); border:2px solid var(--cyan); color:#fff;
+      box-shadow:inset 0 0 18px rgba(0,212,255,.1), 0 0 16px rgba(0,212,255,.15); transition:.25s; }
+    .digit:focus { outline:none; border-color:#fff; box-shadow:0 0 24px rgba(0,212,255,.5); background:rgba(0,102,255,.16); }
+    .btn-connect { width:100%; padding:15px; border-radius:50px; cursor:pointer;
+      background:linear-gradient(135deg,var(--blue),var(--blue-light)); color:#fff; border:none;
+      font-family:inherit; font-weight:900; font-size:.92rem; display:flex; align-items:center; justify-content:center; gap:9px;
+      box-shadow:0 12px 28px rgba(0,102,255,.4); transition:.3s; }
+    .btn-connect:hover { transform:translateY(-3px); box-shadow:0 18px 36px rgba(0,102,255,.6); }
+    .btn-connect:disabled { opacity:.5; cursor:wait; transform:none; }
+    .status-chip { display:inline-flex; align-items:center; gap:8px; padding:9px 20px; border-radius:50px;
+      font-family:'Orbitron',monospace; font-size:.76rem; font-weight:900; letter-spacing:1px; margin-top:16px; }
+    .status-chip.red { background:rgba(244,63,94,.12); border:1px solid var(--red); color:#fda4af; }
+    .status-chip.red i { width:9px; height:9px; border-radius:50%; background:var(--red); box-shadow:0 0 12px var(--red); }
+    .status-chip.green { background:rgba(34,197,94,.12); border:1px solid var(--green); color:var(--green); }
+    .status-chip.green i { width:9px; height:9px; border-radius:50%; background:var(--green); box-shadow:0 0 12px var(--green); }
+    .trans-note { color:var(--gray); font-size:.72rem; margin-top:12px; }
+    .error-msg { margin-top:12px; padding:9px 12px; border-radius:10px; background:rgba(244,63,94,.12);
+      border:1px solid rgba(244,63,94,.45); color:#fda4af; font-size:.78rem; }
+
+    /* Detalle */
+    .detail-row { display:flex; align-items:center; justify-content:space-between; gap:12px;
+      padding:9px 2px; border-bottom:1px solid rgba(255,255,255,.07); font-size:.8rem; }
+    .detail-row:last-child { border-bottom:none; }
+    .detail-row span { color:var(--gray); }
+    .detail-row b { font-family:'Orbitron',monospace; font-size:.78rem; text-align:right; overflow-wrap:anywhere; }
+    .chip { display:inline-block; padding:3px 10px; border-radius:50px; font-size:.64rem; font-weight:900;
+      text-transform:uppercase; border:1px solid currentColor; }
+    .chip.pending { color:var(--yellow); } .chip.approved { color:var(--green); }
+    .chip.active { color:var(--cyan); } .chip.finished { color:var(--gray); }
+    .chip.rejected,.chip.cancelled { color:var(--red); }
+    footer { border-top:1px solid var(--border); background:var(--black); padding:14px 0; text-align:center;
+      color:var(--gray); font-size:.72rem; }
+    @media (max-width:1050px) { .grid-main { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <div class="bg"></div>
+  <nav>
+    <div class="container nav-inner">
+      <div class="brand">
+        <img src="https://i.imgur.com/V47UGra.png" alt="LAN">
+        <span>LATIN AVIATION<br>NETWORK</span>
+      </div>
+      <div class="nav-links">
+        <a href="/dashboard" class="nav-link"><i class="ico ico-plane"></i> Dashboard</a>
+        <a href="/dashboard/planes-de-vuelo" class="nav-link"><i class="ico ico-clip"></i> Planes de vuelo</a>
+        <a href="/dashboard/atc-clearance" class="nav-link active"><i class="ico ico-radio"></i> ATC Clearance</a>
+      </div>
+      <a href="/dashboard" class="btn-back"><i class="ico ico-chev ico-left"></i> Volver al dashboard</a>
+    </div>
+  </nav>
+
+  <main class="container">
+    <header class="hero">
+      <div>
+        <span class="hero-badge"><i class="ico ico-radio"></i> ATC CLEARANCE</span>
+        <h1>Autorización ATC</h1>
+        <p>Conéctate con el control de tránsito aéreo y registra el código transponder asignado por Delivery.</p>
+      </div>
+      <span class="badge-ok"><i></i> PLAN DE VUELO ENVIADO</span>
+    </header>
+
+    <div class="grid-main">
+      <!-- VUELOS ACTIVOS -->
+      <section class="panel">
+        <div class="panel-title"><i class="ico ico-plane"></i> Vuelos Activos</div>
+        <p class="panel-sub">Operaciones en tiempo real · Solo visualización</p>
+        <div class="group del">
+          <div class="group-head"><span class="group-name"><i class="ico ico-clip"></i> DELIVERY</span><span class="group-count" id="cnt-del">0</span></div>
+          <div id="list-del"></div>
+        </div>
+        <div class="group gnd">
+          <div class="group-head"><span class="group-name"><i class="ico ico-plane"></i> GROUND</span><span class="group-count" id="cnt-gnd">0</span></div>
+          <div id="list-gnd"></div>
+        </div>
+        <div class="group twr">
+          <div class="group-head"><span class="group-name"><i class="ico ico-tower"></i> TOWER</span><span class="group-count" id="cnt-twr">0</span></div>
+          <div id="list-twr"></div>
+        </div>
+      </section>
+
+      <!-- TRANSPONDER -->
+      <section class="panel">
+        <div class="trans-box">
+          <div class="radio-icon"><i class="ico ico-radio"></i></div>
+          <div class="trans-title">Conexión de Transponder</div>
+          <p class="trans-sub">Introduce el código Squawk asignado por ATC (Delivery)</p>
+          <div class="flight-chip"><i class="ico ico-plane"></i> Tu vuelo: <b id="flight-label">—</b></div>
+
+          <div class="digits">
+            <input class="digit" id="d0" maxlength="1" inputmode="numeric" placeholder="_">
+            <input class="digit" id="d1" maxlength="1" inputmode="numeric" placeholder="_">
+            <input class="digit" id="d2" maxlength="1" inputmode="numeric" placeholder="_">
+            <input class="digit" id="d3" maxlength="1" inputmode="numeric" placeholder="_">
+          </div>
+
+          <button class="btn-connect" id="btn-connect"><i class="ico ico-link"></i> Conectar Transponder</button>
+
+          <div id="status-wrap">
+            <span class="status-chip red" id="status-chip"><i></i> SQUAWK PENDIENTE</span>
+          </div>
+          <p class="trans-note">Ingresa el código y conéctate para continuar con la autorización.</p>
+          <div class="error-msg" id="error-msg" hidden></div>
+        </div>
+      </section>
+
+      <!-- DETALLE -->
+      <section class="panel">
+        <div class="panel-title"><i class="ico ico-clip"></i> Detalle del Plan de Vuelo</div>
+        <p class="panel-sub">Información completa de tu vuelo seleccionado</p>
+        <div id="detail-body"><p style="color:var(--gray);font-size:.8rem">Selecciona tu vuelo en la lista.</p></div>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container"><span style="font-family:'Orbitron',monospace;color:var(--blue)">0.0.0.0.1</span> © 2026 Latin Aviation Network. Todos los derechos reservados.</div>
+  </footer>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    let misPlanes = [], todos = [], selected = null, yoId = null;
+
+    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function callsign(p) { return (p.airline || '') + (p.flight_number || '') || ('#' + p.id); }
+    function digitos() { return [0,1,2,3].map(i => $('d'+i).value).join(''); }
+
+    // Auto-avance entre dígitos
+    [0,1,2,3].forEach(i => {
+      $('d'+i).addEventListener('input', e => {
+        e.target.value = e.target.value.replace(/\D/g,'').slice(-1);
+        if (e.target.value && i < 3) $('d'+(i+1)).focus();
+        $('error-msg').hidden = true;
+      });
+      $('d'+i).addEventListener('keydown', e => {
+        if (e.key === 'Backspace' && !e.target.value && i > 0) $('d'+(i-1)).focus();
+      });
+    });
+
+    async function cargar() {
+      try {
+        const [rMis, rAll, rMe] = await Promise.all([
+          fetch('/api/flight-plans', {cache:'no-store'}),
+          fetch('/api/flight-plans/active', {cache:'no-store'}),
+          fetch('/api/me', {cache:'no-store'})
+        ]);
+        if (rMe.ok) { const me = await rMe.json(); yoId = String(me.id); }
+        misPlanes = (await rMis.json()).plans || [];
+        todos = (await rAll.json()).plans || [];
+        pintarListas();
+        const paramPlan = new URLSearchParams(window.location.search).get('plan');
+        if (!selected || !misPlanes.some(p => p.id === selected.id)) {
+          selected = misPlanes.find(p => paramPlan && p.id == paramPlan)
+                  || misPlanes.find(p => p.status === 'pending' && p.has_squawk && !p.squawk_validated)
+                  || misPlanes.find(p => p.has_squawk)
+                  || misPlanes[0] || null;
+          if (selected) pintarDetalle(selected);
+        } else {
+          const fresh = misPlanes.find(p => p.id === selected.id);
+          if (fresh) { selected = fresh; pintarDetalle(fresh); }
+        }
+      } catch (e) { console.error(e); }
+    }
+
+    function pintarListas() {
+      ['DEL','GND','TWR'].forEach((stage, i) => {
+        const key = ['del','gnd','twr'][i];
+        const list = todos.filter(p => (p.atc_stage || '').toUpperCase() === stage);
+        $('cnt-'+key).textContent = list.length;
+        $('list-'+key).innerHTML = list.length
+          ? list.map(p => `<button class="strip-item${p.discord_id === yoId ? ' mine' : ''}${selected && selected.id === p.id ? ' active' : ''}"
+              data-id="${p.id}" data-mine="${p.discord_id === yoId}">
+              <span class="dot"></span> ${esc(callsign(p))}</button>`).join('')
+          : '<p style="color:var(--gray);font-size:.72rem;padding:6px">Sin vuelos</p>';
+        $('list-'+key).querySelectorAll('.strip-item').forEach(b => b.addEventListener('click', () => {
+          if (b.dataset.mine !== 'true') return; // los vuelos de otros solo se ven
+          selected = misPlanes.find(p => p.id == b.dataset.id) || null;
+          if (selected) { pintarDetalle(selected); pintarListas(); }
+        }));
+      });
+    }
+
+    function pintarDetalle(p) {
+      $('flight-label').textContent = callsign(p);
+      const row = (k,v) => `<div class="detail-row"><span>${k}</span><b>${esc(v || '—')}</b></div>`;
+      $('detail-body').innerHTML =
+        row('Callsign', callsign(p)) +
+        row('Aerolínea', p.airline) +
+        row('Aeronave', p.aircraft) +
+        row('Matrícula', p.registration) +
+        row('Origen', p.departure) +
+        row('Destino', p.destination) +
+        row('Reglas', p.flight_rules) +
+        row('Altitud solicitada', p.cruise_altitude) +
+        row('Alternate', p.alternate) +
+        row('Pista asignada', p.runway) +
+        row('SID', p.sid) +
+        `<div class="detail-row"><span>Estado</span><b><span class="chip ${esc(p.status)}">${esc(p.status)}</span></b></div>` +
+        row('Squawk validado', p.squawk_validated ? 'SÍ' : 'NO');
+
+      if (p.squawk_validated) {
+        $('status-chip').className = 'status-chip green';
+        $('status-chip').innerHTML = '<i></i> CONNECTED';
+      } else {
+        $('status-chip').className = 'status-chip red';
+        $('status-chip').innerHTML = '<i></i> SQUAWK PENDIENTE';
+      }
+    }
+
+    $('btn-connect').addEventListener('click', async () => {
+      if (!selected) return alert('Selecciona tu vuelo.');
+      const code = digitos();
+      if (!/^\d{4}$/.test(code)) {
+        $('error-msg').hidden = false;
+        $('error-msg').textContent = 'Ingresa los 4 dígitos del Squawk.';
+        return;
+      }
+      const btn = $('btn-connect'); btn.disabled = true; btn.textContent = 'Validando…';
+      try {
+        const res = await fetch('/api/flight-plans/' + selected.id + '/validate-squawk', {
+          method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ squawk: code })
+        });
+        const d = await res.json();
+        if (!res.ok) {
+          $('error-msg').hidden = false;
+          $('error-msg').textContent = '❌ ' + (d.error || 'Código incorrecto');
+          $('status-chip').className = 'status-chip red';
+          $('status-chip').innerHTML = '<i></i> SQUAWK PENDIENTE';
+        } else {
+          $('error-msg').hidden = true;
+          $('status-chip').className = 'status-chip green';
+          $('status-chip').innerHTML = '<i></i> CONNECTED';
+          await cargar();
+        }
+      } catch (e) {
+        $('error-msg').hidden = false; $('error-msg').textContent = 'Error de conexión.';
+      } finally {
+        btn.disabled = false; btn.innerHTML = '<i class="ico ico-link"></i> Conectar Transponder';
+      }
+    });
+
+    setInterval(() => { if (!document.hidden) cargar(); }, 5000);
+    cargar();
+  </script>
+</body>
+</html>
