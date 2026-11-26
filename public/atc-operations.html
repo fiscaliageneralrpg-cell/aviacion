@@ -8,28 +8,21 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --black:#030305; --card:#08131f; --card2:#0d1b2a; --white:#fff; --white-soft:#cbd5e1;
-      --gray:#64748b; --blue:#0066ff; --blue-light:#3399ff; --cyan:#00d4ff;
-      --border:#1e3a5f; --green:#22c55e; --red:#f43f5e; --yellow:#facc15;
+      --black:#030305; --white:#fff; --white-soft:#cbd5e1; --gray:#64748b;
+      --blue:#0066ff; --blue-light:#3399ff; --cyan:#00d4ff; --border:#1e3a5f;
+      --green:#22c55e; --red:#f43f5e; --yellow:#facc15;
     }
     * { margin:0; padding:0; box-sizing:border-box; }
     [hidden] { display:none !important; }
-    body {
-      font-family:'Inter',system-ui,sans-serif; background:var(--black); color:var(--white);
-      line-height:1.5; min-height:100vh; overflow-x:hidden; display:flex; flex-direction:column;
-    }
+    body { font-family:'Inter',system-ui,sans-serif; background:var(--black); color:var(--white);
+      line-height:1.5; min-height:100vh; overflow-x:hidden; display:flex; flex-direction:column; }
     a { text-decoration:none; color:inherit; }
     .container { max-width:1360px; margin:0 auto; padding:0 22px; width:100%; }
-    .bg {
-      position:fixed; inset:0; z-index:-2; background-size:cover; background-position:center;
-      background-image:linear-gradient(rgba(3,8,18,.82),rgba(3,8,18,.94)),
-        url("https://i.imgur.com/rjEhr3O.jpeg");
-    }
-    .bg::after {
-      content:""; position:absolute; inset:0;
+    .bg { position:fixed; inset:0; z-index:-2; background-size:cover; background-position:center;
+      background-image:linear-gradient(rgba(3,8,18,.84),rgba(3,8,18,.94)),url("https://i.imgur.com/rjEhr3O.jpeg"); }
+    .bg::after { content:""; position:absolute; inset:0;
       background:radial-gradient(circle at 20% 10%,rgba(0,102,255,.18),transparent 45%),
-                 radial-gradient(circle at 85% 80%,rgba(0,212,255,.12),transparent 45%);
-    }
+                 radial-gradient(circle at 85% 80%,rgba(0,212,255,.12),transparent 45%); }
 
     .ico { display:inline-block; position:relative; flex-shrink:0; width:1.1em; height:1.1em; vertical-align:-.16em; }
     .ico::before,.ico::after { content:""; position:absolute; display:block; }
@@ -38,571 +31,283 @@
     .ico-tower::before { left:10%; top:0; width:80%; height:70%; border:.12em solid currentColor; border-bottom:none; }
     .ico-clip { border:.12em solid currentColor; border-radius:.2em; }
     .ico-clip::before { left:0; top:0; width:100%; height:32%; background:currentColor; }
-    .ico-shield { border:.12em solid currentColor; border-radius:50% 50% 45% 45%; }
     .ico-chev::before { left:24%; top:18%; width:42%; height:42%; border:solid currentColor; border-width:0 .17em .17em 0; transform:rotate(45deg); }
     .ico-left { transform:rotate(90deg); }
-    .ico-right { transform:rotate(-90deg); }
-    .ico-retry { border:.14em solid currentColor; border-top-color:transparent; border-radius:50%; animation:spin 2.4s linear infinite; }
+    .ico-check::before { left:30%; top:6%; width:30%; height:60%; border:solid currentColor; border-width:0 .17em .17em 0; transform:rotate(45deg); }
     .ico-x::before,.ico-x::after { left:8%; top:43%; width:84%; height:.17em; background:currentColor; border-radius:3px; }
     .ico-x::before { transform:rotate(45deg); } .ico-x::after { transform:rotate(-45deg); }
-    .ico-check::before { left:30%; top:6%; width:30%; height:60%; border:solid currentColor; border-width:0 .17em .17em 0; transform:rotate(45deg); }
-    .ico-users::before { left:28%; top:0; width:44%; height:44%; border-radius:50%; background:currentColor; }
-    .ico-clock { border:.13em solid currentColor; border-radius:50%; }
-    @keyframes spin { to{transform:rotate(360deg)} }
 
-    nav {
-      position:sticky; top:0; z-index:60; padding:11px 0;
-      background:rgba(3,8,18,.92); backdrop-filter:blur(16px); border-bottom:1px solid var(--border);
-      animation:navDrop .7s ease-out;
-    }
+    nav { position:sticky; top:0; z-index:60; padding:11px 0; background:rgba(3,8,18,.92);
+      backdrop-filter:blur(16px); border-bottom:1px solid var(--border); animation:navDrop .7s ease-out; }
     @keyframes navDrop { from{transform:translateY(-100%);opacity:0} to{transform:translateY(0);opacity:1} }
     .nav-inner { display:flex; align-items:center; justify-content:space-between; gap:14px; }
     .brand { display:flex; align-items:center; gap:10px; }
     .brand img { width:38px; height:38px; object-fit:contain; filter:drop-shadow(0 0 8px rgba(0,102,255,.5)); }
-    .brand span { font-family:'Orbitron',monospace; font-weight:900; font-size:.74rem; line-height:1.1; letter-spacing:.5px; }
-    .nav-links { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
-    .nav-link {
-      display:inline-flex; align-items:center; gap:7px; padding:9px 15px; border-radius:50px;
-      color:var(--white-soft); font-size:.78rem; font-weight:800; transition:.25s; border:1px solid transparent;
-    }
-    .nav-link:hover { color:#fff; background:rgba(0,102,255,.16); }
-    .nav-link.active { background:rgba(0,102,255,.2); border-color:rgba(0,212,255,.4); color:#fff; box-shadow:0 0 18px rgba(0,102,255,.3); }
-    .nav-user { display:flex; align-items:center; gap:10px; padding:6px 12px; border-radius:50px; background:rgba(255,255,255,.04); border:1px solid var(--border); }
-    .nav-avatar { width:32px; height:32px; border-radius:50%; display:grid; place-items:center; font-family:'Orbitron',monospace; font-size:.74rem; font-weight:900; background:linear-gradient(135deg,var(--blue),var(--cyan)); }
-    .nav-user small { display:block; color:var(--cyan); font-size:.66rem; }
-    .bell { position:relative; }
-    .bell b { position:absolute; right:-4px; top:-4px; min-width:16px; height:16px; border-radius:50%; background:var(--blue); font-size:.6rem; display:grid; place-items:center; }
+    .brand span { font-family:'Orbitron',monospace; font-weight:900; font-size:.74rem; line-height:1.1; }
+    .btn-back { padding:9px 18px; border-radius:50px; cursor:pointer; background:rgba(0,102,255,.14);
+      border:1px solid rgba(0,102,255,.5); color:#fff; font-family:inherit; font-weight:800; font-size:.76rem; transition:.25s; }
+    .btn-back:hover { background:var(--blue); transform:translateY(-2px); }
 
     main { flex:1; padding:22px 0 50px; }
-    .hero {
-      display:flex; align-items:center; justify-content:space-between; gap:18px; flex-wrap:wrap;
-      padding:22px 28px; border-radius:22px; margin-bottom:18px;
+    .hero { display:flex; align-items:center; justify-content:space-between; gap:18px; flex-wrap:wrap;
+      padding:22px 28px; border-radius:22px; margin-bottom:16px;
       background:linear-gradient(115deg,rgba(0,102,255,.22),rgba(0,212,255,.06) 65%,rgba(8,19,31,.9));
       border:1px solid rgba(0,212,255,.35); box-shadow:0 18px 44px rgba(0,0,0,.55);
-      position:relative; overflow:hidden; animation:riseUp .6s ease-out;
-    }
+      position:relative; overflow:hidden; animation:riseUp .6s ease-out; }
     .hero::after { content:""; position:absolute; top:0; left:-60%; width:45%; height:100%;
-      background:linear-gradient(100deg,transparent,rgba(255,255,255,.07),transparent);
-      transform:skewX(-20deg); animation:shine 8s 1s infinite; pointer-events:none; }
+      background:linear-gradient(100deg,transparent,rgba(255,255,255,.07),transparent); transform:skewX(-20deg);
+      animation:shine 8s 1s infinite; pointer-events:none; }
     @keyframes shine { 0%{left:-60%} 60%,100%{left:130%} }
     @keyframes riseUp { from{transform:translateY(14px);opacity:0} to{transform:translateY(0);opacity:1} }
-    .hero-left { display:flex; align-items:center; gap:16px; }
-    .hero-icon { width:58px; height:58px; border-radius:16px; display:grid; place-items:center;
-      background:rgba(0,102,255,.2); border:2px solid var(--cyan); box-shadow:0 0 28px rgba(0,212,255,.35); color:var(--cyan); font-size:1.7rem; }
     .hero h1 { font-family:'Orbitron',monospace; font-size:1.7rem; font-weight:900; letter-spacing:1px; }
     .hero p { color:var(--white-soft); font-size:.85rem; }
     .online { display:inline-flex; align-items:center; gap:8px; padding:9px 18px; border-radius:50px;
       background:rgba(34,197,94,.12); border:1px solid rgba(34,197,94,.5); color:var(--green); font-size:.76rem; font-weight:900; letter-spacing:1px; }
-    .online i { width:9px; height:9px; border-radius:50%; background:var(--green); box-shadow:0 0 12px var(--green); animation:pulse 2s infinite; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+    .online i { width:9px; height:9px; border-radius:50%; background:var(--green); box-shadow:0 0 12px var(--green); }
 
-    .airport-bar {
-      display:flex; align-items:center; gap:18px; flex-wrap:wrap; padding:16px 22px; border-radius:18px; margin-bottom:16px;
-      background:linear-gradient(160deg,rgba(13,27,42,.96),rgba(8,19,31,.94));
-      border:1px solid var(--border); animation:riseUp .6s .1s ease-out both;
-    }
-    .airport-sel-wrap { display:flex; align-items:center; gap:12px; min-width:260px; flex:1; }
-    .airport-ico { width:42px; height:42px; border-radius:12px; display:grid; place-items:center; background:rgba(0,102,255,.16); border:1px solid rgba(0,212,255,.4); color:var(--cyan); font-size:1.2rem; }
-    .airport-sel { flex:1; padding:11px 14px; border-radius:12px; background:rgba(0,0,0,.4); border:1px solid var(--border); color:#fff; font-family:'Orbitron',monospace; font-size:.9rem; font-weight:700; cursor:pointer; }
-    .airport-sel:focus { outline:none; border-color:var(--cyan); }
-    .airport-meta { display:flex; align-items:center; gap:10px; color:var(--white-soft); font-size:.8rem; padding:0 14px; border-left:1px solid var(--border); }
-    .airport-meta b { color:#fff; font-family:'Orbitron',monospace; }
-    .airport-meta .ico { color:var(--cyan); }
+    .tabs-main { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+    .tab-main { padding:11px 24px; border-radius:50px; cursor:pointer; font-family:'Orbitron',monospace; font-weight:900; font-size:.8rem;
+      background:rgba(255,255,255,.04); border:1px solid var(--border); color:var(--white-soft); transition:.3s; }
+    .tab-main:hover { border-color:var(--cyan); color:var(--cyan); transform:translateY(-2px); }
+    .tab-main.active { background:linear-gradient(135deg,var(--blue),var(--blue-light)); border-color:transparent; color:#fff; box-shadow:0 10px 24px rgba(0,102,255,.4); }
+    .tab-main.rej.active { background:linear-gradient(135deg,#be123c,var(--red)); }
 
-    .stats { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:16px; }
-    .stat { padding:16px 18px; border-radius:16px; border:1px solid var(--border);
-      background:linear-gradient(160deg,rgba(13,27,42,.95),rgba(8,19,31,.92)); position:relative; overflow:hidden;
-      animation:riseUp .5s ease-out both; transition:transform .3s, border-color .3s; }
-    .stat:nth-child(2){animation-delay:.05s} .stat:nth-child(3){animation-delay:.1s} .stat:nth-child(4){animation-delay:.15s} .stat:nth-child(5){animation-delay:.2s}
-    .stat::before { content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--c,var(--cyan)); }
-    .stat:hover { transform:translateY(-4px); border-color:rgba(0,212,255,.5); }
-    .stat-top { display:flex; align-items:center; gap:8px; color:var(--gray); font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.8px; }
-    .stat-top .ico { color:var(--c,var(--cyan)); }
-    .stat-num { font-family:'Orbitron',monospace; font-size:1.7rem; font-weight:900; color:var(--c,var(--white)); margin-top:4px; }
-
-    .layout { display:grid; grid-template-columns:262px 1fr; gap:16px; }
-    .panel {
-      background:linear-gradient(160deg,rgba(13,27,42,.96),rgba(8,19,31,.94));
-      border:1px solid var(--border); border-radius:20px; padding:18px;
-      box-shadow:0 14px 36px rgba(0,0,0,.4); animation:riseUp .6s .2s ease-out both;
-    }
-    .panel-title { display:flex; align-items:center; gap:9px; font-family:'Orbitron',monospace; font-size:.92rem; font-weight:900; margin-bottom:14px; }
-    .panel-title .ico { color:var(--cyan); }
-
-    .pos {
-      display:flex; align-items:center; gap:10px; padding:12px 13px; border-radius:13px; margin-bottom:9px;
-      background:rgba(0,0,0,.3); border:1px solid var(--border); transition:.25s;
-    }
-    .pos:hover { border-color:rgba(0,212,255,.45); transform:translateX(3px); }
-    .pos-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
-    .pos-dot.on { background:var(--green); box-shadow:0 0 10px var(--green); }
-    .pos-dot.off { background:var(--gray); }
-    .pos-info { flex:1; min-width:0; }
-    .pos-name { font-weight:900; font-size:.8rem; letter-spacing:.5px; }
-    .pos-user { display:flex; align-items:center; gap:5px; color:var(--white-soft); font-size:.72rem; margin-top:2px; }
-    .pos-user.empty { color:var(--gray); font-style:italic; }
-    .pos-time { font-family:'Orbitron',monospace; font-size:.68rem; color:var(--cyan); }
-    .pos-actions { display:flex; gap:5px; }
-    .pos-btn { padding:5px 9px; border-radius:8px; cursor:pointer; font-family:inherit; font-size:.65rem; font-weight:900;
-      background:rgba(0,102,255,.16); border:1px solid rgba(0,102,255,.5); color:#fff; transition:.25s; }
-    .pos-btn:hover { background:var(--blue); }
-    .pos-btn.free { background:rgba(244,63,94,.12); border-color:rgba(244,63,94,.4); color:#fda4af; }
-
-    .strips-head { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:14px; }
-    .tabs { display:flex; gap:6px; }
-    .tab { padding:7px 15px; border-radius:50px; cursor:pointer; font-family:inherit; font-weight:900; font-size:.72rem;
-      background:rgba(255,255,255,.04); border:1px solid var(--border); color:var(--white-soft); transition:.25s; }
-    .tab:hover { border-color:var(--cyan); color:var(--cyan); }
-    .tab.active { background:rgba(0,102,255,.22); border-color:var(--cyan); color:#fff; }
-
-    .columns { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
-    .col { border-radius:18px; padding:14px; border:1px solid var(--border); min-height:260px;
-      background:rgba(0,0,0,.22); animation:riseUp .5s ease-out both; }
-    .col:nth-child(2){animation-delay:.07s} .col:nth-child(3){animation-delay:.14s}
-    .col.del { border-color:rgba(0,212,255,.5); box-shadow:inset 0 0 24px rgba(0,212,255,.06); }
-    .col.gnd { border-color:rgba(34,197,94,.5); box-shadow:inset 0 0 24px rgba(34,197,94,.06); }
-    .col.twr { border-color:rgba(250,204,21,.5); box-shadow:inset 0 0 24px rgba(250,204,21,.06); }
-    .col.air { border-color:rgba(51,153,255,.5); box-shadow:inset 0 0 24px rgba(51,153,255,.06); }
-    .col.air .col-name { color:var(--blue-light); }
-    .col.verified { border-color:rgba(34,197,94,.5); box-shadow:inset 0 0 24px rgba(34,197,94,.06); }
-    .col.verified .col-name { color:var(--green); }
-    .col.arr { border-color:rgba(244,63,94,.5); box-shadow:inset 0 0 24px rgba(244,63,94,.06); }
-    .col.arr .col-name { color:#fda4af; }
-    .col-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:12px; }
-    .col-name { display:flex; align-items:center; gap:8px; font-family:'Orbitron',monospace; font-size:.82rem; font-weight:900; }
-    .col.del .col-name { color:var(--cyan); } .col.gnd .col-name { color:var(--green); } .col.twr .col-name { color:var(--yellow); }
+    .columns { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; animation:fadeIn .35s ease-out; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+    .col { border-radius:18px; padding:14px; border:1px solid var(--border); min-height:240px;
+      background:rgba(0,0,0,.22); animation:riseUp .45s ease-out both; }
+    .col:nth-child(2){animation-delay:.06s} .col:nth-child(3){animation-delay:.12s}
+    .col-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
+    .col-name { display:flex; align-items:center; gap:8px; font-family:'Orbitron',monospace; font-size:.8rem; font-weight:900; }
     .col-count { padding:2px 10px; border-radius:50px; background:rgba(255,255,255,.08); font-size:.72rem; font-weight:900; }
-    .col-sub { color:var(--gray); font-size:.68rem; margin:-8px 0 12px; }
+    .col-sub { color:var(--gray); font-size:.68rem; margin:-6px 0 12px; }
+    .col.del .col-name { color:var(--cyan); } .col.del { border-color:rgba(0,212,255,.45); }
+    .col.ver .col-name { color:var(--green); } .col.ver { border-color:rgba(34,197,94,.45); }
+    .col.twr .col-name { color:var(--yellow); } .col.twr { border-color:rgba(250,204,21,.45); }
+    .col.arr .col-name { color:#fda4af; } .col.arr { border-color:rgba(244,63,94,.45); }
+    .col.rej .col-name { color:var(--red); } .col.rej { border-color:rgba(244,63,94,.45); }
 
-    .strip {
-      display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%;
-      padding:11px 13px; border-radius:11px; margin-bottom:8px; cursor:pointer;
-      background:rgba(255,255,255,.03); border:1px solid var(--border); color:#fff;
-      font-family:'Orbitron',monospace; font-size:.8rem; font-weight:800; letter-spacing:.6px;
-      transition:.25s; animation:fadeSlide .4s ease-out both; text-align:left;
-    }
+    .strip { display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%;
+      padding:11px 13px; border-radius:11px; margin-bottom:8px; cursor:pointer; background:rgba(255,255,255,.03);
+      border:1px solid var(--border); color:#fff; font-family:'Orbitron',monospace; font-size:.8rem; font-weight:800;
+      transition:.25s; animation:fadeSlide .4s ease-out both; text-align:left; }
     .strip:hover { transform:translateX(4px); border-color:var(--cyan); background:rgba(0,212,255,.08); }
-    .strip .chev { color:var(--gray); }
     @keyframes fadeSlide { from{opacity:0;transform:translateX(-8px)} to{opacity:1;transform:translateX(0)} }
     .col-empty { color:var(--gray); font-size:.78rem; text-align:center; padding:22px 8px; font-style:italic; }
-    .kind-tag { padding:2px 7px; border-radius:6px; font-size:.58rem; font-weight:900; letter-spacing:.5px; }
-    .kind-tag.DEP { background:rgba(0,102,255,.2); color:var(--blue-light); }
-    .kind-tag.ARR { background:rgba(34,197,94,.2); color:var(--green); }
 
-    .history { margin-top:16px; }
-    .hist-row { display:flex; align-items:center; gap:12px; padding:10px 12px; border-bottom:1px solid rgba(255,255,255,.05); font-size:.78rem; }
-    .hist-row:last-child { border-bottom:none; }
-    .hist-time { font-family:'Orbitron',monospace; color:var(--cyan); font-size:.72rem; min-width:52px; }
-    .hist-icon { color:var(--blue-light); }
-    .hist-callsign { font-family:'Orbitron',monospace; font-weight:800; min-width:80px; }
-    .hist-text { color:var(--white-soft); flex:1; }
-    .pagination-hist { display:flex; align-items:center; justify-content:center; gap:10px; padding-top:12px; margin-top:8px; border-top:1px solid var(--border); }
-    .pagination-hist .page-btn { min-width:32px; height:32px; padding:0 10px; border-radius:9px; cursor:pointer;
-      background:rgba(255,255,255,.04); border:1px solid var(--border); color:var(--white-soft); font-size:.8rem; }
-    .pagination-hist .page-btn:hover:not(:disabled) { border-color:var(--cyan); color:var(--cyan); }
-    .pagination-hist .page-btn:disabled { opacity:.35; cursor:not-allowed; }
-    .pagination-hist .page-info { color:var(--gray); font-size:.72rem; font-weight:700; }
+    .strip-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .strip-field { padding:10px 12px; border-radius:11px; background:rgba(0,0,0,.35); border:1px solid var(--border); }
+    .strip-field label { display:block; color:var(--gray); font-size:.62rem; font-weight:800; text-transform:uppercase; letter-spacing:.8px; }
+    .strip-field b { display:block; margin-top:4px; font-family:'Orbitron',monospace; font-size:.82rem; color:#fff; overflow-wrap:anywhere; }
 
-    /* Overlay ficha */
     .modal-overlay { position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,.8); backdrop-filter:blur(9px);
       display:none; align-items:center; justify-content:center; padding:20px; }
     .modal-overlay.active { display:flex; animation:fadeIn .25s; }
-    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
     .modal-card { position:relative; width:min(600px,100%); max-height:90vh; overflow-y:auto;
       background:linear-gradient(160deg,rgba(13,27,42,.99),rgba(8,19,31,.99));
       border:1px solid rgba(0,212,255,.5); border-radius:22px; padding:28px;
-      box-shadow:0 40px 90px rgba(0,0,0,.85),0 0 60px rgba(0,102,255,.25);
-      animation:modalPop .4s cubic-bezier(.3,1.3,.5,1); }
+      box-shadow:0 40px 90px rgba(0,0,0,.85),0 0 60px rgba(0,102,255,.25); animation:modalPop .4s cubic-bezier(.3,1.3,.5,1); }
     @keyframes modalPop { from{transform:scale(.92) translateY(20px);opacity:0} to{transform:scale(1) translateY(0);opacity:1} }
-    .modal-card::before { content:""; position:absolute; left:0; top:0; right:0; height:3px;
-      background:linear-gradient(90deg,transparent,var(--blue),var(--cyan),#fff,var(--cyan),var(--blue),transparent);
-      background-size:200% 100%; animation:lightFlow 4s linear infinite; }
-    @keyframes lightFlow { from{background-position:200% 0} to{background-position:-200% 0} }
     .modal-close { position:absolute; right:16px; top:16px; width:34px; height:34px; border-radius:50%; cursor:pointer;
       background:rgba(255,255,255,.06); border:1px solid var(--border); color:var(--white-soft); display:grid; place-items:center; }
-    .modal-close:hover { border-color:var(--red); color:var(--red); }
-    .modal-badge { display:inline-flex; align-items:center; gap:7px; padding:4px 12px; border-radius:50px; margin-bottom:10px;
-      background:rgba(0,102,255,.14); border:1px solid rgba(0,102,255,.45); color:var(--blue-light);
-      font-size:.66rem; font-weight:900; letter-spacing:1px; text-transform:uppercase; }
+    .modal-badge { display:inline-flex; padding:4px 12px; border-radius:50px; margin-bottom:10px; background:rgba(0,102,255,.14);
+      border:1px solid rgba(0,102,255,.45); color:var(--blue-light); font-size:.66rem; font-weight:900; letter-spacing:1px; text-transform:uppercase; }
     .modal-card h2 { font-family:'Orbitron',monospace; font-size:1.25rem; margin-bottom:4px; }
     .modal-card .sub { color:var(--gray); font-size:.8rem; margin-bottom:20px; }
-    .strip-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-    .strip-field { padding:10px 12px; border-radius:11px; background:rgba(0,0,0,.35); border:1px solid var(--border); }
-    .strip-field label { display:block; color:var(--gray); font-size:.64rem; font-weight:800; text-transform:uppercase; letter-spacing:.8px; }
-    .strip-field b { display:block; margin-top:3px; font-family:'Orbitron',monospace; font-size:.82rem; color:#fff; overflow-wrap:anywhere; }
-    .strip-field.full { grid-column:1/-1; }
     .squawk-box { margin:16px 0; padding:14px; border-radius:13px; text-align:center;
       background:rgba(0,212,255,.09); border:1px solid rgba(0,212,255,.45); }
-    .squawk-box label { color:var(--gray); font-size:.68rem; font-weight:800; text-transform:uppercase; letter-spacing:1px; }
-    .squawk-code { font-family:'Orbitron',monospace; font-size:2rem; font-weight:900; color:var(--cyan); letter-spacing:8px; text-shadow:0 0 22px rgba(0,212,255,.6); margin-top:6px; }
-    .actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:18px; padding-top:18px; border-top:1px solid var(--border); }
-    .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:12px 22px; border-radius:50px;
-      cursor:pointer; border:1px solid transparent; font-family:inherit; font-weight:800; font-size:.8rem; transition:.3s; }
-    .btn:hover { transform:translateY(-2px); }
-    .btn-primary { background:linear-gradient(135deg,var(--blue),var(--blue-light)); color:#fff; box-shadow:0 10px 24px rgba(0,102,255,.4); }
-    .btn-green { background:linear-gradient(135deg,var(--green),#16a34a); color:#fff; box-shadow:0 10px 24px rgba(34,197,94,.3); }
-    .btn-yellow { background:linear-gradient(135deg,var(--yellow),#f59e0b); color:#000; }
-    .btn-ghost { background:rgba(255,255,255,.05); border-color:var(--border); color:var(--white-soft); }
+    .squawk-code { font-family:'Orbitron',monospace; font-size:2rem; font-weight:900; color:var(--cyan); letter-spacing:8px; margin-top:6px; }
     .field { display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }
     .field label { color:var(--white-soft); font-size:.76rem; font-weight:800; }
     .field input { padding:11px 13px; border-radius:10px; background:rgba(0,0,0,.45); border:1px solid var(--border); color:#fff; font-family:inherit; }
     .field input:focus { outline:none; border-color:var(--cyan); }
+    .actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:18px; padding-top:18px; border-top:1px solid var(--border); }
+    .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:12px 22px; border-radius:50px;
+      cursor:pointer; border:1px solid transparent; font-family:inherit; font-weight:800; font-size:.8rem; transition:.3s; }
+    .btn:hover { transform:translateY(-2px); }
+    .btn-green { background:linear-gradient(135deg,var(--green),#16a34a); color:#fff; }
+    .btn-ghost { background:rgba(255,255,255,.05); border-color:var(--border); color:var(--white-soft); }
+    .btn-red { background:linear-gradient(135deg,#be123c,var(--red)); color:#fff; }
+    .empty { color:var(--gray); font-size:.82rem; padding:14px; text-align:center; }
     footer { border-top:1px solid var(--border); background:var(--black); padding:14px 0; text-align:center; color:var(--gray); font-size:.72rem; }
-    @media (max-width:1100px) {
-      .stats { grid-template-columns:repeat(2,1fr); }
-      .layout { grid-template-columns:1fr; }
-      .columns { grid-template-columns:1fr; }
-    }
-    @media (max-width:640px) {
-      .nav-links { display:none; }
-      .hero h1 { font-size:1.3rem; }
-      .strip-grid { grid-template-columns:1fr; }
-    }
+    @media (max-width:900px) { .columns { grid-template-columns:1fr; } .strip-grid { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
   <div class="bg"></div>
-
-  <nav>
-    <div class="container nav-inner">
-      <div class="brand">
-        <img src="https://i.imgur.com/V47UGra.png" alt="LAN">
-        <span>LATIN AVIATION<br>NETWORK</span>
-      </div>
-      <a href="/dashboard" class="btn-back" style="margin-left:auto"><i class="ico ico-chev ico-left"></i> Volver al dashboard</a>
-      <div class="nav-user">
-        <span class="nav-avatar" id="nav-avatar">AT</span>
-        <div><b id="nav-name" style="font-size:.78rem">Controlador</b><small id="nav-pos">ATC</small></div>
-      </div>
-    </div>
-  </nav>
+  <nav><div class="container nav-inner">
+    <div class="brand"><img src="https://i.imgur.com/V47UGra.png" alt="LAN"><span>LATIN AVIATION<br>NETWORK</span></div>
+    <a href="/dashboard" class="btn-back" style="margin-left:auto"><i class="ico ico-chev ico-left"></i> Volver al dashboard</a>
+  </div></nav>
 
   <main class="container">
     <header class="hero">
-      <div class="hero-left">
-        <span class="hero-icon"><i class="ico ico-tower"></i></span>
-        <div>
-          <h1>ATC OPERATIONS</h1>
-          <p>Centro de Control Aeronáutico · Gestión de vuelos y posiciones ATC</p>
-        </div>
-      </div>
+      <div><h1>ATC OPERATIONS</h1><p>Centro de Control Aeronáutico · Vuelos y autorizaciones</p></div>
       <span class="online"><i></i> SISTEMA EN LÍNEA</span>
     </header>
 
-    <div class="airport-bar">
-      <div class="airport-sel-wrap">
-        <span class="airport-ico"><i class="ico ico-plane"></i></span>
-        <div style="flex:1">
-          <div style="color:var(--gray);font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.8px">Aeropuerto activo</div>
-          <select class="airport-sel" id="airport-sel"></select>
+    <div class="tabs-main">
+      <button class="tab-main active" data-tab="salidas">Salidas (DEP)</button>
+      <button class="tab-main" data-tab="llegadas">Llegadas (ARR)</button>
+      <button class="tab-main rej" data-tab="rechazados">Rechazados</button>
+    </div>
+
+    <!-- SALIDAS -->
+    <div id="tab-salidas">
+      <div class="columns">
+        <div class="col del">
+          <div class="col-head"><span class="col-name"><i class="ico ico-clip"></i> DELIVERY (DEL)</span><span class="col-count" id="c-del">0</span></div>
+          <p class="col-sub">Vuelos en espera de autorización</p><div id="list-del"></div>
+        </div>
+        <div class="col ver">
+          <div class="col-head"><span class="col-name"><i class="ico ico-check"></i> VUELOS VERIFICADOS</span><span class="col-count" id="c-ver">0</span></div>
+          <p class="col-sub">Autorizados · esperando rodaje</p><div id="list-ver"></div>
+        </div>
+        <div class="col twr">
+          <div class="col-head"><span class="col-name"><i class="ico ico-tower"></i> TOWER (TWR)</span><span class="col-count" id="c-twr">0</span></div>
+          <p class="col-sub">Vuelos en pista (despegues)</p><div id="list-twr"></div>
         </div>
       </div>
-      <div class="airport-meta"><i class="ico ico-plane"></i> <b id="airport-name">—</b></div>
-      <div class="airport-meta"><i class="ico ico-users"></i> <span>Controladores: <b id="ctrl-count">0</b></span></div>
     </div>
 
-    <div class="stats">
-      <div class="stat" style="--c:var(--white-soft)"><div class="stat-top"><i class="ico ico-plane"></i> Vuelos totales</div><div class="stat-num" id="s-total">0</div></div>
-      <div class="stat" style="--c:var(--cyan)"><div class="stat-top"><i class="ico ico-clip"></i> Delivery</div><div class="stat-num" id="s-del">0</div></div>
-      <div class="stat" style="--c:var(--green)"><div class="stat-top"><i class="ico ico-plane"></i> Ground</div><div class="stat-num" id="s-gnd">0</div></div>
-      <div class="stat" style="--c:var(--yellow)"><div class="stat-top"><i class="ico ico-tower"></i> Tower</div><div class="stat-num" id="s-twr">0</div></div>
-      <div class="stat" style="--c:var(--blue-light)"><div class="stat-top"><i class="ico ico-users"></i> Posiciones ocupadas</div><div class="stat-num" id="s-pos">0/3</div></div>
-    </div>
-
-    <div class="layout">
-      <aside class="panel">
-        <div class="panel-title"><i class="ico ico-shield"></i> Posiciones Activas</div>
-        <div id="positions-list"><p style="color:var(--gray);font-size:.8rem">Cargando…</p></div>
-      </aside>
-
-      <section class="panel">
-        <div class="strips-head">
-          <div class="panel-title" style="margin:0"><i class="ico ico-plane"></i> Flight Strips — <span id="strip-airport">—</span></div>
-          <div class="tabs" id="tower-tabs">
-            <button class="tab active" data-k="DEP">Salidas (DEP)</button>
-            <button class="tab" data-k="ARR">Llegadas (ARR)</button>
-          </div>
+    <!-- LLEGADAS -->
+    <div id="tab-llegadas" hidden>
+      <div class="columns">
+        <div class="col arr">
+          <div class="col-head"><span class="col-name">🛬 LLEGÓ</span><span class="col-count" id="c-arr">0</span></div>
+          <p class="col-sub">El vuelo llegó al destino</p><div id="list-arr"></div>
         </div>
-        <div class="columns" id="columns">
-          <div class="col del">
-            <div class="col-head"><span class="col-name"><i class="ico ico-clip"></i> DELIVERY (DEL)</span><span class="col-count" id="c-del">0</span></div>
-            <p class="col-sub">Vuelos en espera de autorización</p>
-            <div id="list-del"></div>
-          </div>
-          <div class="col verified">
-            <div class="col-head"><span class="col-name"><i class="ico ico-check"></i> VUELOS VERIFICADOS</span><span class="col-count" id="c-verified">0</span></div>
-            <p class="col-sub">Autorizados · esperando rodaje</p>
-            <div id="list-verified"></div>
-          </div>
-          <div class="col twr">
-            <div class="col-head"><span class="col-name"><i class="ico ico-tower"></i> TOWER (TWR)</span><span class="col-count" id="c-twr">0</span></div>
-            <p class="col-sub">Vuelos en pista (despegues)</p>
-            <div id="list-twr"></div>
-          </div>
-          <div class="col arr">
-            <div class="col-head"><span class="col-name"><i class="ico ico-plane"></i> LLEGADAS (ARR)</span><span class="col-count" id="c-arr">0</span></div>
-            <p class="col-sub">Vuelos que llegaron / estacionando</p>
-            <div id="list-arr"></div>
-          </div>
+        <div class="col ver">
+          <div class="col-head"><span class="col-name">🅿️ A ESTACIONAR</span><span class="col-count" id="c-park">0</span></div>
+          <p class="col-sub">Yendo a la pista / estacionando</p><div id="list-park"></div>
         </div>
-      </section>
-    </div>
-
-    <section class="panel history">
-      <div class="strips-head">
-        <div class="panel-title" style="margin:0"><i class="ico ico-clock"></i> Últimas Operaciones</div>
-        <button class="btn btn-ghost" id="history-refresh" style="padding:8px 16px;font-size:.72rem"><i class="ico ico-retry"></i> Actualizar</button>
+        <div class="col rej">
+          <div class="col-head"><span class="col-name">✅ FINALIZADOS</span><span class="col-count" id="c-fin">0</span></div>
+          <p class="col-sub">Se eliminan 1 día después</p><div id="list-fin"></div>
+        </div>
       </div>
-      <div id="history-list"><p style="color:var(--gray);font-size:.8rem">Cargando…</p></div>
-    </section>
+    </div>
+
+    <!-- RECHAZADOS -->
+    <div id="tab-rechazados" hidden>
+      <div class="columns" style="grid-template-columns:1fr">
+        <div class="col rej">
+          <div class="col-head"><span class="col-name"><i class="ico ico-x"></i> VUELOS RECHAZADOS</span><span class="col-count" id="c-rej">0</span></div>
+          <p class="col-sub">Se eliminan 2 días después</p><div id="list-rej"></div>
+        </div>
+      </div>
+    </div>
   </main>
 
-  <!-- Overlay: Flight Strip completo -->
-  <div class="modal-overlay" id="strip-modal">
-    <div class="modal-card">
-      <button class="modal-close" id="strip-close"><i class="ico ico-x"></i></button>
-      <span class="modal-badge"><i class="ico ico-clip"></i> Flight Strip</span>
-      <h2 id="strip-title">Callsign</h2>
-      <p class="sub" id="strip-sub">Información completa del vuelo</p>
-      <div id="strip-body"></div>
-    </div>
-  </div>
+  <div class="modal-overlay" id="strip-modal"><div class="modal-card">
+    <button class="modal-close" id="strip-close"><i class="ico ico-x"></i></button>
+    <span class="modal-badge"><i class="ico ico-clip"></i> Flight Strip</span>
+    <h2 id="strip-title">Callsign</h2><p class="sub" id="strip-sub"></p>
+    <div id="strip-body"></div>
+  </div></div>
 
-  <footer>
-    <div class="container"><span style="font-family:'Orbitron',monospace;color:var(--blue)">0.0.0.0.1</span> © 2026 Latin Aviation Network. Todos los derechos reservados.</div>
-  </footer>
+  <footer><span style="font-family:'Orbitron',monospace;color:var(--blue)">0.0.0.0.1</span> © 2026 Latin Aviation Network</footer>
 
   <script>
     const $ = id => document.getElementById(id);
-    let aeropuerto = '', strips = [], posiciones = [], me = null;
-    let towerTab = 'DEP', stripActual = null;
+    let strips = [], tabActual = 'salidas';
+    function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
-    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-    function hhmmss(sec) {
-      sec = Number(sec) || 0;
-      return [Math.floor(sec/3600), Math.floor((sec%3600)/60), sec%60].map(n => String(n).padStart(2,'0')).join(':');
-    }
-    function alerta(msg) {
-      const box = $('strip-body');
-      box.innerHTML = '<div style="padding:12px;border-radius:11px;background:rgba(244,63,94,.12);border:1px solid rgba(244,63,94,.5);color:#fda4af;font-size:.82rem">' + esc(msg) + '</div>';
-    }
+    document.querySelectorAll('.tab-main').forEach(t => t.addEventListener('click', () => {
+      document.querySelectorAll('.tab-main').forEach(x => x.classList.remove('active'));
+      t.classList.add('active'); tabActual = t.dataset.tab;
+      ['salidas','llegadas','rechazados'].forEach(x => $('tab-'+x).hidden = x !== tabActual);
+      pintar();
+    }));
 
-    async function cargarAirports() {
-      try {
-        const [rA, rMe] = await Promise.all([fetch('/api/atc/airports'), fetch('/api/me')]);
-        if (!rA.ok) return;
-        if (rMe.ok) me = await rMe.json();
-        const data = await rA.json();
-        const sel = $('airport-sel');
-        sel.innerHTML = data.airports.map(a => '<option value="' + esc(a.code) + '">' + esc(a.code) + ' — ' + esc(a.name) + '</option>').join('');
-        aeropuerto = data.airports[0] ? data.airports[0].code : '';
-        if (me) {
-          $('nav-name').textContent = me.global_name || me.username;
-          $('nav-avatar').textContent = String((me.global_name || me.username || 'AT')[0]).toUpperCase();
-        }
-        await recargar();
-      } catch (e) { console.error(e); }
+    async function cargar(){
+      try{
+        const r = await fetch('/api/atc/strips',{cache:'no-store'});
+        if(!r.ok) return;
+        strips = (await r.json()).strips || [];
+        pintar();
+      }catch(e){console.error(e);}
     }
 
-    async function recargar() {
-      if (!aeropuerto) return;
-      $('strip-airport').textContent = aeropuerto;
-      $('airport-name').textContent = $('airport-sel').selectedOptions[0] ? $('airport-sel').selectedOptions[0].text : aeropuerto;
-      try {
-        const [rS, rP, rL] = await Promise.all([
-          fetch('/api/atc/strips?airport=' + aeropuerto, {cache:'no-store'}),
-          fetch('/api/atc/positions?airport=' + aeropuerto, {cache:'no-store'}),
-          fetch('/api/atc/log?airport=' + aeropuerto + '&page=' + paginaHistorial, {cache:'no-store'})
-        ]);
-        strips = (await rS.json()).strips || [];
-        posiciones = (await rP.json()).positions || [];
-        const logsData = await rL.json();
-        const logs = logsData.operations || [];
-        pintarStats();
-        pintarPosiciones();
-        pintarStrips();
-        pintarHistorial(logs, logsData);
-      } catch (e) { console.error(e); }
+    function destino(s){
+      const k = s.flight_kind || 'DEP';
+      if(['rejected','cancelled','FINISHED'].includes(s.atc_stage) || s.status==='rejected') return 'rej';
+      if(s.atc_stage==='DEL' || !s.atc_stage) return 'del';
+      if(s.atc_stage==='VERIFIED') return 'ver';
+      if(s.atc_stage==='LINEUP'||s.atc_stage==='TWR') return 'twr';
+      if(s.atc_stage==='ARRIVED') return 'arr';
+      if(s.atc_stage==='PARKING') return 'park';
+      if(s.atc_stage==='FINISHED') return 'fin';
+      return k==='ARR' ? 'arr' : 'del';
+    }
+    function destinoFin(s){
+      if(s.atc_stage==='FINISHED' && (s.flight_kind||'DEP')==='ARR') return 'fin';
+      return null;
     }
 
-    function pintarStats() {
-      const activos = ['DEL','GND','TWR'];
-      $('s-total').textContent = strips.filter(s => activos.includes(s.atc_stage)).length;
-      $('s-del').textContent = strips.filter(s => s.atc_stage === 'DEL').length;
-      $('s-gnd').textContent = strips.filter(s => s.atc_stage === 'GND').length;
-      $('s-twr').textContent = strips.filter(s => s.atc_stage === 'TWR' && s.flight_kind === towerTab).length;
-      $('s-pos').textContent = posiciones.filter(p => p.controller_id).length + '/' + posiciones.length;
-      $('ctrl-count').textContent = new Set(posiciones.filter(p => p.controller_id).map(p => p.controller_id)).size;
-    }
-
-    function pintarPosiciones() {
-      const box = $('positions-list');
-      if (!posiciones.length) { box.innerHTML = '<p style="color:var(--gray);font-size:.8rem">Sin posiciones</p>'; return; }
-      box.innerHTML = posiciones.map(p => {
-        const ocupada = !!p.controller_id;
-        const mine = p.controller_id === (me && me.id);
-        return `<div class="pos">
-          <span class="pos-dot ${ocupada ? 'on':'off'}"></span>
-          <div class="pos-info">
-            <div class="pos-name">${esc(p.position)} ${p.position==='DEL'?'(DEL)':p.position==='GND'?'(GND)':'(TWR)'}</div>
-            ${ocupada
-              ? `<div class="pos-user"><i class="ico ico-users"></i> ${esc(p.controller_name || 'Controlador')}</div>`
-              : '<div class="pos-user empty">Sin asignar</div>'}
-          </div>
-          <div>
-            ${ocupada ? '<div class="pos-time">' + hhmmss(p.seconds_on) + '</div>' : ''}
-            <div class="pos-actions">
-              ${!ocupada || mine
-                ? '<button class="pos-btn" data-take="' + p.id + '">' + (mine ? 'Tu posición' : 'Tomar') + '</button>'
-                : ''}
-              ${mine ? '<button class="pos-btn free" data-release="' + p.id + '">Liberar</button>' : ''}
-            </div>
-          </div>
-        </div>`;
-      }).join('');
-      box.querySelectorAll('[data-take]').forEach(b => b.addEventListener('click', async () => {
-        if (b.textContent === 'Tu posición') return;
-        const r = await fetch('/api/atc/position/' + b.dataset.take + '/take', {method:'POST'});
-        const d = await r.json();
-        if (!r.ok) return alert('❌ ' + d.error);
-        await recargar();
-      }));
-      box.querySelectorAll('[data-release]').forEach(b => b.addEventListener('click', async () => {
-        if (!confirm('¿Liberar esta posición?')) return;
-        const r = await fetch('/api/atc/position/' + b.dataset.release + '/release', {method:'POST'});
-        const d = await r.json();
-        if (!r.ok) return alert('❌ ' + d.error);
-        await recargar();
-      }));
-    }
-
-    function pintarStrips() {
-      const del = strips.filter(s => s.atc_stage === 'DEL');
-      const verified = strips.filter(s => s.atc_stage === 'VERIFIED');
-      const twr = strips.filter(s => s.atc_stage === 'LINEUP' || s.atc_stage === 'TWR');
-      const arr = strips.filter(s => ['ARRIVED','PARKING'].includes(s.atc_stage) ||
-                                     (s.flight_kind === 'ARR' && !['DEL','VERIFIED','FINISHED'].includes(s.atc_stage)));
-      $('c-del').textContent = del.length; $('c-verified').textContent = verified.length;
-      $('c-twr').textContent = twr.length; $('c-arr').textContent = arr.length;
+    function pintar(){
+      const g = k => strips.filter(s => destino(s) === k);
       const render = (list, el) => {
         $(el).innerHTML = list.length
-          ? list.map((s,i) => `<button class="strip" data-id="${s.id}" style="animation-delay:${i*.05}s">
-              <span>${esc(s.callsign)}</span><span class="chev">›</span></button>`).join('')
-          : '<p class="col-empty">Sin vuelos en esta posición</p>';
-        $(el).querySelectorAll('.strip').forEach(b => b.addEventListener('click', () => abrirStrip(b.dataset.id)));
+          ? list.map((s,i)=>`<button class="strip" data-id="${s.id}" style="animation-delay:${i*.05}s"><span>${esc(s.callsign)}</span><span>›</span></button>`).join('')
+          : '<p class="col-empty">Sin vuelos</p>';
+        $(el).querySelectorAll('.strip').forEach(b => b.onclick = () => abrir(b.dataset.id));
       };
-      render(del, 'list-del'); render(verified, 'list-verified'); render(twr, 'list-twr'); render(arr, 'list-arr');
-      pintarStats();
+      render(g('del'),'list-del'); render(g('ver'),'list-ver'); render(g('twr'),'list-twr');
+      render(g('arr'),'list-arr'); render(g('park'),'list-park');
+      render(strips.filter(s=>s.atc_stage==='FINISHED'),'list-fin');
+      render(strips.filter(s=>s.status==='rejected'),'list-rej');
+      $('c-del').textContent=g('del').length; $('c-ver').textContent=g('ver').length;
+      $('c-twr').textContent=g('twr').length; $('c-arr').textContent=g('arr').length;
+      $('c-park').textContent=g('park').length; $('c-rej').textContent=strips.filter(s=>s.status==='rejected').length;
+      $('c-fin').textContent=strips.filter(s=>s.atc_stage==='FINISHED').length;
     }
 
-    let paginaHistorial = 1, totalHistorial = 0, paginasHistorial = 1;
-    function pintarHistorial(logs, data) {
-      const box = $('history-list');
-      if (data) { totalHistorial = data.total; paginasHistorial = data.pages; }
-      if (!logs.length) { box.innerHTML = '<p style="color:var(--gray);font-size:.8rem">Sin operaciones registradas.</p>'; return; }
-      box.innerHTML = logs.map(l => {
-        const t = new Date(l.created_at);
-        const hora = String(t.getHours()).padStart(2,'0') + ':' + String(t.getMinutes()).padStart(2,'0') + ':' + String(t.getSeconds()).padStart(2,'0');
-        const fecha = String(t.getDate()).padStart(2,'0') + '/' + String(t.getMonth()+1).padStart(2,'0') + '/' + t.getFullYear();
-        return `<div class="hist-row">
-          <span class="hist-time">${hora}<small style="display:block;color:var(--gray);font-size:.6rem">${fecha}</small></span>
-          <span class="hist-icon"><i class="ico ico-plane"></i></span>
-          <span class="hist-callsign">${esc(l.callsign || '—')}</span>
-          <span class="hist-text">${esc(l.action)}</span>
-          <span style="color:var(--gray);font-size:.7rem">${esc(l.controller_name || '')}</span>
-        </div>`;
-      }).join('') + `
-        <div class="pagination-hist">
-          <button class="page-btn" id="hist-ant" ${paginaHistorial <= 1 ? 'disabled' : ''}><i class="ico ico-chev ico-left"></i></button>
-          <span class="page-info">${paginaHistorial} / ${paginasHistorial} · ${totalHistorial} registro${totalHistorial === 1 ? '' : 's'}</span>
-          <button class="page-btn" id="hist-sig" ${paginaHistorial >= paginasHistorial ? 'disabled' : ''}><i class="ico ico-chev"></i></button>
-        </div>`;
-      $('hist-ant').onclick = () => { if (paginaHistorial > 1) { paginaHistorial--; recargar(); } };
-      $('hist-sig').onclick = () => { if (paginaHistorial < paginasHistorial) { paginaHistorial++; recargar(); } };
-    }
-
-    async function abrirStrip(id) {
-      try {
-        const r = await fetch('/api/atc/strips/' + id, {cache:'no-store'});
-        const d = await r.json();
-        if (!r.ok) return alert('❌ ' + d.error);
-        stripActual = d.strip;
+    async function abrir(id){
+      try{
+        const r = await fetch('/api/atc/strips/'+id,{cache:'no-store'}); const d = await r.json();
+        if(!r.ok) return alert('❌ '+d.error);
         const s = d.strip;
-        $('strip-title').textContent = s.callsign;
-        $('strip-sub').textContent = 'Plan #' + s.id + ' · ' + esc(s.username) + ' · ' + (s.atc_stage || '—');
-        const campo = (label, val, full) => `<div class="strip-field${full?' full':''}"><label>${label}</label><b>${esc(val || '—')}</b></div>`;
-        $('strip-body').innerHTML = `
-          <div class="strip-grid">
-            ${campo('Callsign', s.callsign)}
-            ${campo('Aerolínea', s.airline)}
-            ${campo('Aeronave', s.aircraft)}
-            ${campo('Matrícula', s.registration)}
-            ${campo('Origen', s.departure)}
-            ${campo('Destino', s.destination)}
-            ${campo('Reglas', s.flight_rules)}
-            ${campo('Altitud solicitada', s.cruise_altitude)}
-            ${campo('Alternate', s.alternate)}
-            ${campo('Pista asignada', s.runway)}
-            ${campo('SID', s.sid)}
-            ${campo('Estado ATC', s.atc_stage)}
-            ${campo('Responsable', s.atc_controller_id ? 'Asignado' : 'Sin asignar')}
-            ${campo('Squawk validado', s.squawk_validated ? 'SÍ' : 'NO')}
-          </div>
-          <div class="squawk-box">
-            <label>Squawk asignado (solo ATC)</label>
-            <div class="squawk-code">${esc(s.squawk || '—')}</div>
-            <div style="margin-top:10px;font-size:.8rem;font-weight:900;color:${s.squawk_validated ? 'var(--green)' : 'var(--red)'}">
-              ${s.squawk_validated ? '✅ El piloto YA hizo el Squawk' : '🔴 El piloto aún NO ha hecho el Squawk'}
-            </div>
-          </div>
-          <div id="strip-actions"></div>`;
-        const acc = $('strip-actions');
-        if (s.atc_stage === 'DEL') {
-          acc.innerHTML = `
-            <div class="field"><label>Pista asignada</label><input id="in-runway" placeholder="Ej. 26L" maxlength="8"></div>
-            <div class="field"><label>SID (si aplica)</label><input id="in-sid" placeholder="Ej. LONGA1A" maxlength="40"></div>
-            <div class="actions">
-              <button class="btn btn-green" id="a-clear"><i class="ico ico-check"></i> Autorizar → Vuelos verificados</button>
-              <button class="btn btn-ghost" id="a-deny"><i class="ico ico-x"></i> Denegar</button>
-            </div>`;
-          $('a-clear').onclick = () => {
-            const runway = $('in-runway').value.trim(), sid = $('in-sid').value.trim();
-            if (!runway) return alert('Indica la pista asignada.');
-            transferir('/api/atc/strips/' + s.id + '/clear', { runway, sid });
+        $('strip-title').textContent=s.callsign;
+        $('strip-sub').textContent='Plan #'+s.id+' · '+(s.atc_stage||s.status);
+        const campo=(l,v)=>`<div class="strip-field"><label>${l}</label><b>${esc(v||'—')}</b></div>`;
+        $('strip-body').innerHTML=`<div class="strip-grid">
+          ${campo('Reglas',s.flight_rules)} ${campo('Aerolínea',s.airline)}
+          ${campo('Aeronave',s.aircraft)} ${campo('Matrícula',s.registration)}
+          ${campo('Origen',s.departure)} ${campo('Destino',s.destination)}
+          ${campo('Pista',s.runway)} ${campo('SID',s.sid)}
+          ${campo('Altitud',s.cruise_altitude)} ${campo('Estado',s.atc_stage)}
+        </div>
+        <div class="squawk-box"><label>Squawk (solo ATC)</label><div class="squawk-code">${esc(s.squawk||'—')}</div>
+          <div style="margin-top:8px;font-weight:900;color:${s.squawk_validated?'var(--green)':'var(--red)'}">
+            ${s.squawk_validated?'✅ El piloto YA hizo el Squawk':'🔴 El piloto aún NO ha hecho el Squawk'}</div></div>
+        <div class="actions" id="strip-actions"></div>`;
+        const acc=$('strip-actions');
+        if(s.atc_stage==='DEL'||!s.atc_stage){
+          acc.innerHTML=`<div class="field"><label>Pista asignada</label><input id="in-runway" placeholder="26L" maxlength="8"></div>
+            <div class="field"><label>SID</label><input id="in-sid" placeholder="LONGA1A" maxlength="40"></div>
+            <div class="actions"><button class="btn btn-green" id="a-ok">Autorizar → Vuelos verificados</button>
+            <button class="btn btn-red" id="a-no">Denegar</button></div>`;
+          $('a-ok').onclick=()=>{
+            const rw=$('in-runway').value.trim(); if(!rw) return alert('Indica la pista');
+            accion(s.id,'/clear',{runway:rw,sid:$('in-sid').value.trim()});
           };
-          $('a-deny').onclick = () => {
-            const reason = prompt('Motivo del rechazo:'); if (!reason) return;
-            transferir('/api/atc/strips/' + s.id + '/decision', { action:'reject', reason });
-          };
+          $('a-no').onclick=()=>{const m=prompt('Motivo del rechazo:'); if(m) accion(s.id,'/decision',{action:'reject',reason:m});};
         }
         $('strip-modal').classList.add('active');
-      } catch (e) { console.error(e); }
+      }catch(e){console.error(e);}
     }
-
-    async function transferir(url, body) {
-      try {
-        const r = await fetch(url, {
-          method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)
-        });
-        const d = await r.json();
-        if (!r.ok) { alerta(d.error || 'No se pudo transferir'); return; }
-        $('strip-modal').classList.remove('active');
-        await recargar();
-      } catch (e) { alerta('Error de conexión'); }
+    async function accion(id,path,body){
+      try{
+        const r=await fetch('/api/atc/strips/'+id+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+        const d=await r.json(); if(!r.ok) return alert('❌ '+(d.error||'Error'));
+        $('strip-modal').classList.remove('active'); cargar();
+      }catch(e){alert('Error de conexión');}
     }
-
-    $('airport-sel').addEventListener('change', e => { aeropuerto = e.target.value; recargar(); });
-    document.querySelectorAll('#tower-tabs .tab').forEach(t => t.addEventListener('click', () => {
-      document.querySelectorAll('#tower-tabs .tab').forEach(x => x.classList.remove('active'));
-      t.classList.add('active'); towerTab = t.dataset.k; pintarStrips();
-    }));
-    $('strip-close').addEventListener('click', () => $('strip-modal').classList.remove('active'));
-    $('strip-modal').addEventListener('click', e => { if (e.target === $('strip-modal')) $('strip-modal').classList.remove('active'); });
-    $('history-refresh').addEventListener('click', recargar);
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') $('strip-modal').classList.remove('active'); });
-    setInterval(() => { if (!document.hidden && !$('strip-modal').classList.contains('active')) recargar(); }, 5000);
-
-    cargarAirports();
+    $('strip-close').onclick=()=>$('strip-modal').classList.remove('active');
+    $('strip-modal').onclick=e=>{if(e.target===$('strip-modal'))$('strip-modal').classList.remove('active')};
+    setInterval(()=>{if(!document.hidden)cargar()},5000);
+    cargar();
   </script>
 </body>
 </html>

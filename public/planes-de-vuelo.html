@@ -782,7 +782,9 @@
       }
       const inicio = (paginaActual - 1) * POR_PAGINA;
       const pagina = visible.slice(inicio, inicio + POR_PAGINA);
-      box.innerHTML = pagina.map((p, idx) => `
+      box.innerHTML = pagina.map((p, idx) => {
+        const esMio = !yoId || String(p.discord_id) === yoId;
+        return `
         <div class="plan-row" style="animation-delay:${idx * 0.06}s">
           <div>
             <div class="plan-top">
@@ -812,14 +814,16 @@
               ${p.status === 'approved' ? '<button class="mini-btn atc-estatus" data-id="' + p.id + '">⚙ Estatus</button><button class="mini-btn danger atc-cancel" data-id="' + p.id + '">Cancelar</button>' : ''}
               ${p.status === 'active' ? '<button class="mini-btn atc-finish" data-id="' + p.id + '">Finalizar</button>' : ''}
             ` : `
-              ${['draft','cancelled'].includes(p.status) ? '<button class="mini-btn" data-edit="' + p.id + '">Editar</button><button class="mini-btn" data-send="' + p.id + '">Enviar</button>' : ''}
-              ${['rejected','finished'].includes(p.status) ? '<span class="plan-bloqueado">🔒 Definitivo</span>' : ''}
-              ${p.status === 'pending' ? '<button class="mini-btn danger" data-cancel="' + p.id + '">Cancelar</button>' : ''}
-              ${p.has_squawk && !p.squawk_validated ? '<button class="mini-btn" data-clearance="' + p.id + '">Validar Squawk</button>' : ''}
+              ${!esMio ? '<span class="plan-bloqueado" style="background:rgba(100,116,139,.1);border-color:rgba(100,116,139,.4);color:var(--gray)">Solo lectura</span>' : `
+                ${['draft','cancelled'].includes(p.status) ? '<button class="mini-btn" data-edit="' + p.id + '">Editar</button><button class="mini-btn" data-send="' + p.id + '">Enviar</button>' : ''}
+                ${['rejected','finished'].includes(p.status) ? '<span class="plan-bloqueado">🔒 Definitivo</span>' : ''}
+                ${p.status === 'pending' ? '<button class="mini-btn danger" data-cancel="' + p.id + '">Cancelar</button>' : ''}
+                ${p.has_squawk && !p.squawk_validated ? '<button class="mini-btn" data-clearance="' + p.id + '">Validar Squawk</button>' : ''}
+              `}
             `}
-            <button class="mini-btn ver-detalle" data-id="${p.id}">Ver detalle</button>
+            ${esMio ? '<button class="mini-btn ver-detalle" data-id="${p.id}">Ver detalle</button>' : ''}
           </div>
-        </div>`).join('');
+        </div>`; }).join('');
 
       /* clic en tarjeta o "Ver detalle" → overlay de detalle */
       box.querySelectorAll('.plan-row').forEach(row => row.addEventListener('click', e => {
