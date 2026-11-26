@@ -602,6 +602,7 @@
     const alertBox = document.getElementById('alert');
     const modal = document.getElementById('plan-modal');
     const detalleModal = document.getElementById('detalle-modal');
+    let planesEnPantalla = [];
     let editId = null, todosPlanes = [], misPlanes = [], curFiltro = 'all', curBusqueda = '';
     const POR_PAGINA = 5;
     let paginaActual = 1;
@@ -799,6 +800,7 @@
       }
       const inicio = (paginaActual - 1) * POR_PAGINA;
       const pagina = visible.slice(inicio, inicio + POR_PAGINA);
+      planesEnPantalla = pagina;   // guardar para abrir detalle sin búsquedas
       box.innerHTML = pagina.map((p, idx) => {
         const esMio = !yoId || String(p.discord_id) === yoId;
         return `
@@ -943,9 +945,10 @@
 
     /* Overlay de detalle: TODA la info del vuelo + botones según estado */
     function abrirDetalle(id) {
-      const p = todosPlanes.find(x => String(x.id) === String(id)) || misPlanes.find(x => String(x.id) === String(id));
-      console.log('🔍 Abrir detalle', id, p ? 'encontrado' : 'NO encontrado', 'todos:', todosPlanes.length, 'mios:', misPlanes.length);
-      if (!p) return;
+      const p = planesEnPantalla.find(x => String(x.id) === String(id))
+             || todosPlanes.find(x => String(x.id) === String(id))
+             || misPlanes.find(x => String(x.id) === String(id));
+      if (!p) { alert('No se encontró el plan #' + id); return; }
       document.getElementById('detalle-titulo').textContent = p.departure + ' ➜ ' + p.destination;
       document.getElementById('detalle-sub').textContent = 'Plan #' + p.id + ' · ' + (ESTADOS[p.status] || p.status);
       document.getElementById('detalle-contenido').innerHTML = `
