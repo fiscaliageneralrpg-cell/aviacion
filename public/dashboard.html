@@ -1608,34 +1608,40 @@
       if (!academyStatus) return;
       const st = academyStatus;
       const aprobado = st.status === 'approved';
-      // Roles REALES del usuario: puede tener Piloto y ATC a la vez
+      // Roles REALES del usuario (sin importar la ruta elegida en el overlay)
       const roles = Array.isArray(st.roles) ? st.roles : [];
-      const tienePiloto = roles.includes('1555489377151623178');
-      const tieneAtc = roles.includes('1555512718046404609');
-      const esAtc = tieneAtc || trackActual === 'atc';
-      const esPiloto = tienePiloto || trackActual === 'piloto' || (!tieneAtc && !tienePiloto);
+      const tienePiloto = roles.includes('1555489377151623178'); // Piloto
+      const tieneAtc = roles.includes('1555512718046404609');    // Controlador Aéreo
+      const esAtc = tieneAtc;
+      const esPiloto = tienePiloto;
       const esInstructor = Array.isArray(st.instructor_roles) && st.instructor_roles.length > 0;
 
-      // Grupos visibles: AMBOS si tiene ambos roles
-      document.querySelector('[data-group="piloto"]').hidden = !esPiloto;
-      document.querySelector('[data-group="atc"]').hidden = !esAtc;
+      // Antes de aprobar: los roles de FORMACIÓN (o la ruta elegida) deciden el formulario
+      const tienePilotoF = roles.includes('1555489319639191653'); // Piloto En Formación
+      const tieneAtcF = roles.includes('1555512471383441408');    // ATC En Formación
+      const rutaForm = (tieneAtcF || trackActual === 'atc') ? 'atc' : 'piloto';
+
+      // Grupos visibles: SOLO según roles definitivos (o formación si aún no aprobó)
+      document.querySelector('[data-group="piloto"]').hidden = aprobado ? !esPiloto : (rutaForm !== 'piloto');
+      document.querySelector('[data-group="atc"]').hidden = aprobado ? !esAtc : (rutaForm !== 'atc');
       document.querySelector('[data-group="staff"]').hidden = !(st.is_staff === true || esInstructor);
 
       document.getElementById('access-sub').textContent = (esPiloto && esAtc)
         ? 'Tienes permisos de Piloto y Controlador Aéreo.'
         : esAtc ? 'Herramientas de control de tránsito aéreo.'
-                : 'Herramientas de piloto y academia.';
+                : esPiloto ? 'Herramientas de piloto y academia.'
+                           : 'Completa tu formulario para obtener tu ruta.';
 
-      // Botón principal PILOTO (solo si es piloto)
+      // Botón principal: formulario (sin aprobar) o Planes de Vuelo (solo si tiene rol Piloto)
       const cta = document.getElementById('academy-cta');
-      cta.hidden = !esPiloto;
+      cta.hidden = aprobado ? !esPiloto : false;
       if (aprobado) {
         cta.innerHTML = '<i class="ico ico-plane"></i><span><b>Planes de Vuelo</b><small>Crea y gestiona tus planes</small></span>';
         cta.dataset.mode = 'planes';
       } else {
-        cta.innerHTML = '<i class="ico ico-cap"></i><span><b>Formulario ' + (esAtc ? 'ATC' : 'Piloto') + '</b><small>Examen de admisión LAN Academy</small></span>';
+        cta.innerHTML = '<i class="ico ico-cap"></i><span><b>Formulario ' + (rutaForm === 'atc' ? 'ATC' : 'Piloto') + '</b><small>Examen de admisión LAN Academy</small></span>';
         cta.dataset.mode = 'start';
-        cta.dataset.form = esAtc ? 'atc' : 'piloto';
+        cta.dataset.form = rutaForm;
       }
 
       // Un solo botón por rol: Piloto → Planes de Vuelo (todo integrado); ATC → Operations
