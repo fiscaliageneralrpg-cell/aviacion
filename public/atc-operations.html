@@ -113,7 +113,7 @@
     .tab-main.active { background:linear-gradient(135deg,var(--blue),var(--blue-light)); border-color:transparent; color:#fff; }
     .tab-main.rej.active { background:linear-gradient(135deg,#be123c,var(--red)); }
 
-    .columns { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; animation:fadeIn .35s ease-out; }
+    .columns { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; animation:fadeIn .35s ease-out; }
     @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
     .col { border-radius:18px; padding:14px; border:1px solid var(--border); min-height:230px;
       background:rgba(0,0,0,.22); animation:riseUp .45s ease-out both; }
@@ -124,6 +124,8 @@
     .col-sub { color:var(--gray); font-size:.68rem; margin:-6px 0 12px; }
     .col.del .col-name { color:var(--cyan); } .col.del { border-color:rgba(0,212,255,.45); }
     .col.ver .col-name { color:var(--green); } .col.ver { border-color:rgba(34,197,94,.45); }
+    .col.taxi .col-name { color:var(--cyan); } .col.taxi { border-color:rgba(0,212,255,.35); }
+    .col.air .col-name { color:var(--blue-light); } .col.air { border-color:rgba(51,153,255,.45); }
     .col.twr .col-name { color:var(--yellow); } .col.twr { border-color:rgba(250,204,21,.45); }
     .col.arr .col-name { color:#fda4af; } .col.arr { border-color:rgba(244,63,94,.45); }
     .col.rej .col-name { color:var(--red); } .col.rej { border-color:rgba(244,63,94,.45); }
@@ -239,8 +241,12 @@
         <p class="col-sub">Vuelos en espera de autorización</p><div id="list-del"></div></div>
       <div class="col ver"><div class="col-head"><span class="col-name"><i class="ico ico-check"></i> VUELOS VERIFICADOS</span><span class="col-count" id="c-ver">0</span></div>
         <p class="col-sub">Autorizados · esperando rodaje</p><div id="list-ver"></div></div>
+      <div class="col taxi"><div class="col-head"><span class="col-name">🛩️ VUELOS EN TAXI</span><span class="col-count" id="c-taxi">0</span></div>
+        <p class="col-sub">Rodando hacia la pista</p><div id="list-taxi"></div></div>
       <div class="col twr"><div class="col-head"><span class="col-name"><i class="ico ico-tower"></i> TOWER (TWR)</span><span class="col-count" id="c-twr">0</span></div>
         <p class="col-sub">Vuelos en pista (despegues)</p><div id="list-twr"></div></div>
+      <div class="col air"><div class="col-head"><span class="col-name">✈️ EN EL AIRE</span><span class="col-count" id="c-air">0</span></div>
+        <p class="col-sub">Vuelos en operación aérea</p><div id="list-air"></div></div>
     </div></div>
 
     <div id="tab-llegadas" hidden><div class="columns">
@@ -353,7 +359,9 @@
       if(s.status==='rejected') return 'rej';
       if(s.atc_stage==='DEL'||!s.atc_stage) return 'del';
       if(s.atc_stage==='VERIFIED') return 'ver';
-      if(s.atc_stage==='LINEUP'||s.atc_stage==='TWR'||s.atc_stage==='TAXI') return 'twr';
+      if(s.atc_stage==='TAXI') return 'taxi';
+      if(s.atc_stage==='LINEUP'||s.atc_stage==='TWR') return 'twr';
+      if(s.atc_stage==='AIR') return 'air';
       if(s.atc_stage==='ARRIVED') return 'arr';
       if(s.atc_stage==='PARKING') return 'park';
       if(s.atc_stage==='FINISHED') return 'fin';
@@ -367,12 +375,14 @@
           : '<p class="col-empty">Sin vuelos en esta posición</p>';
         $(el).querySelectorAll('.strip').forEach(b=>b.onclick=()=>abrir(b.dataset.id));
       };
-      render(g('del'),'list-del');render(g('ver'),'list-ver');render(g('twr'),'list-twr');
+      render(g('del'),'list-del');render(g('ver'),'list-ver');render(g('taxi'),'list-taxi');
+      render(g('twr'),'list-twr');render(g('air'),'list-air');
       render(g('arr'),'list-arr');render(g('park'),'list-park');
       render(strips.filter(s=>s.atc_stage==='FINISHED'),'list-fin');
       render(strips.filter(s=>s.status==='rejected'),'list-rej');
       $('c-del').textContent=g('del').length;$('c-ver').textContent=g('ver').length;
-      $('c-twr').textContent=g('twr').length;$('c-arr').textContent=g('arr').length;
+      $('c-taxi').textContent=g('taxi').length;$('c-twr').textContent=g('twr').length;
+      $('c-air').textContent=g('air').length;$('c-arr').textContent=g('arr').length;
       $('c-park').textContent=g('park').length;$('c-fin').textContent=strips.filter(s=>s.atc_stage==='FINISHED').length;
       $('c-rej').textContent=strips.filter(s=>s.status==='rejected').length;
       const ocupadas=positions.filter(p=>p.controller_id).length;

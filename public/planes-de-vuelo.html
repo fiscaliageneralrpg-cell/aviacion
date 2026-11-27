@@ -993,7 +993,7 @@
       } else if (p.atc_stage && !['FINISHED'].includes(p.atc_stage)) {
         // Piloto: avanzar estatus de uno en uno
         const SIG = { VERIFIED:'TAXI', TAXI:'LINEUP', LINEUP:'AIR', AIR:'ARRIVED', ARRIVED:'PARKING', PARKING:'FINISHED' };
-        const NOMBRE = { VERIFIED:'Verificado', TAXI:'En rodaje', LINEUP:'En pista para despegar',
+        const NOMBRE = { VERIFIED:'Verificado', TAXI:'Vuelo en taxi', LINEUP:'En pista para despegar',
                          AIR:'En el aire', ARRIVED:'Llegó al destino', PARKING:'Estacionando / bajando pasajeros', FINISHED:'Finalizado' };
         const sig = SIG[p.atc_stage];
         acc.innerHTML = `
