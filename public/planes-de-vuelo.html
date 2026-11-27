@@ -840,7 +840,7 @@
                 ${p.has_squawk && !p.squawk_validated && !['rejected','finished','cancelled'].includes(p.status) ? '<button class="mini-btn" data-clearance="' + p.id + '">Validar Squawk</button>' : ''}
               `}
             `}
-            ${esMio ? '<button class="mini-btn ver-detalle" data-id="${p.id}">Ver detalle</button>' : ''}
+            ${esMio ? '<button class="mini-btn ver-detalle" data-id="' + p.id + '">Ver detalle</button>' : ''}
           </div>
         </div>`; }).join('');
 
