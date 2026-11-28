@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS verified_users (
   fully_verified     TINYINT(1)   NOT NULL DEFAULT 0,
   track              VARCHAR(10)  DEFAULT NULL,
   track_role_done    TINYINT NOT NULL DEFAULT 0,
+  verify_role_done   TINYINT NOT NULL DEFAULT 1,
   created_at         DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at         DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   UNIQUE KEY uq_verified_users_discord (discord_id)
@@ -176,6 +177,8 @@ ALTER TABLE verified_users
   ADD COLUMN IF NOT EXISTS track VARCHAR(10) DEFAULT NULL;
 ALTER TABLE verified_users
   ADD COLUMN IF NOT EXISTS track_role_done TINYINT NOT NULL DEFAULT 0;
+ALTER TABLE verified_users
+  ADD COLUMN IF NOT EXISTS verify_role_done TINYINT NOT NULL DEFAULT 1;
 
 ALTER TABLE academy_submissions
   ADD COLUMN IF NOT EXISTS denied_ack TINYINT NOT NULL DEFAULT 0,

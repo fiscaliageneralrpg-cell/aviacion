@@ -103,7 +103,7 @@ async function obtenerEstadoVerificado(discordId) {
   if (roblox && !verificado) {
     try {
       await pool.query(
-        'UPDATE verified_users SET fully_verified = 1, updated_at = NOW() WHERE discord_id = ?',
+        'UPDATE verified_users SET fully_verified = 1, verify_role_done = 0, updated_at = NOW() WHERE discord_id = ?',
         [discordId]
       );
       console.log(`✅ Verificación auto-completada (Roblox conectado): ${discordId}`);
@@ -164,10 +164,10 @@ async function ensureVerifiedUsersTable() {
     }
     await pool.query('ALTER TABLE verified_users ADD UNIQUE KEY uniq_verified_discord (discord_id)');
     console.log('🔑 Índice único verified_users.discord_id listo.');
-    // Marca para que el bot asigne el rol de formación al elegir ruta
+    // Marca para que el bot asigne/quite roles de verificación
     try {
-      await pool.query('ALTER TABLE verified_users ADD COLUMN track_role_done TINYINT NOT NULL DEFAULT 0');
-    } catch (e) { if (e.code !== 'ER_DUP_FIELDNAME') console.error('Error columna track_role_done:', e.message); }
+      await pool.query('ALTER TABLE verified_users ADD COLUMN verify_role_done TINYINT NOT NULL DEFAULT 1');
+    } catch (e) { if (e.code !== 'ER_DUP_FIELDNAME') console.error('Error columna verify_role_done:', e.message); }
   } catch (err) {
     if (err.code === 'ER_DUP_KEYNAME') console.log('🔑 Índice único verified_users.discord_id ya existe.');
     else console.error('Error asegurando verified_users:', err.message);
@@ -389,6 +389,7 @@ const ACADEMY_ROL_ENTRADA = '1559429028333621369';          // Piloto En Prácti
 const STAFF_ROLES = [
   '1555480212051857418', // Fundador
   '1557648392362922014', // Co Funder
+  '1561609483900289054', // Management
   '1559433801162170378'  // Director Académico
 ];
 
@@ -1791,9 +1792,9 @@ app.post('/api/verify-complete', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'Debes conectar tu cuenta de Roblox para completar la verificación.' });
     }
 
-    // 1) UPDATE primero (no crea filas nuevas)
+    // 1) UPDATE primero (no crea filas nuevas) — marcar para que el bot asigne roles
     const [upd] = await pool.query(
-      'UPDATE verified_users SET fully_verified = 1, updated_at = NOW() WHERE discord_id = ?',
+      'UPDATE verified_users SET fully_verified = 1, verify_role_done = 0, updated_at = NOW() WHERE discord_id = ?',
       [discordId]
     );
 
